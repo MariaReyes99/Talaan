@@ -1,0 +1,176 @@
+{
+  "meta": {
+    "langName": "中文",
+    "htmlLang": "zh-Hans",
+    "voiceLang": "zh-CN"
+  },
+  "controls": {
+    "tourTitle": "Talaan 导览",
+    "play": "播放",
+    "pause": "暂停",
+    "prev": "上一段",
+    "next": "下一段",
+    "voiceOn": "语音开",
+    "voiceOff": "语音关",
+    "sceneOf": "第 {current} / {total} 段",
+    "language": "语言",
+    "replay": "重新播放",
+    "voiceMissing": "此设备没有该语言的语音，已开启字幕。",
+    "mockNote": "示例数据，仅供演示。Talaan 仍在设计中。",
+    "startUsing": "开始使用 Talaan",
+    "close": "关闭导览",
+    "voiceLabel": "语音",
+    "sounds": "声音",
+    "female": "女声",
+    "male": "男声",
+    "testVoice": "试听",
+    "guess": "推测",
+    "otherLang": "其他语言",
+    "noVoices": "此浏览器没有语音。字幕仍会播放。请尝试 Microsoft Edge 或 Google Chrome，或在设备设置中安装语音。",
+    "voiceTipTl": "他加禄语可使用 Microsoft Edge 的菲律宾语语音（Blessica 和 Angelo）。其他浏览器会用英文语音朗读他加禄语。",
+    "loadingVoices": "正在加载语音…",
+    "testLine": "你好，我是 {name}。我们开始吧。"
+  },
+  "nav": {
+    "home": "首页",
+    "clients": "客户",
+    "payRuns": "发薪",
+    "files": "文件",
+    "employees": "员工"
+  },
+  "scenes": {
+    "intro": {
+      "title": "你好，我是 {name}",
+      "line": "你好！我是 {name}，你的 Talaan 向导。两分钟内，我会带你看看如何为所有客户处理工资，点击更少，错误更少。"
+    },
+    "home": {
+      "title": "你的主页",
+      "line": "所有客户都在同一个页面上。绿色表示一切正常，黄色表示截止日期快到了，红色表示今天有事需要你处理。"
+    },
+    "payrun": {
+      "title": "五步完成发薪",
+      "line": "选择客户和工资周期，导入工时，让 Talaan 检查，批准，然后获取文件。每个页面只做一步，你始终知道自己在哪里。"
+    },
+    "checks": {
+      "title": "Talaan 帮你发现错误",
+      "line": "付款之前，Talaan 会检查每一位员工。红色表示必须先修正才能继续；黄色需要你填写简短原因。每条提示都会告诉你如何修正。"
+    },
+    "approve": {
+      "title": "两人把关，一次批准",
+      "line": "准备工资的人不能自己批准。老板会在手机上收到简明摘要，点击“批准”即可。批准后，本期发薪会被锁定。"
+    },
+    "files": {
+      "title": "所有文件，命名就绪",
+      "line": "Talaan 会生成各政府机构需要的文件，名称和格式都已正确。清单会显示每个文件上传到哪里、何时截止。目前由你自行上传；Talaan 会提醒你并保存回执。"
+    },
+    "xero": {
+      "title": "账簿始终同步",
+      "line": "一键即可把已批准的工资以凭证形式发送到客户的 Xero。无需重复录入，金额自动对上。"
+    },
+    "phone": {
+      "title": "手机查看工资单",
+      "line": "员工可以用手机查看自己的工资单和 BIR 2316 表格，支持英文、他加禄语和中文。不用再打印。"
+    },
+    "ask": {
+      "title": "问 Tala，附带出处",
+      "line": "对某条规定不确定？问我就好。我的回答来自官方发布的文件，并附上出处。如果找不到依据，我会如实告诉你，并转给你的顾问。"
+    },
+    "language": {
+      "title": "你的语言",
+      "line": "随时在英文、他加禄语和中文之间切换。SSS、BIR 等术语保持不变，信息不会走样。"
+    },
+    "ready": {
+      "title": "准备好了吗",
+      "line": "这就是 Talaan：每一步都有引导，自动检查，所有文件随时备好。现在就开始你的第一次发薪吧。"
+    }
+  },
+  "ui": {
+    "welcome": "为每位客户处理工资与合规",
+    "tilePayroll": "工资",
+    "tileFiles": "政府申报文件",
+    "tileXero": "Xero 同步",
+    "greeting": "早上好，Maricel",
+    "clientsCount": "40 个客户",
+    "colClient": "客户",
+    "colStaff": "员工",
+    "colNext": "下一步",
+    "colStatus": "状态",
+    "next1": "发送工资单",
+    "next2": "缴纳 SSS 供款",
+    "next3": "批准本期发薪",
+    "next4": "申报 BIR 1601-C",
+    "dueIn": "{days} 天后到期",
+    "overdue": "已逾期 1 天",
+    "statusOk": "正常",
+    "statusSoon": "即将到期",
+    "statusLate": "今天需处理",
+    "step1": "选择周期",
+    "step2": "导入工时",
+    "step3": "检查",
+    "step4": "批准",
+    "step5": "获取文件",
+    "stepOf": "第 {n} 步，共 5 步",
+    "dropHint": "把工时表拖到这里",
+    "rowsFound": "找到 38 名员工，工时已匹配",
+    "mapMemory": "系统会记住你的列设置",
+    "continue": "继续",
+    "checksTitle": "付款前检查",
+    "checksSummary": "1 项需修正，1 项需说明，36 项就绪",
+    "checkRed": "Ana Cruz：SSS 号码应为 10 位数字，你输入了 9 位。",
+    "fixNow": "立即修正",
+    "checkAmber": "Ben Reyes：实发工资比上期高 32%。",
+    "addReason": "填写原因",
+    "checkOk1": "最低工资检查通过（NCR）",
+    "checkOk2": "缴款按 2026 年费率表计算",
+    "summaryTitle": "本期发薪摘要",
+    "employees": "员工",
+    "gross": "应发工资",
+    "govt": "政府缴款",
+    "netPay": "实发工资",
+    "approve": "批准",
+    "preparedBy": "由 Jun 准备",
+    "approvedBy": "由老板 Ana 批准",
+    "roleOnlyNote": "Jun 不能批准自己准备的发薪",
+    "lockedNote": "批准后锁定",
+    "filesTitle": "本期文件",
+    "colFile": "文件",
+    "colUpload": "上传至",
+    "colDue": "截止",
+    "colDone": "完成",
+    "fileSSS": "SSS 缴款文件",
+    "filePH": "PhilHealth 缴款文件",
+    "filePI": "Pag-IBIG 缴款文件",
+    "fileBIR": "BIR 1601-C 表格数据",
+    "fileBank": "BDO 工资文件",
+    "receiptSaved": "回执已保存",
+    "journalTitle": "工资凭证",
+    "colAccount": "科目",
+    "debit": "借方",
+    "credit": "贷方",
+    "total": "合计",
+    "sentXero": "已发送到 Xero",
+    "accSalaries": "工资费用",
+    "accEmployer": "雇主缴款费用",
+    "accSSS": "应付 SSS",
+    "accPH": "应付 PhilHealth",
+    "accPI": "应付 Pag-IBIG",
+    "accWHT": "应付预扣税",
+    "accNet": "应付实发工资",
+    "payslipTitle": "工资单",
+    "cutoffLabel": "2026 年 10 月上半月",
+    "basicPay": "基本工资",
+    "overtime": "加班费",
+    "nightDiff": "夜班津贴",
+    "grossPay": "应发工资",
+    "deductions": "扣款",
+    "download2316": "下载 BIR 2316 表格",
+    "askQ": "第十三个月工资要缴税吗？",
+    "askA": "第十三个月工资及其他福利每年 ₱90,000 以内免税，只有超出部分需要缴税。",
+    "askSource": "出处",
+    "askPlaceholder": "向 Tala 提问",
+    "approvedShort": "发薪已批准",
+    "readyPoint1": "每步有引导",
+    "readyPoint2": "自动检查",
+    "readyPoint3": "文件随时备好"
+  }
+}

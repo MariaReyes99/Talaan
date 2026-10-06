@@ -1,0 +1,176 @@
+{
+  "meta": {
+    "langName": "Tagalog",
+    "htmlLang": "tl",
+    "voiceLang": "fil-PH"
+  },
+  "controls": {
+    "tourTitle": "Guided tour ng Talaan",
+    "play": "I-play",
+    "pause": "I-pause",
+    "prev": "Nakaraan",
+    "next": "Susunod",
+    "voiceOn": "May boses",
+    "voiceOff": "Walang boses",
+    "sceneOf": "{current} sa {total}",
+    "language": "Wika",
+    "replay": "Ulitin ang tour",
+    "voiceMissing": "Walang boses para sa wikang ito sa device na ito. Naka-on ang captions.",
+    "mockNote": "Halimbawang data lamang. Dinidisenyo pa ang Talaan.",
+    "startUsing": "Simulan ang Talaan",
+    "close": "Isara ang tour",
+    "voiceLabel": "Boses",
+    "sounds": "Tunog",
+    "female": "Babae",
+    "male": "Lalaki",
+    "testVoice": "Subukan ang boses",
+    "guess": "hula",
+    "otherLang": "ibang wika",
+    "noVoices": "Walang boses ang browser na ito. Tuloy pa rin ang captions. Subukan ang Microsoft Edge o Google Chrome, o mag-install ng boses sa settings ng device mo.",
+    "voiceTipTl": "Para sa Tagalog, may Filipino na boses ang Microsoft Edge (Blessica at Angelo). Sa ibang browser, English na boses ang babasa ng Tagalog.",
+    "loadingVoices": "Nilo-load ang mga boses…",
+    "testLine": "Kumusta, ako si {name}. Magsimula na tayo."
+  },
+  "nav": {
+    "home": "Home",
+    "clients": "Mga client",
+    "payRuns": "Pay runs",
+    "files": "Mga file",
+    "employees": "Mga empleyado"
+  },
+  "scenes": {
+    "intro": {
+      "title": "Kumusta, ako si {name}",
+      "line": "Kumusta! Ako si {name}, ang gabay mo sa Talaan. Sa loob ng dalawang minuto, ipapakita ko kung paano magpa-payroll para sa lahat ng client mo, nang mas kaunting click at mas kaunting mali."
+    },
+    "home": {
+      "title": "Ang home screen mo",
+      "line": "Lahat ng client mo, nasa iisang screen. Ang berde ay ayos ang lahat, ang dilaw ay malapit na ang deadline, at ang pula ay may kailangan kang gawin ngayon."
+    },
+    "payrun": {
+      "title": "Payroll sa limang hakbang",
+      "line": "Piliin ang client at ang cutoff, ilagay ang oras ng trabaho, hayaang i-check ito ng Talaan, aprubahan, at kunin ang mga file. Isang hakbang bawat screen, kaya alam mo palagi kung nasaan ka."
+    },
+    "checks": {
+      "title": "Hinuhuli ng Talaan ang mga mali",
+      "line": "Bago magbayad, chine-check ng Talaan ang bawat empleyado. Ang pula ay pipigil sa iyo hangga’t hindi naaayos. Ang dilaw ay hihingi ng maikling dahilan. Bawat mensahe ay may kasamang paraan kung paano ito ayusin."
+    },
+    "approve": {
+      "title": "Dalawang tao, isang approval",
+      "line": "Hindi puwedeng mag-approve ang naghanda ng payroll. Makakatanggap ang may-ari ng simpleng buod sa phone niya at pipindutin ang Aprubahan. Pagkatapos noon, naka-lock na ang pay run."
+    },
+    "files": {
+      "title": "Lahat ng file, handa na",
+      "line": "Gagawin ng Talaan ang mga file na kailangan ng bawat ahensya, may tamang pangalan at format na. May checklist kung saan ia-upload ang bawat isa at kailan ang deadline. Sa ngayon, ikaw ang mag-a-upload; ipapaalala ito ng Talaan at itatabi ang resibo."
+    },
+    "xero": {
+      "title": "Laging tugma ang libro mo",
+      "line": "Isang click lang, maipapadala na ang naaprubahang payroll sa Xero ng client bilang journal. Wala nang muling pagta-type, at tugma ang mga total."
+    },
+    "phone": {
+      "title": "Payslip sa kahit anong phone",
+      "line": "Mabubuksan ng mga empleyado ang payslip at BIR Form 2316 nila sa phone, sa English, Tagalog o Chinese. Wala nang pagpi-print."
+    },
+    "ask": {
+      "title": "Tanungin si Tala, may source pa",
+      "line": "Hindi sigurado sa isang patakaran? Tanungin mo ako. Sumasagot ako mula sa mga opisyal na issuance at ipinapakita ko ang source. Kung wala akong makita, sasabihin ko at ipapasa ko sa adviser mo."
+    },
+    "language": {
+      "title": "Ang wika mo",
+      "line": "Puwede kang lumipat sa English, Tagalog o Chinese anumang oras. Hindi nagbabago ang mga terminong gaya ng SSS at BIR, kaya walang nawawala."
+    },
+    "ready": {
+      "title": "Handa na kami",
+      "line": "Iyan ang Talaan: may gabay sa bawat hakbang, awtomatikong check, at handa ang bawat file. Simulan na natin ang una mong payroll."
+    }
+  },
+  "ui": {
+    "welcome": "Payroll at compliance para sa bawat client",
+    "tilePayroll": "Payroll",
+    "tileFiles": "Mga file para sa gobyerno",
+    "tileXero": "Xero sync",
+    "greeting": "Magandang umaga, Maricel",
+    "clientsCount": "40 na client",
+    "colClient": "Client",
+    "colStaff": "Empleyado",
+    "colNext": "Susunod na gagawin",
+    "colStatus": "Status",
+    "next1": "Ipadala ang payslips",
+    "next2": "Bayaran ang SSS contributions",
+    "next3": "I-approve ang pay run",
+    "next4": "I-file ang BIR 1601-C",
+    "dueIn": "{days} araw na lang",
+    "overdue": "Late ng 1 araw",
+    "statusOk": "Ayos",
+    "statusSoon": "Malapit na",
+    "statusLate": "Kailangan ka ngayon",
+    "step1": "Pumili ng cutoff",
+    "step2": "Ilagay ang oras",
+    "step3": "I-check",
+    "step4": "Aprubahan",
+    "step5": "Kunin ang files",
+    "stepOf": "Hakbang {n} sa 5",
+    "dropHint": "I-drop dito ang timesheet",
+    "rowsFound": "38 empleyado ang nakita, tugma ang oras",
+    "mapMemory": "Tanda namin ang ayos ng columns mo",
+    "continue": "Tuloy",
+    "checksTitle": "Mga check bago magbayad",
+    "checksSummary": "1 aayusin, 1 ipapaliwanag, 36 handa na",
+    "checkRed": "Ana Cruz: Dapat 10 digits ang SSS number. 9 ang nailagay mo.",
+    "fixNow": "Ayusin ngayon",
+    "checkAmber": "Ben Reyes: 32% na mas mataas ang net pay kaysa noong nakaraang cutoff.",
+    "addReason": "Maglagay ng dahilan",
+    "checkOk1": "Pasado sa minimum wage check (NCR)",
+    "checkOk2": "Gamit ang 2026 tables sa kontribusyon",
+    "summaryTitle": "Buod ng pay run",
+    "employees": "Empleyado",
+    "gross": "Gross pay",
+    "govt": "Kontribusyon sa gobyerno",
+    "netPay": "Net pay",
+    "approve": "Aprubahan",
+    "preparedBy": "Inihanda ni Jun",
+    "approvedBy": "Inaprubahan ni Ana, may-ari",
+    "roleOnlyNote": "Hindi puwedeng mag-approve si Jun",
+    "lockedNote": "Naka-lock pagkatapos ma-approve",
+    "filesTitle": "Mga file para sa cutoff na ito",
+    "colFile": "File",
+    "colUpload": "I-upload sa",
+    "colDue": "Deadline",
+    "colDone": "Tapos",
+    "fileSSS": "SSS contribution file",
+    "filePH": "PhilHealth remittance file",
+    "filePI": "Pag-IBIG remittance file",
+    "fileBIR": "BIR 1601-C form data",
+    "fileBank": "BDO payroll file",
+    "receiptSaved": "Naitabi ang resibo",
+    "journalTitle": "Payroll journal",
+    "colAccount": "Account",
+    "debit": "Debit",
+    "credit": "Credit",
+    "total": "Kabuuan",
+    "sentXero": "Naipadala sa Xero",
+    "accSalaries": "Salaries expense",
+    "accEmployer": "Employer contributions expense",
+    "accSSS": "SSS payable",
+    "accPH": "PhilHealth payable",
+    "accPI": "Pag-IBIG payable",
+    "accWHT": "Withholding tax payable",
+    "accNet": "Net pay payable",
+    "payslipTitle": "Payslip",
+    "cutoffLabel": "Unang cutoff, Oktubre 2026",
+    "basicPay": "Basic pay",
+    "overtime": "Overtime",
+    "nightDiff": "Night differential",
+    "grossPay": "Gross pay",
+    "deductions": "Mga kaltas",
+    "download2316": "I-download ang BIR Form 2316",
+    "askQ": "May tax ba ang 13th month pay?",
+    "askA": "Walang tax ang 13th month pay at iba pang benefits hanggang ₱90,000 kada taon. Ang sobra lang doon ang may tax.",
+    "askSource": "Source",
+    "askPlaceholder": "Magtanong kay Tala",
+    "approvedShort": "Naaprubahan ang pay run",
+    "readyPoint1": "May gabay bawat hakbang",
+    "readyPoint2": "Awtomatikong check",
+    "readyPoint3": "Handa ang bawat file"
+  }
+}

@@ -1,0 +1,285 @@
+[
+  {
+    "source": "RA 11199 (Social Security Act of 2018), contribution schedule from January 2025",
+    "url": "https://www.sss.gov.ph",
+    "agency": "SSS",
+    "entries": [
+      "sss-rate"
+    ]
+  },
+  {
+    "source": "PD 626 (Employees’ Compensation Program) and SSS contribution schedule",
+    "url": "https://www.sss.gov.ph",
+    "agency": "SSS",
+    "entries": [
+      "sss-ec"
+    ]
+  },
+  {
+    "source": "RA 11223 (Universal Health Care Act) premium schedule",
+    "url": "https://www.philhealth.gov.ph",
+    "agency": "PhilHealth",
+    "entries": [
+      "philhealth-rate"
+    ]
+  },
+  {
+    "source": "HDMF Circular No. 460 (2024)",
+    "url": "https://www.pagibigfund.gov.ph",
+    "agency": "Pag-IBIG",
+    "entries": [
+      "pagibig-rate"
+    ]
+  },
+  {
+    "source": "Talaan practice note: agencies compute contributions monthly",
+    "url": "",
+    "agency": "Talaan",
+    "entries": [
+      "contrib-split"
+    ]
+  },
+  {
+    "source": "SSS, PhilHealth and Pag-IBIG employer payment schedules",
+    "url": "",
+    "agency": "SSS",
+    "entries": [
+      "remit-deadlines"
+    ]
+  },
+  {
+    "source": "RA 11199, Sec. 22 (penalty on late remittance)",
+    "url": "https://www.sss.gov.ph",
+    "agency": "SSS",
+    "entries": [
+      "sss-late"
+    ]
+  },
+  {
+    "source": "BIR Revenue Regulations No. 11-2018, Annex E (withholding tax table, 2023 onwards)",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "wht-table"
+    ]
+  },
+  {
+    "source": "NIRC Sec. 24(A)(2), as amended by RA 9504",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "mwe"
+    ]
+  },
+  {
+    "source": "NIRC Sec. 32(B)(7)(e), as amended by RA 10963 (TRAIN Law)",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "thirteenth-tax"
+    ]
+  },
+  {
+    "source": "BIR Revenue Regulations No. 29-2025 (effective 6 January 2026), amending RR 2-98",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "de-minimis"
+    ]
+  },
+  {
+    "source": "BIR Revenue Regulations No. 2-98, as amended by RR 11-2018 (year-end adjustment)",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "annualization"
+    ]
+  },
+  {
+    "source": "BIR Revenue Regulations No. 11-2018 (substituted filing)",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "substituted-filing"
+    ]
+  },
+  {
+    "source": "Labor Code of the Philippines, Art. 87",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "overtime"
+    ]
+  },
+  {
+    "source": "Labor Code of the Philippines, Art. 86",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "night-diff"
+    ]
+  },
+  {
+    "source": "Labor Code of the Philippines, Art. 94; DOLE holiday pay rules",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "regular-holiday"
+    ]
+  },
+  {
+    "source": "DOLE Labor Advisory on holiday pay rules (issued yearly)",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "special-day"
+    ]
+  },
+  {
+    "source": "Labor Code of the Philippines, Art. 93",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "rest-day"
+    ]
+  },
+  {
+    "source": "Wage Order No. NCR-28 (effective 26 September 2026), NWPC",
+    "url": "https://nwpc.dole.gov.ph",
+    "agency": "NWPC/RTWPB",
+    "entries": [
+      "min-wage-ncr"
+    ]
+  },
+  {
+    "source": "DOLE Handbook on Workers’ Statutory Monetary Benefits (equivalent monthly rate factors)",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "daily-rate"
+    ]
+  },
+  {
+    "source": "PD 851 and the Revised Guidelines on 13th month pay",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "thirteenth-when"
+    ]
+  },
+  {
+    "source": "Labor Code of the Philippines, Art. 95",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "sil"
+    ]
+  },
+  {
+    "source": "RA 11210 (105-Day Expanded Maternity Leave Law)",
+    "url": "https://www.sss.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "maternity"
+    ]
+  },
+  {
+    "source": "RA 8187 (Paternity Leave Act of 1996); RA 11210 (transferred days)",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "paternity"
+    ]
+  },
+  {
+    "source": "RA 11861 (Expanded Solo Parents Welfare Act)",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "solo-parent"
+    ]
+  },
+  {
+    "source": "RA 9262 (Anti-Violence Against Women and Their Children Act), Sec. 43",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "vawc-leave"
+    ]
+  },
+  {
+    "source": "RA 9710 (Magna Carta of Women), Sec. 18",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "special-leave-women"
+    ]
+  },
+  {
+    "source": "DOLE Labor Advisory No. 06, Series of 2020",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "final-pay",
+      "coe"
+    ]
+  },
+  {
+    "source": "Labor Code of the Philippines, Arts. 298 and 299",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "separation-pay"
+    ]
+  },
+  {
+    "source": "RA 7641 (Retirement Pay Law)",
+    "url": "https://www.dole.gov.ph",
+    "agency": "DOLE",
+    "entries": [
+      "retirement-pay"
+    ]
+  },
+  {
+    "source": "BIR filing calendar; RR 11-2018",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "deadline-1601c",
+      "deadline-1604c",
+      "deadline-2316"
+    ]
+  },
+  {
+    "source": "NIRC Secs. 248 and 249, as amended by RA 11976 (Ease of Paying Taxes Act)",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "bir-penalties"
+    ]
+  },
+  {
+    "source": "RA 10173 (Data Privacy Act of 2012); NPC Circular 16-03",
+    "url": "",
+    "agency": "NPC",
+    "entries": [
+      "privacy"
+    ]
+  },
+  {
+    "source": "Talaan help",
+    "url": "",
+    "agency": "Talaan",
+    "entries": [
+      "how-payrun",
+      "how-red",
+      "how-approve",
+      "how-file",
+      "how-import",
+      "how-language",
+      "how-xero",
+      "emp-deductions",
+      "emp-netchange"
+    ]
+  }
+]

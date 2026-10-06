@@ -1,0 +1,176 @@
+{
+  "meta": {
+    "langName": "English",
+    "htmlLang": "en",
+    "voiceLang": "en-PH"
+  },
+  "controls": {
+    "tourTitle": "Talaan guided tour",
+    "play": "Play",
+    "pause": "Pause",
+    "prev": "Previous",
+    "next": "Next",
+    "voiceOn": "Voice on",
+    "voiceOff": "Voice off",
+    "sceneOf": "{current} of {total}",
+    "language": "Language",
+    "replay": "Replay tour",
+    "voiceMissing": "No voice for this language on this device. Captions are on.",
+    "mockNote": "Sample data for illustration. Talaan is in design.",
+    "startUsing": "Start using Talaan",
+    "close": "Close tour",
+    "voiceLabel": "Voice",
+    "sounds": "Sounds",
+    "female": "Female",
+    "male": "Male",
+    "testVoice": "Test voice",
+    "guess": "guess",
+    "otherLang": "other language",
+    "noVoices": "This browser has no speech voices. Captions still play. Try Microsoft Edge or Google Chrome, or install a voice in your device settings.",
+    "voiceTipTl": "For Tagalog, Microsoft Edge offers Filipino voices (Blessica and Angelo). Other browsers read Tagalog with an English voice.",
+    "loadingVoices": "Loading voices…",
+    "testLine": "Hi, I’m {name}. Let’s get started."
+  },
+  "nav": {
+    "home": "Home",
+    "clients": "Clients",
+    "payRuns": "Pay runs",
+    "files": "Files",
+    "employees": "Employees"
+  },
+  "scenes": {
+    "intro": {
+      "title": "Hi, I’m {name}",
+      "line": "Hi, I’m {name}, your guide to Talaan. In two minutes I’ll show you how to run payroll for all your clients, with fewer clicks and fewer mistakes."
+    },
+    "home": {
+      "title": "Your home screen",
+      "line": "Every client on one screen. Green means on track, yellow means a deadline is near, and red means something needs you today."
+    },
+    "payrun": {
+      "title": "Run payroll in five steps",
+      "line": "Pick the client and the cutoff, bring in the hours, let Talaan check them, approve, then get your files. One step per screen, so you always know where you are."
+    },
+    "checks": {
+      "title": "Talaan catches mistakes for you",
+      "line": "Before anything is paid, Talaan checks every employee. Red stops you until it’s fixed. Yellow asks for a short reason. Each message tells you how to fix it."
+    },
+    "approve": {
+      "title": "Two people, one approval",
+      "line": "The person who prepares payroll can’t approve it. The business owner gets a simple summary on their phone and taps Approve. After that, the pay run is locked."
+    },
+    "files": {
+      "title": "Every file, named and ready",
+      "line": "Talaan makes the files each office needs, already named and in the right format. A checklist shows where to upload each one and when it’s due. For now you upload them yourself; Talaan reminds you and keeps the receipt."
+    },
+    "xero": {
+      "title": "Your books stay in step",
+      "line": "One click sends the approved payroll to the client’s Xero as a journal. No retyping, and the totals match."
+    },
+    "phone": {
+      "title": "Payslips on any phone",
+      "line": "Employees open their payslip and their BIR Form 2316 on their phone, in English, Tagalog or Chinese. No more printing."
+    },
+    "ask": {
+      "title": "Ask Tala, get the source",
+      "line": "Not sure about a rule? Ask me. I answer from official issuances and show you the source. If I can’t find one, I say so and pass it to your adviser."
+    },
+    "language": {
+      "title": "Your language",
+      "line": "Switch between English, Tagalog and Chinese at any time. Terms like SSS and BIR stay the same, so nothing gets lost."
+    },
+    "ready": {
+      "title": "Ready when you are",
+      "line": "That’s Talaan: guided steps, automatic checks, and every file ready. Let’s run your first payroll."
+    }
+  },
+  "ui": {
+    "welcome": "Payroll and compliance for every client",
+    "tilePayroll": "Payroll",
+    "tileFiles": "Government files",
+    "tileXero": "Xero sync",
+    "greeting": "Good morning, Maricel",
+    "clientsCount": "40 clients",
+    "colClient": "Client",
+    "colStaff": "Staff",
+    "colNext": "Next step",
+    "colStatus": "Status",
+    "next1": "Send payslips",
+    "next2": "Pay SSS contributions",
+    "next3": "Approve pay run",
+    "next4": "File BIR 1601-C",
+    "dueIn": "Due in {days} days",
+    "overdue": "1 day late",
+    "statusOk": "On track",
+    "statusSoon": "Due soon",
+    "statusLate": "Needs you today",
+    "step1": "Choose cutoff",
+    "step2": "Add hours",
+    "step3": "Check",
+    "step4": "Approve",
+    "step5": "Get files",
+    "stepOf": "Step {n} of 5",
+    "dropHint": "Drop your timesheet here",
+    "rowsFound": "38 employees found, hours matched",
+    "mapMemory": "We remember your column setup",
+    "continue": "Continue",
+    "checksTitle": "Checks before payment",
+    "checksSummary": "1 to fix, 1 to explain, 36 ready",
+    "checkRed": "Ana Cruz: SSS number needs 10 digits. You typed 9.",
+    "fixNow": "Fix now",
+    "checkAmber": "Ben Reyes: net pay is 32% higher than last cutoff.",
+    "addReason": "Add a reason",
+    "checkOk1": "Minimum wage check passed (NCR)",
+    "checkOk2": "Contributions use the 2026 tables",
+    "summaryTitle": "Pay run summary",
+    "employees": "Employees",
+    "gross": "Gross pay",
+    "govt": "Government contributions",
+    "netPay": "Net pay",
+    "approve": "Approve",
+    "preparedBy": "Prepared by Jun",
+    "approvedBy": "Approved by Ana, owner",
+    "roleOnlyNote": "Jun can’t approve his own pay run",
+    "lockedNote": "Locked after approval",
+    "filesTitle": "Files for this cutoff",
+    "colFile": "File",
+    "colUpload": "Upload at",
+    "colDue": "Due",
+    "colDone": "Done",
+    "fileSSS": "SSS contribution file",
+    "filePH": "PhilHealth remittance file",
+    "filePI": "Pag-IBIG remittance file",
+    "fileBIR": "BIR 1601-C form data",
+    "fileBank": "BDO payroll file",
+    "receiptSaved": "Receipt saved",
+    "journalTitle": "Payroll journal",
+    "colAccount": "Account",
+    "debit": "Debit",
+    "credit": "Credit",
+    "total": "Total",
+    "sentXero": "Sent to Xero",
+    "accSalaries": "Salaries expense",
+    "accEmployer": "Employer contributions expense",
+    "accSSS": "SSS payable",
+    "accPH": "PhilHealth payable",
+    "accPI": "Pag-IBIG payable",
+    "accWHT": "Withholding tax payable",
+    "accNet": "Net pay payable",
+    "payslipTitle": "Payslip",
+    "cutoffLabel": "1st cutoff, October 2026",
+    "basicPay": "Basic pay",
+    "overtime": "Overtime",
+    "nightDiff": "Night differential",
+    "grossPay": "Gross pay",
+    "deductions": "Deductions",
+    "download2316": "Download BIR Form 2316",
+    "askQ": "Is 13th month pay taxable?",
+    "askA": "13th month pay and other benefits are tax-free up to ₱90,000 a year. Only the amount above that is taxed.",
+    "askSource": "Source",
+    "askPlaceholder": "Ask Tala a question",
+    "approvedShort": "Pay run approved",
+    "readyPoint1": "Guided steps",
+    "readyPoint2": "Automatic checks",
+    "readyPoint3": "Every file ready"
+  }
+}

@@ -1,0 +1,2243 @@
+[
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "sss-rate",
+  "category": "contributions",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "sss",
+    3
+   ],
+   [
+    "social security",
+    3
+   ],
+   [
+    "msc",
+    2
+   ],
+   [
+    "salary credit",
+    3
+   ]
+  ],
+  "source": "RA 11199 (Social Security Act of 2018), contribution schedule from January 2025",
+  "sourceUrl": "https://www.sss.gov.ph",
+  "effective": "2025-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How much is the SSS contribution?",
+   "tl": "Magkano ang SSS contribution?",
+   "zh": "SSS 缴款是多少？"
+  },
+  "a": {
+   "en": "SSS contributions are 15% of the monthly salary credit: 10% paid by the employer and 5% by the employee. The salary credit runs from ₱5,000 to ₱35,000, in ₱500 steps.",
+   "tl": "Ang SSS contribution ay 15% ng monthly salary credit: 10% ang employer at 5% ang empleyado. Ang salary credit ay mula ₱5,000 hanggang ₱35,000, kada ₱500.",
+   "zh": "SSS 缴款为月薪基数的 15%：雇主 10%，员工 5%。月薪基数从 ₱5,000 到 ₱35,000，每档 ₱500。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "sss-ec",
+  "category": "contributions",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "ec",
+    2
+   ],
+   [
+    "employees compensation",
+    3
+   ],
+   [
+    "employees’ compensation",
+    3
+   ]
+  ],
+  "source": "PD 626 (Employees’ Compensation Program) and SSS contribution schedule",
+  "sourceUrl": "https://www.sss.gov.ph",
+  "effective": "2025-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What is the EC contribution and who pays it?",
+   "tl": "Ano ang EC contribution at sino ang nagbabayad?",
+   "zh": "EC 缴款是什么？由谁缴纳？"
+  },
+  "a": {
+   "en": "The Employees’ Compensation (EC) contribution is paid by the employer only: ₱10 a month when the salary credit is below ₱15,000, and ₱30 a month from ₱15,000 up. It is not deducted from the employee.",
+   "tl": "Ang Employees’ Compensation (EC) ay employer lang ang nagbabayad: ₱10 kada buwan kung mababa sa ₱15,000 ang salary credit, at ₱30 kung ₱15,000 pataas. Hindi ito kinakaltas sa empleyado.",
+   "zh": "雇员补偿（EC）缴款只由雇主缴纳：月薪基数低于 ₱15,000 时每月 ₱10，₱15,000 及以上每月 ₱30。不从员工工资中扣除。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "philhealth-rate",
+  "category": "contributions",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "philhealth",
+    3
+   ],
+   [
+    "phic",
+    3
+   ],
+   [
+    "premium",
+    1
+   ]
+  ],
+  "source": "RA 11223 (Universal Health Care Act) premium schedule",
+  "sourceUrl": "https://www.philhealth.gov.ph",
+  "effective": "2025-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How much is the PhilHealth premium?",
+   "tl": "Magkano ang PhilHealth premium?",
+   "zh": "PhilHealth 保费是多少？"
+  },
+  "a": {
+   "en": "PhilHealth premiums are 5% of basic monthly salary, shared equally by employer and employee. Salaries below ₱10,000 are charged as ₱10,000, and salaries above ₱100,000 as ₱100,000.",
+   "tl": "Ang PhilHealth premium ay 5% ng basic monthly salary, hati ang employer at empleyado. Kung mababa sa ₱10,000 ang sahod, ₱10,000 ang batayan; kung lampas ₱100,000, ₱100,000 ang batayan.",
+   "zh": "PhilHealth 保费为月基本工资的 5%，雇主和员工各付一半。月薪低于 ₱10,000 按 ₱10,000 计，高于 ₱100,000 按 ₱100,000 计。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "pagibig-rate",
+  "category": "contributions",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "pag-ibig",
+    3
+   ],
+   [
+    "pagibig",
+    3
+   ],
+   [
+    "hdmf",
+    3
+   ]
+  ],
+  "source": "HDMF Circular No. 460 (2024)",
+  "sourceUrl": "https://www.pagibigfund.gov.ph",
+  "effective": "2024-02",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How much is the Pag-IBIG contribution?",
+   "tl": "Magkano ang Pag-IBIG contribution?",
+   "zh": "Pag-IBIG 缴款是多少？"
+  },
+  "a": {
+   "en": "The employee pays 2% (1% if earning ₱1,500 or less) and the employer pays 2%, on pay up to ₱10,000. That is at most ₱200 each a month.",
+   "tl": "Ang empleyado ay 2% (1% kung kumikita ng ₱1,500 o mas mababa) at ang employer ay 2%, sa sahod hanggang ₱10,000. Hanggang ₱200 bawat isa kada buwan.",
+   "zh": "员工缴 2%（月收入 ₱1,500 或以下为 1%），雇主缴 2%，计费工资上限 ₱10,000，即每人每月最多 ₱200。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "contrib-split",
+  "category": "contributions",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "cutoff",
+    2
+   ],
+   [
+    "semi-monthly",
+    3
+   ],
+   [
+    "split",
+    2
+   ],
+   [
+    "twice a month",
+    3
+   ],
+   [
+    "dalawang beses",
+    3
+   ],
+   [
+    "hatiin",
+    2
+   ],
+   [
+    "半月",
+    2
+   ],
+   [
+    "两次",
+    3
+   ],
+   [
+    "月度缴款",
+    3
+   ]
+  ],
+  "source": "Talaan practice note: agencies compute contributions monthly",
+  "sourceUrl": "",
+  "effective": "2026-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How are monthly contributions handled when we pay twice a month?",
+   "tl": "Paano ang buwanang kontribusyon kung dalawang beses magpasahod?",
+   "zh": "每月发薪两次时，月度缴款怎么处理？"
+  },
+  "a": {
+   "en": "Agencies compute SSS, PhilHealth and Pag-IBIG per month. Talaan splits each monthly amount evenly across the two cutoffs; some employers deduct it all in one cutoff instead. Either is fine as long as the monthly total is right.",
+   "tl": "Buwanan kinukuwenta ng mga ahensya ang SSS, PhilHealth at Pag-IBIG. Hinahati ito ng Talaan nang pantay sa dalawang cutoff; ang ibang employer ay kinakaltas lahat sa isang cutoff. Ayos lang alinman basta tama ang total kada buwan.",
+   "zh": "各机构按月计算 SSS、PhilHealth 和 Pag-IBIG。Talaan 把月度金额平均分到两个周期；也有雇主在其中一期一次扣完。只要每月合计正确，两种做法都可以。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "remit-deadlines",
+  "category": "contributions",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "remit",
+    2
+   ],
+   [
+    "remittance",
+    2
+   ],
+   [
+    "deadline",
+    2
+   ],
+   [
+    "due",
+    2
+   ],
+   [
+    "due date",
+    2
+   ],
+   [
+    "when to pay",
+    2
+   ],
+   [
+    "kailan ang deadline",
+    3
+   ],
+   [
+    "何时缴款",
+    4
+   ],
+   [
+    "缴款期限",
+    3
+   ],
+   [
+    "sss",
+    1
+   ],
+   [
+    "philhealth",
+    1
+   ],
+   [
+    "pag-ibig",
+    1
+   ]
+  ],
+  "source": "SSS, PhilHealth and Pag-IBIG employer payment schedules",
+  "sourceUrl": "",
+  "effective": "2026-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "When are SSS, PhilHealth and Pag-IBIG payments due?",
+   "tl": "Kailan ang deadline ng SSS, PhilHealth at Pag-IBIG?",
+   "zh": "SSS、PhilHealth 和 Pag-IBIG 何时缴款？"
+  },
+  "a": {
+   "en": "Each agency sets its own monthly payment schedule, and the due day can depend on the employer number or name. Check each agency’s current schedule for the employer, then set the due days in Talaan’s client settings so reminders are right.",
+   "tl": "May sariling buwanang schedule ang bawat ahensya, at puwedeng nakadepende ito sa employer number o pangalan. Tingnan ang kasalukuyang schedule ng bawat ahensya, saka itakda ang mga araw sa settings ng client sa Talaan para tama ang paalala.",
+   "zh": "各机构有自己的月度缴款时间表，截止日可能取决于雇主编号或名称。请核对各机构对该雇主的现行时间表，再在 Talaan 客户设置中填写截止日，确保提醒准确。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "sss-late",
+  "category": "contributions",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "late",
+    2
+   ],
+   [
+    "penalty",
+    2
+   ],
+   [
+    "multa",
+    2
+   ],
+   [
+    "罚",
+    2
+   ],
+   [
+    "sss",
+    1
+   ]
+  ],
+  "source": "RA 11199, Sec. 22 (penalty on late remittance)",
+  "sourceUrl": "https://www.sss.gov.ph",
+  "effective": "2019-02",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What is the penalty for paying SSS late?",
+   "tl": "Ano ang multa kapag late ang bayad sa SSS?",
+   "zh": "SSS 逾期缴款有什么处罚？"
+  },
+  "a": {
+   "en": "Late SSS contributions carry a penalty of 2% a month on the unpaid amount until paid. Unremitted employee deductions can also lead to criminal liability.",
+   "tl": "May penalty na 2% kada buwan sa hindi nabayarang SSS contribution hanggang mabayaran. Puwede ring magkaroon ng kasong kriminal kapag hindi na-remit ang kinaltas sa empleyado.",
+   "zh": "逾期的 SSS 缴款按未缴金额每月加收 2% 罚款，直至缴清。已扣员工款项而未上缴的，还可能承担刑事责任。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "wht-table",
+  "category": "tax",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "withholding",
+    3
+   ],
+   [
+    "tax table",
+    3
+   ],
+   [
+    "wht",
+    3
+   ],
+   [
+    "bracket",
+    2
+   ],
+   [
+    "预扣",
+    3
+   ]
+  ],
+  "source": "BIR Revenue Regulations No. 11-2018, Annex E (withholding tax table, 2023 onwards)",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2023-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Which withholding tax table do we use?",
+   "tl": "Anong withholding tax table ang gagamitin?",
+   "zh": "预扣税用哪张税表？"
+  },
+  "a": {
+   "en": "Use the TRAIN law table in effect from 2023. Semi-monthly: zero up to ₱10,417; 15% of the excess over ₱10,417 up to ₱16,667; ₱937.50 plus 20% over ₱16,667 up to ₱33,333; and higher brackets above that. Taxable pay is gross pay minus non-taxable items and the employee’s SSS, PhilHealth and Pag-IBIG.",
+   "tl": "Gamitin ang TRAIN law table mula 2023. Semi-monthly: walang tax hanggang ₱10,417; 15% ng sobra sa ₱10,417 hanggang ₱16,667; ₱937.50 at 20% ng sobra sa ₱16,667 hanggang ₱33,333; at mas mataas pa lampas doon. Ang taxable ay gross pay bawas ang non-taxable at ang SSS, PhilHealth at Pag-IBIG ng empleyado.",
+   "zh": "使用 2023 年起生效的 TRAIN 法税表。半月薪：₱10,417 以下免税；₱10,417 至 ₱16,667 之间按超出部分的 15%；₱16,667 至 ₱33,333 之间为 ₱937.50 加超出部分的 20%；更高档次依此类推。应税工资为应发工资减去免税项目及员工承担的 SSS、PhilHealth 和 Pag-IBIG。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "mwe",
+  "category": "tax",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "minimum wage earner",
+    4
+   ],
+   [
+    "mwe",
+    3
+   ],
+   [
+    "exempt",
+    1
+   ],
+   [
+    "income tax",
+    3
+   ],
+   [
+    "tax",
+    1
+   ],
+   [
+    "最低工资收入",
+    3
+   ],
+   [
+    "所得税",
+    3
+   ]
+  ],
+  "source": "NIRC Sec. 24(A)(2), as amended by RA 9504",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2008-07",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Do minimum wage earners pay income tax?",
+   "tl": "May income tax ba ang minimum wage earner?",
+   "zh": "最低工资收入者要缴个人所得税吗？"
+  },
+  "a": {
+   "en": "No. Minimum wage earners pay no income tax on their statutory minimum wage, holiday pay, overtime, night differential and hazard pay. Other taxable income they receive is still taxed.",
+   "tl": "Wala. Walang income tax ang minimum wage earner sa minimum wage, holiday pay, overtime, night differential at hazard pay. May tax pa rin ang ibang taxable na kita nila.",
+   "zh": "不用。最低工资收入者的法定最低工资、节假日工资、加班费、夜班津贴和危险津贴免缴个人所得税，但其他应税收入仍需缴税。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "thirteenth-tax",
+  "category": "tax",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "13th",
+    2
+   ],
+   [
+    "thirteenth",
+    2
+   ],
+   [
+    "十三",
+    2
+   ],
+   [
+    "tax",
+    1
+   ],
+   [
+    "taxable",
+    1
+   ],
+   [
+    "buwis",
+    1
+   ],
+   [
+    "税",
+    1
+   ],
+   [
+    "90,000",
+    3
+   ],
+   [
+    "bonus",
+    1
+   ]
+  ],
+  "source": "NIRC Sec. 32(B)(7)(e), as amended by RA 10963 (TRAIN Law)",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2018-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Is 13th month pay taxable?",
+   "tl": "May tax ba ang 13th month pay?",
+   "zh": "第十三个月工资要缴税吗？"
+  },
+  "a": {
+   "en": "13th month pay and other benefits are tax-free up to ₱90,000 a year in total. Only the amount above ₱90,000 is taxable.",
+   "tl": "Walang tax ang 13th month pay at iba pang benefits hanggang ₱90,000 kada taon. Ang sobra lang sa ₱90,000 ang may tax.",
+   "zh": "第十三个月工资及其他福利每年合计 ₱90,000 以内免税，只有超过 ₱90,000 的部分需要缴税。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "de-minimis",
+  "category": "tax",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "de minimis",
+    4
+   ],
+   [
+    "rice",
+    2
+   ],
+   [
+    "uniform",
+    2
+   ],
+   [
+    "laundry",
+    2
+   ],
+   [
+    "allowance",
+    1
+   ],
+   [
+    "bigas",
+    2
+   ],
+   [
+    "小额",
+    3
+   ],
+   [
+    "大米",
+    2
+   ]
+  ],
+  "source": "BIR Revenue Regulations No. 29-2025 (effective 6 January 2026), amending RR 2-98",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2026-01-06",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What are the 2026 de minimis limits?",
+   "tl": "Ano ang mga limit ng de minimis sa 2026?",
+   "zh": "2026 年小额免税福利的上限是多少？"
+  },
+  "a": {
+   "en": "From 6 January 2026: rice subsidy ₱2,500 a month; uniform and clothing ₱8,000 a year; medical cash allowance to dependents ₱2,000 a semester; laundry ₱400 a month; Christmas and anniversary gifts ₱6,000 a year; achievement awards and CBA or productivity incentives ₱12,000 a year; overtime meal allowance 30% of the regional minimum wage. Amounts above a limit move into the ₱90,000 other-benefits ceiling.",
+   "tl": "Mula 6 Enero 2026: rice subsidy ₱2,500 kada buwan; uniform at damit ₱8,000 kada taon; medical cash allowance sa dependents ₱2,000 kada semester; laundry ₱400 kada buwan; regalo sa Pasko at anibersaryo ₱6,000 kada taon; achievement awards at CBA o productivity incentive ₱12,000 kada taon; meal allowance sa overtime 30% ng regional minimum wage. Ang sobra ay papasok sa ₱90,000 na ceiling ng iba pang benefits.",
+   "zh": "自 2026 年 1 月 6 日起：大米补贴每月 ₱2,500；制服和服装每年 ₱8,000；家属医疗现金津贴每半年 ₱2,000；洗衣津贴每月 ₱400；圣诞及周年礼品每年 ₱6,000；成就奖及集体协议或生产力奖励每年 ₱12,000；加班餐补为地区最低工资的 30%。超出上限的部分计入 ₱90,000 其他福利额度。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "annualization",
+  "category": "tax",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "annualization",
+    4
+   ],
+   [
+    "annualize",
+    4
+   ],
+   [
+    "year-end",
+    3
+   ],
+   [
+    "refund",
+    2
+   ],
+   [
+    "december",
+    1
+   ],
+   [
+    "年终",
+    3
+   ]
+  ],
+  "source": "BIR Revenue Regulations No. 2-98, as amended by RR 11-2018 (year-end adjustment)",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2018-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What is year-end annualization?",
+   "tl": "Ano ang year-end annualization?",
+   "zh": "什么是年终税款汇算？"
+  },
+  "a": {
+   "en": "In the last payroll of the year, the employer recomputes each employee’s tax on the whole year’s pay. If too much was withheld, the excess is refunded; if too little, the shortfall is deducted, by January 25 of the next year at the latest.",
+   "tl": "Sa huling payroll ng taon, kinukuwenta ulit ng employer ang tax ng bawat empleyado batay sa buong taon. Kung sobra ang nakaltas, ibinabalik ito; kung kulang, kinakaltas ang kulang, hindi lalampas sa January 25 ng susunod na taon.",
+   "zh": "在年度最后一次发薪时，雇主按全年工资重新计算每位员工的税款。多扣的退还，少扣的补扣，最迟在次年 1 月 25 日前完成。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "substituted-filing",
+  "category": "tax",
+  "audience": [
+   "accountant",
+   "employee"
+  ],
+  "kw": [
+   [
+    "substituted filing",
+    4
+   ],
+   [
+    "itr",
+    2
+   ],
+   [
+    "sariling itr",
+    4
+   ],
+   [
+    "own income tax return",
+    4
+   ],
+   [
+    "1700",
+    2
+   ],
+   [
+    "income tax return",
+    3
+   ],
+   [
+    "报税",
+    2
+   ],
+   [
+    "自己报",
+    4
+   ],
+   [
+    "个人所得税",
+    2
+   ]
+  ],
+  "source": "BIR Revenue Regulations No. 11-2018 (substituted filing)",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2018-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Do employees need to file their own income tax return?",
+   "tl": "Kailangan bang mag-file ng sariling ITR ang empleyado?",
+   "zh": "员工需要自己报个人所得税吗？"
+  },
+  "a": {
+   "en": "Not if they qualify for substituted filing: one employer for the whole year, compensation income only, and tax withheld correctly. The employer’s Form 2316 filed with the BIR takes the place of their return.",
+   "tl": "Hindi, kung qualified sa substituted filing: iisang employer sa buong taon, sahod lang ang kita, at tama ang nakaltas na tax. Ang Form 2316 na isinumite ng employer sa BIR ang papalit sa kanilang ITR.",
+   "zh": "符合“替代申报”条件的不需要：全年只有一个雇主、只有工资收入、且税款已正确预扣。雇主向 BIR 提交的 2316 表格即视为其纳税申报。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "overtime",
+  "category": "pay",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "overtime",
+    3
+   ],
+   [
+    "ot",
+    1
+   ],
+   [
+    "obertaym",
+    3
+   ],
+   [
+    "加班",
+    3
+   ]
+  ],
+  "source": "Labor Code of the Philippines, Art. 87",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "1974-05",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How is overtime paid?",
+   "tl": "Paano binabayaran ang overtime?",
+   "zh": "加班费怎么算？"
+  },
+  "a": {
+   "en": "Work beyond 8 hours on an ordinary working day is paid at least 25% more than the hourly rate. Overtime on a rest day or holiday is paid at least 30% more than the hourly rate for that day.",
+   "tl": "Ang trabaho na lampas 8 oras sa ordinaryong araw ay may dagdag na hindi bababa sa 25% ng hourly rate. Ang overtime sa rest day o holiday ay may dagdag na hindi bababa sa 30% ng hourly rate sa araw na iyon.",
+   "zh": "普通工作日超过 8 小时的部分，至少按时薪加 25% 支付。休息日或节假日的加班，至少按当天时薪加 30% 支付。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "night-diff",
+  "category": "pay",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "night",
+    2
+   ],
+   [
+    "differential",
+    3
+   ],
+   [
+    "gabi",
+    2
+   ],
+   [
+    "夜班",
+    3
+   ],
+   [
+    "nd",
+    1
+   ]
+  ],
+  "source": "Labor Code of the Philippines, Art. 86",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "1974-05",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How is night differential paid?",
+   "tl": "Paano binabayaran ang night differential?",
+   "zh": "夜班津贴怎么算？"
+  },
+  "a": {
+   "en": "Each hour worked between 10pm and 6am earns at least 10% more than the regular hourly rate.",
+   "tl": "Bawat oras ng trabaho mula 10pm hanggang 6am ay may dagdag na hindi bababa sa 10% ng regular na hourly rate.",
+   "zh": "晚上 10 点至早上 6 点之间每工作 1 小时，至少按正常时薪加 10% 支付。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "regular-holiday",
+  "category": "pay",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "regular holiday",
+    4
+   ],
+   [
+    "holiday",
+    2
+   ],
+   [
+    "piyesta",
+    2
+   ],
+   [
+    "法定节假日",
+    4
+   ],
+   [
+    "节假日",
+    2
+   ]
+  ],
+  "source": "Labor Code of the Philippines, Art. 94; DOLE holiday pay rules",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "1974-05",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How is a regular holiday paid?",
+   "tl": "Paano binabayaran ang regular holiday?",
+   "zh": "法定节假日工资怎么算？"
+  },
+  "a": {
+   "en": "If not worked, the employee still gets 100% of the daily rate. If worked, at least 200% of the daily rate for the first 8 hours, plus 30% more per hour of overtime.",
+   "tl": "Kung hindi pumasok, 100% pa rin ng daily rate ang matatanggap. Kung pumasok, hindi bababa sa 200% ng daily rate sa unang 8 oras, at dagdag na 30% kada oras ng overtime.",
+   "zh": "不上班也照付 100% 日薪。上班的话，前 8 小时至少按日薪的 200% 支付，加班每小时再加 30%。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "special-day",
+  "category": "pay",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "special",
+    3
+   ],
+   [
+    "non-working",
+    3
+   ],
+   [
+    "special day",
+    4
+   ],
+   [
+    "特别假日",
+    4
+   ]
+  ],
+  "source": "DOLE Labor Advisory on holiday pay rules (issued yearly)",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "2026-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How is a special non-working day paid?",
+   "tl": "Paano binabayaran ang special non-working day?",
+   "zh": "特别非工作日工资怎么算？"
+  },
+  "a": {
+   "en": "No work, no pay, unless company policy or a contract says otherwise. If worked, the employee gets at least 130% of the daily rate for the first 8 hours, or 150% if it is also their rest day.",
+   "tl": "No work, no pay, maliban kung iba ang patakaran ng kumpanya o kontrata. Kung pumasok, hindi bababa sa 130% ng daily rate sa unang 8 oras, o 150% kung rest day din niya.",
+   "zh": "不上班不付薪，除非公司政策或合同另有规定。上班的话，前 8 小时至少按日薪的 130% 支付；如果当天也是其休息日，则为 150%。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "rest-day",
+  "category": "pay",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "rest day",
+    4
+   ],
+   [
+    "day off",
+    3
+   ],
+   [
+    "休息日",
+    4
+   ]
+  ],
+  "source": "Labor Code of the Philippines, Art. 93",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "1974-05",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How is work on a rest day paid?",
+   "tl": "Paano binabayaran ang trabaho sa rest day?",
+   "zh": "休息日上班怎么付薪？"
+  },
+  "a": {
+   "en": "Work on the employee’s scheduled rest day is paid at least 130% of the daily rate for the first 8 hours.",
+   "tl": "Ang trabaho sa nakatakdang rest day ng empleyado ay binabayaran ng hindi bababa sa 130% ng daily rate sa unang 8 oras.",
+   "zh": "在员工排定的休息日上班，前 8 小时至少按日薪的 130% 支付。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "min-wage-ncr",
+  "category": "pay",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "minimum wage",
+    4
+   ],
+   [
+    "minimum",
+    1
+   ],
+   [
+    "wage order",
+    4
+   ],
+   [
+    "ncr",
+    2
+   ],
+   [
+    "metro manila",
+    3
+   ],
+   [
+    "最低工资",
+    4
+   ]
+  ],
+  "source": "Wage Order No. NCR-28 (effective 26 September 2026), NWPC",
+  "sourceUrl": "https://nwpc.dole.gov.ph",
+  "effective": "2026-09-26",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What is the minimum wage in Metro Manila?",
+   "tl": "Magkano ang minimum wage sa Metro Manila?",
+   "zh": "马尼拉大都会的最低工资是多少？"
+  },
+  "a": {
+   "en": "From 26 September 2026, Wage Order NCR-28 sets ₱755 a day for non-agriculture and ₱718 for agriculture, retail and service with 15 or fewer workers, and manufacturing with fewer than 10. Rates differ by region; check the regional wage board and update each client’s minimum wage in Talaan.",
+   "tl": "Mula 26 Setyembre 2026, sa Wage Order NCR-28: ₱755 kada araw sa non-agriculture at ₱718 sa agriculture, retail at service na may 15 o mas kaunting manggagawa, at manufacturing na may mas kaunti sa 10. Iba-iba ito bawat rehiyon; tingnan ang regional wage board at i-update ang minimum wage ng bawat client sa Talaan.",
+   "zh": "自 2026 年 9 月 26 日起，NCR-28 号工资令规定：非农业每日 ₱755；农业、15 人及以下的零售和服务业、不足 10 人的制造业每日 ₱718。各地区标准不同，请核对地区工资委员会公告，并在 Talaan 中更新每个客户的最低工资。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "daily-rate",
+  "category": "pay",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "daily rate",
+    4
+   ],
+   [
+    "factor",
+    3
+   ],
+   [
+    "261",
+    3
+   ],
+   [
+    "313",
+    3
+   ],
+   [
+    "日薪",
+    4
+   ]
+  ],
+  "source": "DOLE Handbook on Workers’ Statutory Monetary Benefits (equivalent monthly rate factors)",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "2024-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do we turn a monthly salary into a daily rate?",
+   "tl": "Paano kunin ang daily rate mula sa buwanang sahod?",
+   "zh": "月薪怎么换算成日薪？"
+  },
+  "a": {
+   "en": "Daily rate = monthly salary × 12 ÷ the number of paid days a year. Use 261 for a 5-day week and 313 for a 6-day week. The hourly rate is the daily rate ÷ 8.",
+   "tl": "Daily rate = buwanang sahod × 12 ÷ bilang ng bayad na araw kada taon. Gamitin ang 261 kung 5 araw kada linggo at 313 kung 6 na araw. Ang hourly rate ay daily rate ÷ 8.",
+   "zh": "日薪 = 月薪 × 12 ÷ 全年计薪天数。每周 5 天用 261，每周 6 天用 313。时薪 = 日薪 ÷ 8。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "thirteenth-when",
+  "category": "benefits",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "13th",
+    2
+   ],
+   [
+    "thirteenth",
+    2
+   ],
+   [
+    "十三",
+    2
+   ],
+   [
+    "when",
+    1
+   ],
+   [
+    "december",
+    2
+   ],
+   [
+    "kailan",
+    1
+   ],
+   [
+    "什么时候",
+    1
+   ],
+   [
+    "compute",
+    1
+   ],
+   [
+    "how much",
+    1
+   ],
+   [
+    "magkano",
+    1
+   ],
+   [
+    "多少",
+    1
+   ],
+   [
+    "prorate",
+    2
+   ]
+  ],
+  "source": "PD 851 and the Revised Guidelines on 13th month pay",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "1975-12",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How is 13th month pay computed and when is it due?",
+   "tl": "Paano kinukuwenta ang 13th month pay at kailan ito ibinibigay?",
+   "zh": "第十三个月工资怎么算？何时发放？"
+  },
+  "a": {
+   "en": "Rank-and-file employees get at least one twelfth of the basic salary they earned during the year, paid by December 24. Employees who leave during the year get a prorated amount with their final pay.",
+   "tl": "Ang rank-and-file ay makakatanggap ng hindi bababa sa one twelfth ng basic salary na kinita sa taon, ibibigay hanggang December 24. Ang umalis sa kalagitnaan ng taon ay may prorated na halaga kasama ng final pay.",
+   "zh": "普通员工至少获得当年所得基本工资的十二分之一，最迟 12 月 24 日发放。年中离职的员工按比例计算，随最终工资一并发放。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "sil",
+  "category": "benefits",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "service incentive",
+    4
+   ],
+   [
+    "sil",
+    3
+   ],
+   [
+    "vacation leave",
+    3
+   ],
+   [
+    "leave",
+    1
+   ],
+   [
+    "bakasyon",
+    2
+   ],
+   [
+    "年假",
+    3
+   ]
+  ],
+  "source": "Labor Code of the Philippines, Art. 95",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "1974-05",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What is service incentive leave?",
+   "tl": "Ano ang service incentive leave?",
+   "zh": "什么是服务奖励假？"
+  },
+  "a": {
+   "en": "Employees with at least one year of service get 5 days of paid leave a year. Unused days are converted to cash at the end of the year or when the employee leaves. Some employers, such as those with fewer than 10 workers, are exempt.",
+   "tl": "Ang empleyadong may hindi bababa sa isang taon ng serbisyo ay may 5 araw na bayad na leave kada taon. Ang hindi nagamit ay ginagawang cash sa katapusan ng taon o pag-alis ng empleyado. May ilang exempted, gaya ng employer na may mas kaunti sa 10 manggagawa.",
+   "zh": "工作满一年的员工每年享有 5 天带薪假。未用完的天数在年底或离职时折算成现金。部分雇主可豁免，例如员工不足 10 人的雇主。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "maternity",
+  "category": "benefits",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "maternity",
+    4
+   ],
+   [
+    "manganganak",
+    3
+   ],
+   [
+    "产假",
+    4
+   ],
+   [
+    "105",
+    3
+   ]
+  ],
+  "source": "RA 11210 (105-Day Expanded Maternity Leave Law)",
+  "sourceUrl": "https://www.sss.gov.ph",
+  "effective": "2019-03",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How long is maternity leave?",
+   "tl": "Gaano katagal ang maternity leave?",
+   "zh": "产假有多长？"
+  },
+  "a": {
+   "en": "105 days with full pay for live childbirth, plus 15 days more for solo mothers, and 60 days for miscarriage or emergency termination of pregnancy. The mother may extend by 30 days without pay and may give up to 7 of her days to the child’s father.",
+   "tl": "105 araw na may buong sahod sa panganganak, dagdag na 15 araw sa solo mother, at 60 araw kung nakunan. Puwedeng i-extend ng 30 araw nang walang bayad, at puwedeng ibigay ang hanggang 7 araw sa ama ng bata.",
+   "zh": "正常分娩享有 105 天全薪产假，单亲母亲再加 15 天，流产或紧急终止妊娠为 60 天。可再延长 30 天无薪假，并可把最多 7 天转给孩子的父亲。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "paternity",
+  "category": "benefits",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "paternity",
+    4
+   ],
+   [
+    "father",
+    2
+   ],
+   [
+    "tatay",
+    2
+   ],
+   [
+    "陪产",
+    4
+   ]
+  ],
+  "source": "RA 8187 (Paternity Leave Act of 1996); RA 11210 (transferred days)",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "1996-06",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How long is paternity leave?",
+   "tl": "Gaano katagal ang paternity leave?",
+   "zh": "陪产假有多长？"
+  },
+  "a": {
+   "en": "7 days with full pay for a married father, for the first four deliveries of his lawful wife. He can get up to 7 more days if the mother transfers part of her maternity leave. A bill to extend paternity leave was filed in 2026 but is not law.",
+   "tl": "7 araw na may buong sahod para sa amang may asawa, para sa unang apat na panganganak ng kanyang asawa. Puwedeng madagdagan ng hanggang 7 araw kung ilipat ng ina ang bahagi ng kanyang maternity leave. May panukalang batas noong 2026 para pahabain ito pero hindi pa batas.",
+   "zh": "已婚父亲在合法配偶前四次分娩时享有 7 天全薪陪产假。如母亲转让部分产假，可再增加最多 7 天。2026 年已有延长陪产假的议案，但尚未成为法律。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "solo-parent",
+  "category": "benefits",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "solo parent",
+    4
+   ],
+   [
+    "single parent",
+    3
+   ],
+   [
+    "单亲",
+    4
+   ]
+  ],
+  "source": "RA 11861 (Expanded Solo Parents Welfare Act)",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "2022-06",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What leave do solo parents get?",
+   "tl": "Anong leave ang para sa solo parent?",
+   "zh": "单亲父母有什么假？"
+  },
+  "a": {
+   "en": "Solo parents with at least 6 months of service get up to 7 working days of paid parental leave a year, on top of other leave.",
+   "tl": "Ang solo parent na may hindi bababa sa 6 na buwan ng serbisyo ay may hanggang 7 araw ng trabaho na bayad na parental leave kada taon, dagdag sa ibang leave.",
+   "zh": "工作满 6 个月的单亲父母每年享有最多 7 个工作日的带薪育儿假，另计于其他假期。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "vawc-leave",
+  "category": "benefits",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "vawc",
+    4
+   ],
+   [
+    "violence",
+    3
+   ],
+   [
+    "karahasan",
+    3
+   ],
+   [
+    "暴力",
+    3
+   ]
+  ],
+  "source": "RA 9262 (Anti-Violence Against Women and Their Children Act), Sec. 43",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "2004-03",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What is VAWC leave?",
+   "tl": "Ano ang VAWC leave?",
+   "zh": "什么是 VAWC 假？"
+  },
+  "a": {
+   "en": "A woman employee who is a victim of violence under RA 9262 can take up to 10 days of paid leave, extendable when needed, to attend to medical and legal concerns.",
+   "tl": "Ang babaeng empleyado na biktima ng karahasan sa ilalim ng RA 9262 ay may hanggang 10 araw na bayad na leave, na puwedeng pahabain kung kailangan, para sa medikal at legal na usapin.",
+   "zh": "根据 RA 9262 遭受暴力的女性员工，可享有最多 10 天带薪假（必要时可延长），用于处理医疗和法律事务。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "special-leave-women",
+  "category": "benefits",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "magna carta",
+    4
+   ],
+   [
+    "gynecological",
+    4
+   ],
+   [
+    "special leave",
+    3
+   ],
+   [
+    "妇科",
+    4
+   ]
+  ],
+  "source": "RA 9710 (Magna Carta of Women), Sec. 18",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "2009-08",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What is the special leave for women?",
+   "tl": "Ano ang special leave para sa kababaihan?",
+   "zh": "女性特别假是什么？"
+  },
+  "a": {
+   "en": "A woman employee with at least 6 months of service in the last 12 months can take up to 2 months of leave with full pay after surgery for a gynecological disorder.",
+   "tl": "Ang babaeng empleyado na may hindi bababa sa 6 na buwang serbisyo sa nakaraang 12 buwan ay puwedeng mag-leave nang hanggang 2 buwan na may buong sahod pagkatapos ng operasyon sa gynecological na kondisyon.",
+   "zh": "过去 12 个月内工作满 6 个月的女性员工，因妇科疾病手术后可享有最多 2 个月全薪假。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "final-pay",
+  "category": "separation",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "final pay",
+    4
+   ],
+   [
+    "last pay",
+    3
+   ],
+   [
+    "resign",
+    2
+   ],
+   [
+    "huling sahod",
+    4
+   ],
+   [
+    "离职",
+    3
+   ],
+   [
+    "最终工资",
+    4
+   ]
+  ],
+  "source": "DOLE Labor Advisory No. 06, Series of 2020",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "2020-04",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "When must final pay be released?",
+   "tl": "Kailan dapat ibigay ang final pay?",
+   "zh": "最终工资必须什么时候发放？"
+  },
+  "a": {
+   "en": "Within 30 days from the date the employee leaves, unless a company policy or agreement is more favourable. Final pay includes unpaid salary, prorated 13th month pay, cash value of unused service incentive leave and any other amounts due.",
+   "tl": "Sa loob ng 30 araw mula sa pag-alis ng empleyado, maliban kung mas mabuti ang patakaran o kasunduan ng kumpanya. Kasama sa final pay ang hindi pa nabayarang sahod, prorated na 13th month pay, cash ng hindi nagamit na service incentive leave, at iba pang dapat bayaran.",
+   "zh": "自员工离职之日起 30 天内发放，公司政策或协议更优的除外。最终工资包括未付工资、按比例的第十三个月工资、未用服务奖励假折现及其他应付款项。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "coe",
+  "category": "separation",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "certificate of employment",
+    4
+   ],
+   [
+    "coe",
+    4
+   ],
+   [
+    "在职证明",
+    4
+   ],
+   [
+    "离职证明",
+    4
+   ]
+  ],
+  "source": "DOLE Labor Advisory No. 06, Series of 2020",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "2020-04",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How fast must a certificate of employment be issued?",
+   "tl": "Gaano kabilis dapat ibigay ang certificate of employment?",
+   "zh": "在职或离职证明要多快开出？"
+  },
+  "a": {
+   "en": "Within 3 days from the employee’s request.",
+   "tl": "Sa loob ng 3 araw mula nang hilingin ng empleyado.",
+   "zh": "员工提出申请后 3 天内。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "separation-pay",
+  "category": "separation",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "separation pay",
+    4
+   ],
+   [
+    "redundancy",
+    3
+   ],
+   [
+    "retrenchment",
+    3
+   ],
+   [
+    "closure",
+    2
+   ],
+   [
+    "遣散",
+    4
+   ]
+  ],
+  "source": "Labor Code of the Philippines, Arts. 298 and 299",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "1974-05",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How much is separation pay?",
+   "tl": "Magkano ang separation pay?",
+   "zh": "遣散费是多少？"
+  },
+  "a": {
+   "en": "For redundancy or labour-saving devices: one month’s pay per year of service. For retrenchment, closure not due to serious losses, or disease: half a month’s pay per year of service. Either way, at least one month’s pay; six months or more counts as a full year.",
+   "tl": "Sa redundancy o labor-saving device: isang buwang sahod kada taon ng serbisyo. Sa retrenchment, pagsasara na hindi dahil sa malaking lugi, o sakit: kalahating buwan kada taon. Alinman, hindi bababa sa isang buwang sahod; ang 6 na buwan pataas ay bilang isang buong taon.",
+   "zh": "因岗位冗余或引进节省人力设备：每服务一年发一个月工资。因裁员、非严重亏损的停业或疾病：每服务一年发半个月工资。无论哪种至少一个月工资；满 6 个月按一年计。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "retirement-pay",
+  "category": "separation",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "retirement",
+    4
+   ],
+   [
+    "retire",
+    3
+   ],
+   [
+    "pagreretiro",
+    3
+   ],
+   [
+    "退休",
+    4
+   ]
+  ],
+  "source": "RA 7641 (Retirement Pay Law)",
+  "sourceUrl": "https://www.dole.gov.ph",
+  "effective": "1993-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How much is retirement pay without a company plan?",
+   "tl": "Magkano ang retirement pay kung walang company plan?",
+   "zh": "没有公司退休计划时，退休金是多少？"
+  },
+  "a": {
+   "en": "An employee aged 60 to 65 with at least 5 years of service gets at least 22.5 days’ pay per year of service: 15 days’ salary, plus one twelfth of 13th month pay, plus 5 days of service incentive leave.",
+   "tl": "Ang empleyadong 60 hanggang 65 taong gulang na may hindi bababa sa 5 taon ng serbisyo ay makakatanggap ng hindi bababa sa 22.5 araw na sahod kada taon ng serbisyo: 15 araw na sahod, one twelfth ng 13th month pay, at 5 araw ng service incentive leave.",
+   "zh": "60 至 65 岁、服务满 5 年的员工，每服务一年至少获得 22.5 天工资：15 天工资，加第十三个月工资的十二分之一，再加 5 天服务奖励假。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "deadline-1601c",
+  "category": "deadlines",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "1601-c",
+    4
+   ],
+   [
+    "1601c",
+    4
+   ],
+   [
+    "monthly withholding",
+    3
+   ],
+   [
+    "remittance return",
+    3
+   ]
+  ],
+  "source": "BIR filing calendar; RR 11-2018",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2026-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "When is BIR Form 1601-C due?",
+   "tl": "Kailan ang deadline ng BIR Form 1601-C?",
+   "zh": "BIR 1601-C 表格何时截止？"
+  },
+  "a": {
+   "en": "Monthly, by the 10th of the following month for non-eFPS filers. eFPS filers file between the 11th and 15th depending on their group. The December return is due January 15. When a deadline falls on a weekend or holiday, it moves to the next working day.",
+   "tl": "Buwanan, hanggang ika-10 ng susunod na buwan para sa hindi naka-eFPS. Ang naka-eFPS ay mula ika-11 hanggang ika-15 depende sa grupo. Ang para sa Disyembre ay hanggang January 15. Kung tumapat sa weekend o holiday, lilipat sa susunod na araw ng trabaho.",
+   "zh": "按月申报，非 eFPS 申报人为次月 10 日前；eFPS 申报人按组别在 11 日至 15 日之间。12 月的申报于次年 1 月 15 日截止。遇周末或节假日顺延至下一个工作日。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "deadline-1604c",
+  "category": "deadlines",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "1604-c",
+    4
+   ],
+   [
+    "1604c",
+    4
+   ],
+   [
+    "alphalist",
+    4
+   ],
+   [
+    "annual information",
+    3
+   ]
+  ],
+  "source": "BIR filing calendar; RR 11-2018",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2026-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "When are Form 1604-C and the alphalist due?",
+   "tl": "Kailan ang deadline ng Form 1604-C at alphalist?",
+   "zh": "1604-C 表格和员工名册何时截止？"
+  },
+  "a": {
+   "en": "By January 31 of the following year, covering all compensation and tax withheld in the year. The totals must match the monthly 1601-C returns and each employee’s Form 2316.",
+   "tl": "Hanggang January 31 ng susunod na taon, para sa lahat ng sahod at tax na nakaltas sa taon. Dapat tugma ang mga total sa buwanang 1601-C at sa Form 2316 ng bawat empleyado.",
+   "zh": "次年 1 月 31 日前，涵盖全年所有工资和预扣税。合计数必须与每月 1601-C 申报及每位员工的 2316 表格一致。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "deadline-2316",
+  "category": "deadlines",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "2316",
+    4
+   ],
+   [
+    "certificate of compensation",
+    4
+   ]
+  ],
+  "source": "BIR filing calendar; RR 11-2018",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2026-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "When is BIR Form 2316 due?",
+   "tl": "Kailan ang deadline ng BIR Form 2316?",
+   "zh": "BIR 2316 表格何时截止？"
+  },
+  "a": {
+   "en": "Employers give each employee a signed Form 2316 by January 31, including employees who left during the year. Copies for substituted filing are submitted to the BIR by February 28.",
+   "tl": "Ibibigay ng employer ang pirmadong Form 2316 sa bawat empleyado hanggang January 31, kasama ang mga umalis sa taon. Ang kopya para sa substituted filing ay isusumite sa BIR hanggang February 28.",
+   "zh": "雇主须在 1 月 31 日前向每位员工（包括年内离职员工）发放已签署的 2316 表格；替代申报的副本须在 2 月 28 日前提交 BIR。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "bir-penalties",
+  "category": "deadlines",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "surcharge",
+    4
+   ],
+   [
+    "interest",
+    2
+   ],
+   [
+    "late filing",
+    3
+   ],
+   [
+    "penalty",
+    1
+   ],
+   [
+    "bir",
+    1
+   ],
+   [
+    "罚款",
+    2
+   ]
+  ],
+  "source": "NIRC Secs. 248 and 249, as amended by RA 11976 (Ease of Paying Taxes Act)",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2024-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What happens if a BIR return is filed late?",
+   "tl": "Ano ang mangyayari kung late ang pag-file sa BIR?",
+   "zh": "BIR 逾期申报会怎样？"
+  },
+  "a": {
+   "en": "Late filing or payment generally costs a 25% surcharge plus 12% interest a year. Under the Ease of Paying Taxes Act, micro and small taxpayers pay a reduced 10% surcharge and half the interest. A compromise penalty may also apply.",
+   "tl": "Karaniwan, 25% surcharge at 12% interest kada taon. Sa ilalim ng Ease of Paying Taxes Act, ang micro at small taxpayer ay 10% surcharge lang at kalahati ng interest. Puwede ring may compromise penalty.",
+   "zh": "逾期申报或缴税一般加收 25% 附加费，另按年利率 12% 计息。根据《便利纳税法》，微型和小型纳税人的附加费降为 10%，利息减半。还可能有和解罚款。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "privacy",
+  "category": "deadlines",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "privacy",
+    4
+   ],
+   [
+    "data privacy",
+    4
+   ],
+   [
+    "breach",
+    3
+   ],
+   [
+    "npc",
+    3
+   ],
+   [
+    "隐私",
+    4
+   ]
+  ],
+  "source": "RA 10173 (Data Privacy Act of 2012); NPC Circular 16-03",
+  "sourceUrl": "",
+  "effective": "2012-08",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What privacy rules apply to payroll data?",
+   "tl": "Anong patakaran sa privacy ang para sa payroll data?",
+   "zh": "工资数据适用哪些隐私规定？"
+  },
+  "a": {
+   "en": "Government ID numbers, health and salary details are personal information, and ID numbers and health data are sensitive. Limit access to people who need it, keep records secure, and report a serious breach to the National Privacy Commission within 72 hours.",
+   "tl": "Ang government ID number, health at sahod ay personal information, at sensitive ang ID number at health data. Limitahan ang access sa mga kailangan lang, panatilihing ligtas, at i-report ang seryosong breach sa National Privacy Commission sa loob ng 72 oras.",
+   "zh": "政府证件号码、健康和薪资信息都属于个人信息，其中证件号码和健康数据属于敏感信息。仅限有需要的人访问，妥善保管，发生严重泄露须在 72 小时内向国家隐私委员会报告。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-payrun",
+  "category": "talaan",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "how to run",
+    4
+   ],
+   [
+    "run payroll",
+    4
+   ],
+   [
+    "pay run",
+    3
+   ],
+   [
+    "start",
+    1
+   ],
+   [
+    "paano mag-payroll",
+    4
+   ],
+   [
+    "怎么发薪",
+    4
+   ],
+   [
+    "发薪",
+    2
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I run payroll in Talaan?",
+   "tl": "Paano mag-payroll sa Talaan?",
+   "zh": "在 Talaan 怎么发薪？"
+  },
+  "a": {
+   "en": "Go to Pay runs, choose the client and cutoff, and press Start. Enter only what changed (absences, overtime, night hours, holidays), review the checks, have the client owner approve, then download the files.",
+   "tl": "Pumunta sa Pay runs, piliin ang client at cutoff, at pindutin ang Simulan. Ilagay lang ang nagbago (absent, overtime, oras sa gabi, holiday), tingnan ang mga check, ipa-approve sa may-ari ng client, saka i-download ang mga file.",
+   "zh": "进入“发薪”，选择客户和工资周期，点击“开始”。只填写有变化的内容（缺勤、加班、夜班、节假日），查看检查结果，由客户老板批准，然后下载文件。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-red",
+  "category": "talaan",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "red",
+    3
+   ],
+   [
+    "cannot continue",
+    4
+   ],
+   [
+    "continue",
+    1
+   ],
+   [
+    "locked",
+    1
+   ],
+   [
+    "pula",
+    3
+   ],
+   [
+    "红色",
+    4
+   ],
+   [
+    "blocked",
+    3
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Why can’t I continue past the checks?",
+   "tl": "Bakit hindi ako makatuloy sa mga check?",
+   "zh": "为什么检查后不能继续？"
+  },
+  "a": {
+   "en": "A red check means something would make the pay run wrong or illegal, like a missing ID number or pay below minimum wage. Press Fix now to open the exact record. Yellow checks only need a short reason.",
+   "tl": "Ang pulang check ay may maling magpapamali o magpapailegal sa pay run, gaya ng kulang na ID number o sahod na mas mababa sa minimum wage. Pindutin ang Ayusin ngayon para buksan ang mismong record. Ang dilaw ay maikling dahilan lang ang kailangan.",
+   "zh": "红色检查表示存在会导致发薪错误或违法的问题，例如缺少证件号码或工资低于最低工资。点击“立即修正”即可打开对应记录。黄色检查只需填写简短原因。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-approve",
+  "category": "talaan",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "approve",
+    3
+   ],
+   [
+    "cannot approve",
+    4
+   ],
+   [
+    "two-person",
+    4
+   ],
+   [
+    "aprubahan",
+    3
+   ],
+   [
+    "批准",
+    4
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Why can’t I approve the pay run?",
+   "tl": "Bakit hindi ko ma-approve ang pay run?",
+   "zh": "为什么我不能批准发薪？"
+  },
+  "a": {
+   "en": "The person who prepared a pay run cannot approve it. The client owner or the firm owner must approve. After approval the pay run is locked, so changes go into the next pay run as adjustments.",
+   "tl": "Hindi puwedeng mag-approve ang naghanda ng pay run. Ang may-ari ng client o ng firm ang dapat mag-approve. Pagkatapos ma-approve, naka-lock na ito, kaya ang mga pagbabago ay ilalagay sa susunod na pay run bilang adjustment.",
+   "zh": "准备发薪的人不能自己批准，须由客户老板或事务所负责人批准。批准后发薪即被锁定，如需修改，请在下一次发薪中作为调整处理。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-file",
+  "category": "talaan",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "mark as filed",
+    4
+   ],
+   [
+    "filed",
+    2
+   ],
+   [
+    "reference number",
+    4
+   ],
+   [
+    "upload",
+    2
+   ],
+   [
+    "file with",
+    3
+   ],
+   [
+    "can talaan",
+    3
+   ],
+   [
+    "for me",
+    2
+   ],
+   [
+    "mag-file",
+    4
+   ],
+   [
+    "para sa akin",
+    2
+   ],
+   [
+    "替我",
+    4
+   ],
+   [
+    "申报",
+    2
+   ],
+   [
+    "i-file",
+    3
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Can Talaan file with BIR, SSS, PhilHealth or Pag-IBIG for me?",
+   "tl": "Kaya bang mag-file ng Talaan sa BIR, SSS, PhilHealth o Pag-IBIG para sa akin?",
+   "zh": "Talaan 能替我向 BIR、SSS、PhilHealth 或 Pag-IBIG 申报吗？"
+  },
+  "a": {
+   "en": "Not yet. Talaan prepares each file and shows where to upload it. After you upload and pay on the agency portal, enter the reference number on the Files page to mark it as filed. Direct filing through an accredited partner is planned for Phase 2.",
+   "tl": "Hindi pa. Inihahanda ng Talaan ang bawat file at ipinapakita kung saan ia-upload. Pagkatapos mag-upload at magbayad sa portal, ilagay ang reference number sa page ng Mga file para markahang na-file. Ang direktang pag-file sa pamamagitan ng accredited partner ay nakaplano sa Phase 2.",
+   "zh": "暂时不能。Talaan 会准备好每个文件并告诉你上传到哪里。在机构网站上传并缴款后，在“文件”页面输入参考号即可标记为已申报。通过认证合作伙伴直接申报计划在第二阶段推出。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-import",
+  "category": "talaan",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "import",
+    3
+   ],
+   [
+    "excel",
+    3
+   ],
+   [
+    "spreadsheet",
+    3
+   ],
+   [
+    "paste",
+    2
+   ],
+   [
+    "timesheet",
+    3
+   ],
+   [
+    "表格",
+    3
+   ],
+   [
+    "导入",
+    4
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I bring in hours from Excel?",
+   "tl": "Paano ilagay ang oras mula sa Excel?",
+   "zh": "怎么从 Excel 导入工时？"
+  },
+  "a": {
+   "en": "In step 2 of a pay run, choose Paste from a spreadsheet and paste rows with a header such as Name, Absent, OT, ND. Talaan matches employees by name and remembers the column setup for that client.",
+   "tl": "Sa hakbang 2 ng pay run, piliin ang I-paste mula sa spreadsheet at i-paste ang mga row na may header gaya ng Name, Absent, OT, ND. Itutugma ng Talaan ayon sa pangalan at tatandaan ang ayos ng columns para sa client na iyon.",
+   "zh": "在发薪第 2 步选择“从表格粘贴”，粘贴带标题行（如 Name、Absent、OT、ND）的数据。Talaan 按姓名匹配员工，并记住该客户的列设置。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-language",
+  "category": "talaan",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "language",
+    4
+   ],
+   [
+    "tagalog",
+    3
+   ],
+   [
+    "chinese",
+    3
+   ],
+   [
+    "wika",
+    4
+   ],
+   [
+    "语言",
+    4
+   ],
+   [
+    "中文",
+    3
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I change the language?",
+   "tl": "Paano palitan ang wika?",
+   "zh": "怎么切换语言？"
+  },
+  "a": {
+   "en": "Use the English, Tagalog or 中文 buttons at the top of any page. Government terms such as SSS, BIR and form numbers stay the same in every language.",
+   "tl": "Gamitin ang English, Tagalog o 中文 na button sa itaas ng kahit anong page. Hindi nagbabago ang mga terminong gaya ng SSS, BIR at numero ng form sa alinmang wika.",
+   "zh": "在任何页面顶部点击 English、Tagalog 或“中文”按钮。SSS、BIR 等政府术语和表格编号在各语言中保持不变。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-xero",
+  "category": "talaan",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "xero",
+    4
+   ],
+   [
+    "journal",
+    3
+   ],
+   [
+    "books",
+    2
+   ],
+   [
+    "accounting",
+    2
+   ],
+   [
+    "凭证",
+    3
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How does Talaan send payroll to Xero?",
+   "tl": "Paano ipinapadala ng Talaan ang payroll sa Xero?",
+   "zh": "Talaan 怎么把工资发送到 Xero？"
+  },
+  "a": {
+   "en": "After approval, step 5 shows the payroll journal. Press Send to Xero to post it to the client’s Xero as a manual journal. Connect Xero first in the client’s settings. In the prototype this connection is a demo.",
+   "tl": "Pagkatapos ma-approve, makikita ang payroll journal sa hakbang 5. Pindutin ang Ipadala sa Xero para i-post ito sa Xero ng client bilang manual journal. I-connect muna ang Xero sa settings ng client. Sa prototype, demo lang ang koneksyon.",
+   "zh": "批准后，第 5 步会显示工资凭证。点击“发送到 Xero”即可作为手工凭证过账到客户的 Xero。请先在客户设置中连接 Xero。原型中的连接仅为演示。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "emp-deductions",
+  "category": "employees",
+  "audience": [
+   "employee"
+  ],
+  "kw": [
+   [
+    "deduction",
+    3
+   ],
+   [
+    "kaltas",
+    4
+   ],
+   [
+    "why deducted",
+    4
+   ],
+   [
+    "扣款",
+    4
+   ],
+   [
+    "payslip",
+    1
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What are the deductions on my payslip?",
+   "tl": "Ano ang mga kaltas sa payslip ko?",
+   "zh": "工资单上的扣款是什么？"
+  },
+  "a": {
+   "en": "SSS, PhilHealth and Pag-IBIG are your share of government contributions; your employer pays its own share on top. Withholding tax is income tax taken in advance. Loans appear only if you have an SSS or Pag-IBIG loan.",
+   "tl": "Ang SSS, PhilHealth at Pag-IBIG ay bahagi mo sa kontribusyon sa gobyerno; may sariling bahagi rin ang employer mo. Ang withholding tax ay income tax na kinakaltas nang maaga. Lalabas lang ang loan kung may SSS o Pag-IBIG loan ka.",
+   "zh": "SSS、PhilHealth 和 Pag-IBIG 是你应缴的政府缴款部分，雇主另外缴纳其部分。预扣税是提前扣缴的个人所得税。只有在你有 SSS 或 Pag-IBIG 贷款时才会显示贷款扣款。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "emp-netchange",
+  "category": "employees",
+  "audience": [
+   "employee"
+  ],
+  "kw": [
+   [
+    "different",
+    2
+   ],
+   [
+    "changed",
+    2
+   ],
+   [
+    "lower",
+    2
+   ],
+   [
+    "higher",
+    2
+   ],
+   [
+    "bakit iba",
+    4
+   ],
+   [
+    "为什么不同",
+    4
+   ],
+   [
+    "net pay",
+    2
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Why is my net pay different this cutoff?",
+   "tl": "Bakit iba ang net pay ko ngayong cutoff?",
+   "zh": "为什么这一期的实发工资不一样？"
+  },
+  "a": {
+   "en": "Net pay changes with absences, overtime, night hours, holidays worked, allowances and loan deductions. Open the payslip to see each line. If something looks wrong, ask your HR or payroll contact.",
+   "tl": "Nagbabago ang net pay dahil sa absent, overtime, oras sa gabi, holiday na pumasok, allowance at kaltas sa loan. Buksan ang payslip para makita ang bawat linya. Kung may mukhang mali, magtanong sa HR o payroll.",
+   "zh": "实发工资会随缺勤、加班、夜班、节假日上班、津贴和贷款扣款而变化。打开工资单可查看每一项。如有疑问，请联系人事或工资负责人。"
+  }
+ }
+]

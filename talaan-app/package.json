@@ -1,0 +1,27 @@
+{
+  "name": "talaan-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node build.mjs && npx --yes serve dist -l 3000",
+    "test": "tsx src/engine.test.ts && tsx src/secure.test.ts && tsx src/tour/voice.test.ts",
+    "typecheck": "tsc -p .",
+    "check:corpus": "tsx scripts/check-corpus.ts",
+    "export:corpus": "tsx scripts/export-corpus.ts"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "jspdf": "^4.2.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.25.0",
+    "opencc-js": "^1.4.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
