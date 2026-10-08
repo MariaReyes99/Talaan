@@ -1,5 +1,0 @@
-   {
-     "installCommand": "cd talaan-app && npm ci",
-     "buildCommand": "cd talaan-app && npm run build",
-     "outputDirectory": "talaan-app/dist"
-   }
