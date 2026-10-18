@@ -1,0 +1,7 @@
+{
+  "_about": "Locked terms: if a term appears in the English text, it must appear unchanged in every other language. Add new agency names, form numbers and brand names here.",
+  "locked": ["Talaan", "Tala", "SSS", "PhilHealth", "Pag-IBIG", "BIR", "1601-C", "2316", "Xero", "BDO", "NCR", "₱90,000", "13th month"],
+  "lockedExceptions": {
+    "zh-Hans": ["13th month"]
+  }
+}

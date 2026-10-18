@@ -1,0 +1,28 @@
+{
+  "name": "talaan-tour-kit",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "check:i18n": "tsx scripts/check-i18n.ts",
+    "review:translations": "tsx scripts/back-translate.ts"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.39.0",
+    "next": "^15.5.26",
+    "next-intl": "^4.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "stripe": "^23.0.0"
+  },
+  "devDependencies": {
+    "@formatjs/icu-messageformat-parser": "^2.9.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "openai": "^4.80.0",
+    "opencc-js": "^1.0.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -12,4 +12,4 @@ Talaan Specifications/
 Talaan *.html
 Talaan *.md
 Talaan_*.html
-package-lock.json
+/package-lock.json

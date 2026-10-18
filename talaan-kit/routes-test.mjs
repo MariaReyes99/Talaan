@@ -1,0 +1,22 @@
+import Stripe from 'stripe';
+const base = 'http://localhost:3124', secret = 'whsec_test_talaan_local';
+const stripe = new Stripe('sk_test_dummy');
+const send = async (payload, sig) => fetch(`${base}/api/stripe/webhook`, { method: 'POST', headers: { 'stripe-signature': sig, 'content-type': 'application/json' }, body: payload });
+const ev = (id, type, object) => JSON.stringify({ id, object: 'event', type, data: { object } });
+const signed = p => stripe.webhooks.generateTestHeaderString({ payload: p, secret });
+
+let p = ev('evt_1', 'checkout.session.completed', { id: 'cs_1', object: 'checkout.session', client_reference_id: 'org_mabuhay', customer: 'cus_1', subscription: 'sub_1', metadata: { plan: 'firm' } });
+let r = await send(p, signed(p)); console.log('1. valid signed checkout event   →', r.status, await r.text());
+r = await send(p, signed(p)); console.log('2. same event sent again        →', r.status, await r.text());
+r = await send(p, 't=1,v1=forged'); console.log('3. forged signature             →', r.status, await r.text());
+p = ev('evt_2', 'customer.subscription.updated', { id: 'sub_1', object: 'subscription', customer: 'cus_1', status: 'past_due', metadata: {}, items: { data: [{ price: { id: 'price_firm' } }] } });
+r = await send(p, signed(p)); console.log('4. subscription update event    →', r.status, await r.text());
+r = await fetch(`${base}/api/xero/connect?org=org_mabuhay`, { redirect: 'manual' });
+const loc = new URL(r.headers.get('location'));
+console.log('5. Xero connect                 →', r.status, loc.origin + loc.pathname);
+console.log('   scopes:', loc.searchParams.get('scope'));
+console.log('   redirect_uri:', loc.searchParams.get('redirect_uri'), '| state cookie set:', /talaan_xero_state=.+HttpOnly/i.test(r.headers.get('set-cookie')));
+r = await fetch(`${base}/api/xero/connect`, { redirect: 'manual' }); console.log('6. Xero connect without org     →', r.status);
+r = await fetch(`${base}/api/xero/callback?code=abc&state=wrong`, { redirect: 'manual', headers: { cookie: 'talaan_xero_state=right.org_mabuhay' } });
+console.log('7. callback with wrong state    →', r.status, (await r.text()).slice(0, 70));
+r = await fetch(`${base}/api/xero/callback?error=access_denied`, { redirect: 'manual' }); console.log('8. user declines in Xero        →', r.status, r.headers.get('location'));
