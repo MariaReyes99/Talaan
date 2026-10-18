@@ -1,2 +1,15 @@
 node_modules/
 dist/
+.env
+.env.local
+.env.*.local
+*.zip
+*.docx
+*.pdf
+*.patch
+*.csv
+Talaan Specifications/
+Talaan *.html
+Talaan *.md
+Talaan_*.html
+package-lock.json
