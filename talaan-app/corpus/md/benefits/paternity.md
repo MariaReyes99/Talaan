@@ -8,7 +8,7 @@ audience: [accountant, owner, employee]
 source: "RA 8187 (Paternity Leave Act of 1996); RA 11210 (transferred days)"
 source_url: https://www.dole.gov.ph
 effective: 1996-06
-verified: 2026-10-04
+verified: 2026-10-19
 status: Needs CPA review before production use
 languages: [en, tl, zh-Hans]
 ---

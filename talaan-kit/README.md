@@ -13,7 +13,7 @@ Tested with Next.js 15.5 (App Router), React 19, next-intl 4: `npm run build` pr
 - `scripts/back-translate.ts` — CSV for a native reviewer: each translation turned back into English with a verdict.
 - `i18n/`, `middleware.ts`, `next.config.mjs` — next-intl setup, language in the URL.
 - `app/[locale]/tour/page.tsx`, `components/tour/` — the tour (player, 11 scenes, Tala, scoped CSS).
-- `standalone/` — the single-file published version, rebuilt from the same message files (`python3 scripts/build-tour-html.py`).
+- `standalone/` — the single-file published version of the tour. It is built from the same scenes and message files in `talaan-app` (run `npm run build:tour` there, then copy `dist/talaan-guided-tour.html` here).
 
 ## Run
     npm install

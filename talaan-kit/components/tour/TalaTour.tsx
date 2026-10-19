@@ -8,8 +8,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '../../i18n/navigation';
 import { routing } from '../../i18n/routing';
-import TalaAvatar, { TalaMark } from './TalaAvatar';
-import { NAV_FOR, SCENES, Screen } from './Screens';
+import TalaAvatar from './TalaAvatar';
+import { NAV_FOR, NAV_KEYS, SCENES, Screen, TOUR_MARK } from './Screens';
 import { guessGender, loadVoices, pickName, rankVoices, speak, type Gender, type TourLang } from './voice';
 
 const LANG_NAMES: Record<string, string> = { en: 'English', tl: 'Tagalog', zh: '中文' };
@@ -92,12 +92,12 @@ export default function TalaTour() {
     window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey);
   }, [idx, go]);
 
-  const navKeys = ['home', 'clients', 'payRuns', 'files', 'employees'] as const;
+  const navKeys = NAV_KEYS;
 
   return (
     <div className="talaan-tour"><div className="page">
       <header className="top">
-        <div className="brand"><TalaMark size={30} /><span className="word">tala<i>a</i>n</span><span className="sub">{t('controls.tourTitle')}</span></div>
+        <div className="brand"><img src={TOUR_MARK} alt="" width={34} height={34} /><span className="word">TALAAN</span><span className="sub">{t('controls.tourTitle')}</span></div>
         <div className="langs" role="group" aria-label={t('controls.language')}>
           {routing.locales.map((l) => (
             <button key={l} type="button" aria-pressed={l === locale} lang={l === 'zh' ? 'zh-Hans' : l} onClick={() => router.replace(pathname, { locale: l })}>{LANG_NAMES[l]}</button>
@@ -109,7 +109,7 @@ export default function TalaTour() {
         <div className="stage-wrap" ref={wrapRef} style={{ height: 540 * scale }}>
           <div className="stage" aria-hidden="true" style={{ transform: `scale(${scale})` }}>
             <div className="appbar">
-              <span className="mini"><TalaMark size={22} />talaan</span>
+              <span className="mini"><img src={TOUR_MARK} alt="" width={22} height={22} />TALAAN</span>
               <nav>{navKeys.map((k) => <span key={k} className={NAV_FOR[id] === k ? 'on' : ''}>{t(`nav.${k}`)}</span>)}</nav>
               <span className="who">MS</span>
             </div>

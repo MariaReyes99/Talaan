@@ -279,7 +279,51 @@
       "how-language",
       "how-xero",
       "emp-deductions",
-      "emp-netchange"
+      "emp-netchange",
+      "how-modules",
+      "how-templates",
+      "how-loans",
+      "how-bonus-run",
+      "how-finalpay",
+      "how-leave",
+      "how-byo",
+      "how-calendar",
+      "how-reports",
+      "how-history",
+      "how-support",
+      "emp-leave"
+    ]
+  },
+  {
+    "source": "Proclamation No. 1006 (s. 2025), 2026 regular holidays and special non-working days",
+    "url": "https://www.officialgazette.gov.ph",
+    "agency": "Talaan",
+    "entries": [
+      "holidays-2026"
+    ]
+  },
+  {
+    "source": "Labor Code Art. 95 (service incentive leave commutable to cash); RR 11-2018 (de minimis: monetized unused vacation leave up to 10 days)",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "leave-monetize"
+    ]
+  },
+  {
+    "source": "NIRC Sec. 32(A) and RR 2-98, Sec. 2.78.1 (expenses incurred for the employer, liquidated with receipts, are not compensation)",
+    "url": "https://www.bir.gov.ph",
+    "agency": "BIR",
+    "entries": [
+      "reimburse-tax"
+    ]
+  },
+  {
+    "source": "SSS and Pag-IBIG employer obligations on member loans (salary deduction and monthly remittance)",
+    "url": "https://www.sss.gov.ph",
+    "agency": "SSS",
+    "entries": [
+      "loan-deduct"
     ]
   }
 ]

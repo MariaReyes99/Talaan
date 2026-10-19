@@ -8,7 +8,7 @@ audience: [accountant, owner, employee]
 source: "NIRC Sec. 32(B)(7)(e), as amended by RA 10963 (TRAIN Law)"
 source_url: https://www.bir.gov.ph
 effective: 2018-01
-verified: 2026-10-04
+verified: 2026-10-19
 status: Needs CPA review before production use
 languages: [en, tl, zh-Hans]
 ---

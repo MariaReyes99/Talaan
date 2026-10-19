@@ -1,3 +1,6 @@
+import { enModules } from './i18n-modules.en';
+import { tlModules } from './i18n-modules.tl';
+import { zhModules } from './i18n-modules.zh';
 export type Lang = 'en' | 'tl' | 'zh';
 type Dict = Record<string, string>;
 
@@ -1303,6 +1306,7 @@ const zh: Dict = {
   confirm: '确认', reasonSaved: '原因已保存', print: '打印',
 };
 
+Object.assign(en, enModules); Object.assign(tl, tlModules); Object.assign(zh, zhModules);
 export const DICTS: Record<Lang, Dict> = { en, tl, zh };
 export const LANG_NAMES: Record<Lang, string> = { en: 'English', tl: 'Tagalog', zh: '中文' };
 export const INTL_LOCALE: Record<Lang, string> = { en: 'en-PH', tl: 'fil-PH', zh: 'zh-CN' };

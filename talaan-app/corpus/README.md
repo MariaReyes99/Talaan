@@ -1,7 +1,7 @@
 # Talaan corpus
 
-45 question-and-answer entries in English, Tagalog and Simplified Chinese, each with its official
-source, effective date and the date it was last checked (4 October 2026). Topics: contributions,
+61 question-and-answer entries in English, Tagalog and Simplified Chinese, each with its official
+source, effective date and the date it was last checked (4 October 2026; rates, wages and holidays re-checked 19 October 2026). Topics: contributions,
 withholding tax, pay rules, leave and benefits, leaving a job, deadlines and compliance, using
 Talaan, and questions from employees.
 
@@ -25,7 +25,9 @@ This corpus belongs to Talaan only. Every entry and exported file is tagged `pro
   translation, Chinese has Traditional characters, a question cannot find its own answer, or an
   off-topic question gets an answer instead of a polite decline.
 
-Updated in this version: de minimis ceilings (RR 29-2025, from 6 January 2026) and NCR minimum wage
+Updated 19 October 2026: how-to answers for every feature in version 0.9 (modules, pay templates, loans, 13th month and bonus runs, final pay, leave, bring-your-own payroll, deadline calendar, reports, change history, support); new rule entries for the 2026 holidays (Proclamation 1006), leave conversion, reimbursements and loan deductions. Re-checked: SSS 15% (no 2026 change), PhilHealth 5%, NCR ₱755/₱718 under Wage Order NCR-28 (the NCR-27 January 2027 tranche is not in force while court proceedings continue), paternity leave still 7 days.
+
+Earlier update: de minimis ceilings (RR 29-2025, from 6 January 2026) and NCR minimum wage
 ₱755 (Wage Order NCR-28, from 26 September 2026). Paternity leave is still 7 days; the 2026 bill to
 extend it is not law.
 

@@ -30,7 +30,7 @@
   "source": "RA 11199 (Social Security Act of 2018), contribution schedule from January 2025",
   "sourceUrl": "https://www.sss.gov.ph",
   "effective": "2025-01",
-  "verified": "2026-10-04",
+  "verified": "2026-10-19",
   "status": "Needs CPA review before production use",
   "q": {
    "en": "How much is the SSS contribution?",
@@ -109,7 +109,7 @@
   "source": "RA 11223 (Universal Health Care Act) premium schedule",
   "sourceUrl": "https://www.philhealth.gov.ph",
   "effective": "2025-01",
-  "verified": "2026-10-04",
+  "verified": "2026-10-19",
   "status": "Needs CPA review before production use",
   "q": {
    "en": "How much is the PhilHealth premium?",
@@ -380,7 +380,7 @@
   "source": "BIR Revenue Regulations No. 11-2018, Annex E (withholding tax table, 2023 onwards)",
   "sourceUrl": "https://www.bir.gov.ph",
   "effective": "2023-01",
-  "verified": "2026-10-04",
+  "verified": "2026-10-19",
   "status": "Needs CPA review before production use",
   "q": {
    "en": "Which withholding tax table do we use?",
@@ -500,7 +500,7 @@
   "source": "NIRC Sec. 32(B)(7)(e), as amended by RA 10963 (TRAIN Law)",
   "sourceUrl": "https://www.bir.gov.ph",
   "effective": "2018-01",
-  "verified": "2026-10-04",
+  "verified": "2026-10-19",
   "status": "Needs CPA review before production use",
   "q": {
    "en": "Is 13th month pay taxable?",
@@ -948,7 +948,7 @@
   "source": "Wage Order No. NCR-28 (effective 26 September 2026), NWPC",
   "sourceUrl": "https://nwpc.dole.gov.ph",
   "effective": "2026-09-26",
-  "verified": "2026-10-04",
+  "verified": "2026-10-19",
   "status": "Needs CPA review before production use",
   "q": {
    "en": "What is the minimum wage in Metro Manila?",
@@ -956,9 +956,9 @@
    "zh": "马尼拉大都会的最低工资是多少？"
   },
   "a": {
-   "en": "From 26 September 2026, Wage Order NCR-28 sets ₱755 a day for non-agriculture and ₱718 for agriculture, retail and service with 15 or fewer workers, and manufacturing with fewer than 10. Rates differ by region; check the regional wage board and update each client’s minimum wage in Talaan.",
-   "tl": "Mula 26 Setyembre 2026, sa Wage Order NCR-28: ₱755 kada araw sa non-agriculture at ₱718 sa agriculture, retail at service na may 15 o mas kaunting manggagawa, at manufacturing na may mas kaunti sa 10. Iba-iba ito bawat rehiyon; tingnan ang regional wage board at i-update ang minimum wage ng bawat client sa Talaan.",
-   "zh": "自 2026 年 9 月 26 日起，NCR-28 号工资令规定：非农业每日 ₱755；农业、15 人及以下的零售和服务业、不足 10 人的制造业每日 ₱718。各地区标准不同，请核对地区工资委员会公告，并在 Talaan 中更新每个客户的最低工资。"
+   "en": "From 26 September 2026, Wage Order NCR-28 sets ₱755 a day for non-agriculture and ₱718 for agriculture, retail and service with 15 or fewer workers, and manufacturing with fewer than 10. Rates differ by region; check the regional wage board and update each client’s minimum wage in Talaan. The ₱25 January 2027 increase under the earlier Wage Order NCR-27 is not in force while court proceedings continue.",
+   "tl": "Mula 26 Setyembre 2026, sa Wage Order NCR-28: ₱755 kada araw sa non-agriculture at ₱718 sa agriculture, retail at service na may 15 o mas kaunting manggagawa, at manufacturing na may mas kaunti sa 10. Iba-iba ito bawat rehiyon; tingnan ang regional wage board at i-update ang minimum wage ng bawat client sa Talaan. Hindi pa umiiral ang ₱25 na dagdag sa Enero 2027 sa ilalim ng naunang Wage Order NCR-27 habang may kaso pa sa korte.",
+   "zh": "自 2026 年 9 月 26 日起，NCR-28 号工资令规定：非农业每日 ₱755；农业、15 人及以下的零售和服务业、不足 10 人的制造业每日 ₱718。各地区标准不同，请核对地区工资委员会公告，并在 Talaan 中更新每个客户的最低工资。此前 NCR-27 号工资令规定的 2027 年 1 月 ₱25 加薪，在法院程序结束前不生效。"
   }
  },
  {
@@ -1210,7 +1210,7 @@
   "source": "RA 8187 (Paternity Leave Act of 1996); RA 11210 (transferred days)",
   "sourceUrl": "https://www.dole.gov.ph",
   "effective": "1996-06",
-  "verified": "2026-10-04",
+  "verified": "2026-10-19",
   "status": "Needs CPA review before production use",
   "q": {
    "en": "How long is paternity leave?",
@@ -1807,9 +1807,9 @@
    "zh": "在 Talaan 怎么发薪？"
   },
   "a": {
-   "en": "Go to Pay runs, choose the client and cutoff, and press Start. Enter only what changed (absences, overtime, night hours, holidays), review the checks, have the client owner approve, then download the files.",
-   "tl": "Pumunta sa Pay runs, piliin ang client at cutoff, at pindutin ang Simulan. Ilagay lang ang nagbago (absent, overtime, oras sa gabi, holiday), tingnan ang mga check, ipa-approve sa may-ari ng client, saka i-download ang mga file.",
-   "zh": "进入“发薪”，选择客户和工资周期，点击“开始”。只填写有变化的内容（缺勤、加班、夜班、节假日），查看检查结果，由客户老板批准，然后下载文件。"
+   "en": "Go to Payroll → Pay runs, choose the client and cutoff, and press Start. Talaan fills in pay template items, loan deductions and approved leave without pay. Enter only what changed (absences, overtime, night hours, holidays), review the checks, send for approval, then download the files.",
+   "tl": "Pumunta sa Payroll → Mga pay run, piliin ang client at cutoff, at pindutin ang Simulan. Pupunan ng Talaan ang pay template, kaltas sa loan at aprubadong leave na walang bayad. Ilagay lang ang nagbago (absent, overtime, oras sa gabi, holiday), tingnan ang mga check, ipadala para sa approval, saka i-download ang mga file.",
+   "zh": "进入“工资 → 发薪批次”，选择客户和工资周期，点击“开始”。Talaan 会自动填入工资模板项目、借款扣款和已批准的无薪假。只填写有变化的内容（缺勤、加班、夜班、节假日），查看检查结果，提交审批，然后下载文件。"
   }
  },
  {
@@ -1982,9 +1982,9 @@
    "zh": "Talaan 能替我向 BIR、SSS、PhilHealth 或 Pag-IBIG 申报吗？"
   },
   "a": {
-   "en": "Not yet. Talaan prepares each file and shows where to upload it. After you upload and pay on the agency portal, enter the reference number on the Files page to mark it as filed. Direct filing through an accredited partner is planned for Phase 2.",
-   "tl": "Hindi pa. Inihahanda ng Talaan ang bawat file at ipinapakita kung saan ia-upload. Pagkatapos mag-upload at magbayad sa portal, ilagay ang reference number sa page ng Mga file para markahang na-file. Ang direktang pag-file sa pamamagitan ng accredited partner ay nakaplano sa Phase 2.",
-   "zh": "暂时不能。Talaan 会准备好每个文件并告诉你上传到哪里。在机构网站上传并缴款后，在“文件”页面输入参考号即可标记为已申报。通过认证合作伙伴直接申报计划在第二阶段推出。"
+   "en": "Not yet. Talaan prepares each file and shows where to upload it. After you upload and pay on the agency portal, record the reference number, amount and receipt under Compliance → Remit and pay to mark it as filed. Direct filing through an accredited partner is planned for Phase 2.",
+   "tl": "Hindi pa. Inihahanda ng Talaan ang bawat file at ipinapakita kung saan ia-upload. Pagkatapos mag-upload at magbayad sa portal, itala ang reference number, halaga at resibo sa Compliance → Remit at bayad para markahang na-file. Ang direktang pag-file sa pamamagitan ng accredited partner ay nakaplano sa Phase 2.",
+   "zh": "暂时不能。Talaan 会准备好每个文件并告诉你上传到哪里。在机构网站上传并缴款后，在“合规 → 缴款与支付”中记录参考号、金额和收据，即可标记为已申报。通过认证合作伙伴直接申报计划在第二阶段推出。"
   }
  },
  {
@@ -2135,9 +2135,9 @@
    "zh": "Talaan 怎么把工资发送到 Xero？"
   },
   "a": {
-   "en": "After approval, step 5 shows the payroll journal. Press Send to Xero to post it to the client’s Xero as a manual journal. Connect Xero first in the client’s settings. In the prototype this connection is a demo.",
-   "tl": "Pagkatapos ma-approve, makikita ang payroll journal sa hakbang 5. Pindutin ang Ipadala sa Xero para i-post ito sa Xero ng client bilang manual journal. I-connect muna ang Xero sa settings ng client. Sa prototype, demo lang ang koneksyon.",
-   "zh": "批准后，第 5 步会显示工资凭证。点击“发送到 Xero”即可作为手工凭证过账到客户的 Xero。请先在客户设置中连接 Xero。原型中的连接仅为演示。"
+   "en": "After approval, step 5 shows the payroll journal. Press Send to Xero to post it to the client’s Xero as a manual journal; the Books page also downloads it for QuickBooks or other apps, split by department if the client tracks departments. Connect Xero first in the client’s settings. In the prototype this connection is a demo.",
+   "tl": "Pagkatapos ma-approve, makikita ang payroll journal sa hakbang 5. Pindutin ang Ipadala sa Xero para i-post ito sa Xero ng client bilang manual journal; sa page na Books, puwede rin itong i-download para sa QuickBooks o ibang app, hati ayon sa department kung tina-track ito ng client. I-connect muna ang Xero sa settings ng client. Sa prototype, demo lang ang koneksyon.",
+   "zh": "批准后，第 5 步会显示工资凭证。点击“发送到 Xero”即可作为手工凭证过账到客户的 Xero；在“账务”页面也可下载给 QuickBooks 或其他软件使用，并可按部门拆分。请先在客户设置中连接 Xero。原型中的连接仅为演示。"
   }
  },
  {
@@ -2238,6 +2238,945 @@
    "en": "Net pay changes with absences, overtime, night hours, holidays worked, allowances and loan deductions. Open the payslip to see each line. If something looks wrong, ask your HR or payroll contact.",
    "tl": "Nagbabago ang net pay dahil sa absent, overtime, oras sa gabi, holiday na pumasok, allowance at kaltas sa loan. Buksan ang payslip para makita ang bawat linya. Kung may mukhang mali, magtanong sa HR o payroll.",
    "zh": "实发工资会随缺勤、加班、夜班、节假日上班、津贴和贷款扣款而变化。打开工资单可查看每一项。如有疑问，请联系人事或工资负责人。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-modules",
+  "category": "talaan",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "module",
+    4
+   ],
+   [
+    "modules",
+    4
+   ],
+   [
+    "subscription",
+    3
+   ],
+   [
+    "turn on",
+    2
+   ],
+   [
+    "mga module",
+    4
+   ],
+   [
+    "模块",
+    4
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What are the Talaan modules and how do I turn them on?",
+   "tl": "Ano ang mga module ng Talaan at paano ito bubuksan?",
+   "zh": "Talaan 有哪些模块？怎么开启？"
+  },
+  "a": {
+   "en": "Talaan has six modules: Payroll, Compliance, Books, HR, AI (Ask Tala) and Analytics. The firm owner turns them on for each client under Clients → the client → Talaan modules. Menus show only the modules that are on, and the price is per active employee for each module.",
+   "tl": "Anim ang module ng Talaan: Payroll, Compliance, Books, HR, AI (Ask Tala) at Analytics. Binubuksan ito ng may-ari ng firm para sa bawat client sa Clients → ang client → Mga module ng Talaan. Ang nakabukas lang ang lumalabas sa menu, at ang presyo ay bawat aktibong empleyado sa bawat module.",
+   "zh": "Talaan 有六个模块：工资、合规、账务、人事、AI（问 Tala）和分析。事务所负责人在“客户 → 该客户 → Talaan 模块”中为每个客户开启。菜单只显示已开启的模块，价格按每个模块的在职员工人数计算。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-templates",
+  "category": "talaan",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "pay template",
+    5
+   ],
+   [
+    "pay item",
+    4
+   ],
+   [
+    "allowance every",
+    3
+   ],
+   [
+    "recurring",
+    3
+   ],
+   [
+    "umuulit",
+    3
+   ],
+   [
+    "工资模板",
+    5
+   ],
+   [
+    "固定项目",
+    3
+   ],
+   [
+    "每期固定",
+    6
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I set up recurring allowances and deductions?",
+   "tl": "Paano mag-set up ng umuulit na allowance at kaltas?",
+   "zh": "怎么设置每期固定的津贴和扣款？"
+  },
+  "a": {
+   "en": "Add the item once under Payroll → Pay items (taxable allowance, de minimis, deduction or reimbursement). Then open Payroll → Pay templates, choose the client and add the item and amount per cutoff for each employee. New regular pay runs fill them in automatically; open a draft and press Refresh to update it.",
+   "tl": "Idagdag ang item nang isang beses sa Payroll → Mga pay item (allowance na may buwis, de minimis, kaltas o reimbursement). Saka buksan ang Payroll → Mga pay template, piliin ang client at idagdag ang item at halaga bawat cutoff para sa bawat empleyado. Kusang pupunan ito ng mga bagong regular na pay run; buksan ang draft at pindutin ang Refresh para i-update.",
+   "zh": "先在“工资 → 工资项目”中添加一次（应税津贴、小额免税福利、扣款或报销）。然后打开“工资 → 工资模板”，选择客户，为每名员工添加项目和每期金额。新的常规发薪会自动填入；打开草稿并点击“刷新”即可更新。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-loans",
+  "category": "talaan",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "loan",
+    3
+   ],
+   [
+    "cash advance",
+    4
+   ],
+   [
+    "salary loan",
+    3
+   ],
+   [
+    "loan balance",
+    4
+   ],
+   [
+    "utang",
+    2
+   ],
+   [
+    "借款",
+    4
+   ],
+   [
+    "预支",
+    4
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I deduct an SSS loan or a cash advance?",
+   "tl": "Paano kaltasan ang SSS loan o cash advance?",
+   "zh": "怎么扣 SSS 贷款或预支款？"
+  },
+  "a": {
+   "en": "Go to Payroll → Loans and deductions and press Add loan. Enter the amount borrowed, the deduction per cutoff and the first cutoff. Talaan deducts it in every regular pay run, shows the balance and stops at zero. SSS and Pag-IBIG loan amounts must match the agency’s billing.",
+   "tl": "Pumunta sa Payroll → Loan at kaltas at pindutin ang Magdagdag ng loan. Ilagay ang halagang hiniram, kaltas bawat cutoff at unang cutoff. Kakaltasin ito ng Talaan sa bawat regular na pay run, ipapakita ang balanse at hihinto kapag zero na. Dapat tugma ang halaga ng SSS at Pag-IBIG loan sa billing ng ahensya.",
+   "zh": "进入“工资 → 借款与扣款”，点击“添加借款”，填写借款金额、每期扣款和首次扣款期。Talaan 会在每次常规发薪时扣除，显示余额，余额为零时停止。SSS 和 Pag-IBIG 贷款金额必须与机构账单一致。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-bonus-run",
+  "category": "talaan",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "13th month pay run",
+    5
+   ],
+   [
+    "bonus run",
+    5
+   ],
+   [
+    "off-cycle",
+    4
+   ],
+   [
+    "separate pay run",
+    4
+   ],
+   [
+    "reimbursement run",
+    4
+   ],
+   [
+    "hiwalay na pay run",
+    4
+   ],
+   [
+    "额外发薪",
+    4
+   ],
+   [
+    "奖金发薪",
+    4
+   ],
+   [
+    "separately",
+    6
+   ],
+   [
+    "hiwalay",
+    6
+   ],
+   [
+    "单独发放",
+    6
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I pay the 13th month or a bonus separately?",
+   "tl": "Paano ibigay nang hiwalay ang 13th month o bonus?",
+   "zh": "怎么单独发放第13个月工资或奖金？"
+  },
+  "a": {
+   "en": "In Payroll → Pay runs, press Bonus or reimbursement run. Choose the client, the cutoff to pay with and the employees. For the 13th month, Talaan fills in basic pay earned this year divided by 12, less what was already paid, and taxes only the part above the ₱90,000 limit. No SSS, PhilHealth or Pag-IBIG is deducted. It goes through the same checks and approval.",
+   "tl": "Sa Payroll → Mga pay run, pindutin ang Pay run para sa bonus o reimbursement. Piliin ang client, cutoff na kasabay ng bayad at mga empleyado. Para sa 13th month, pupunan ng Talaan ang basic pay ngayong taon na hinati sa 12, bawas ang naibigay na, at ang lampas lang sa ₱90,000 na limit ang bubuwisan. Walang kaltas na SSS, PhilHealth o Pag-IBIG. Dadaan ito sa parehong check at approval.",
+   "zh": "在“工资 → 发薪批次”中点击“奖金或报销发薪”，选择客户、随哪一期发放以及员工。第13个月工资由 Talaan 按本年基本工资除以 12、减去已发金额自动填写，只对超过 ₱90,000 限额的部分计税，不扣 SSS、PhilHealth 或 Pag-IBIG。同样需要检查和审批。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-finalpay",
+  "category": "talaan",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "final pay run",
+    5
+   ],
+   [
+    "employee leaving",
+    4
+   ],
+   [
+    "resigned employee",
+    4
+   ],
+   [
+    "last salary",
+    3
+   ],
+   [
+    "aalis na empleyado",
+    4
+   ],
+   [
+    "离职结算",
+    5
+   ],
+   [
+    "final pay in talaan",
+    7
+   ],
+   [
+    "final pay sa talaan",
+    7
+   ],
+   [
+    "办理离职结算",
+    6
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I process final pay in Talaan?",
+   "tl": "Paano mag-process ng final pay sa Talaan?",
+   "zh": "在 Talaan 中怎么办理离职结算？"
+  },
+  "a": {
+   "en": "In Payroll → Pay runs, press Final pay, choose the employee, the last day of work and the reason. Talaan works out the last salary, the pro-rated 13th month, unused convertible leave and the tax adjustment for the year, and prepares a certificate of employment. Release it within 30 days unless a better company policy applies.",
+   "tl": "Sa Payroll → Mga pay run, pindutin ang Final pay, piliin ang empleyado, huling araw ng trabaho at dahilan. Kukuwentahin ng Talaan ang huling sahod, pro-rated na 13th month, hindi nagamit na leave na puwedeng gawing pera at adjustment sa buwis ngayong taon, at ihahanda ang certificate of employment. Ibigay ito sa loob ng 30 araw maliban kung may mas magandang patakaran ang kumpanya.",
+   "zh": "在“工资 → 发薪批次”中点击“离职结算”，选择员工、最后工作日和原因。Talaan 计算最后工资、按比例的第13个月工资、可折现的未休假期和本年度税款调整，并准备在职证明。除非公司政策更优惠，应在 30 天内发放。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-leave",
+  "category": "talaan",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "approve leave",
+    5
+   ],
+   [
+    "leave request",
+    5
+   ],
+   [
+    "file leave",
+    4
+   ],
+   [
+    "leave balance",
+    4
+   ],
+   [
+    "leave without pay",
+    3
+   ],
+   [
+    "hiling na leave",
+    4
+   ],
+   [
+    "请假申请",
+    5
+   ],
+   [
+    "假期余额",
+    4
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do leave requests work in Talaan?",
+   "tl": "Paano gumagana ang hiling na leave sa Talaan?",
+   "zh": "Talaan 的请假申请怎么运作？"
+  },
+  "a": {
+   "en": "Employees request leave from My leave, or staff file it under HR → File leave. The client owner or firm owner approves it under HR → Leave requests. Approved leave without pay is deducted as absent days in the pay run for those dates; paid leave does not change pay. HR → Leave balances shows the days left.",
+   "tl": "Humihiling ang empleyado sa Aking leave, o nagfa-file ang staff sa HR → Mag-file ng leave. Inaaprubahan ito ng may-ari ng client o firm sa HR → Mga hiling na leave. Ibinabawas bilang absent ang aprubadong leave na walang bayad sa pay run ng mga petsang iyon; hindi nagbabago ang sahod sa leave na may bayad. Makikita sa HR → Balanse ng leave ang natitirang araw.",
+   "zh": "员工在“我的假期”中申请，或由工作人员在“人事 → 登记请假”中登记。客户老板或事务所负责人在“人事 → 请假申请”中审批。已批准的无薪假会在对应日期所在的发薪中按缺勤扣除；带薪假不影响工资。“人事 → 假期余额”显示剩余天数。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-byo",
+  "category": "talaan",
+  "audience": [
+   "accountant"
+  ],
+  "kw": [
+   [
+    "another payroll system",
+    5
+   ],
+   [
+    "sprout",
+    4
+   ],
+   [
+    "salarium",
+    4
+   ],
+   [
+    "payroll register",
+    4
+   ],
+   [
+    "import payroll",
+    5
+   ],
+   [
+    "ibang payroll system",
+    5
+   ],
+   [
+    "其他工资系统",
+    5
+   ],
+   [
+    "工资明细表",
+    4
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Can a client that uses another payroll system still use Talaan?",
+   "tl": "Puwede pa bang gumamit ng Talaan ang client na may ibang payroll system?",
+   "zh": "使用其他工资系统的客户还能用 Talaan 吗？"
+  },
+  "a": {
+   "en": "Yes. Set the client’s payroll to Another payroll system, then each month upload its payroll register under Compliance → Import payroll. Talaan checks the SSS, PhilHealth, Pag-IBIG and tax figures against its own tables, flags differences, and prepares the government files from the register.",
+   "tl": "Oo. Itakda ang payroll ng client sa Ibang payroll system, saka buwan-buwan i-upload ang payroll register nito sa Compliance → Import payroll. Susuriin ng Talaan ang SSS, PhilHealth, Pag-IBIG at buwis gamit ang sarili nitong table, ituturo ang pagkakaiba, at ihahanda ang mga file para sa gobyerno mula sa register.",
+   "zh": "可以。将该客户的工资来源设为“其他工资系统”，每月在“合规 → 导入工资”中上传工资明细表。Talaan 用自己的费率表核对 SSS、PhilHealth、Pag-IBIG 和税款，标出差异，并根据明细表准备政府申报文件。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-calendar",
+  "category": "talaan",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "deadline calendar",
+    5
+   ],
+   [
+    "calendar",
+    3
+   ],
+   [
+    "all deadlines",
+    4
+   ],
+   [
+    "kalendaryo",
+    4
+   ],
+   [
+    "日历",
+    4
+   ],
+   [
+    "all the deadlines",
+    7
+   ],
+   [
+    "lahat ng deadline",
+    7
+   ],
+   [
+    "所有客户的截止日",
+    6
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Where can I see all the deadlines for my clients?",
+   "tl": "Saan makikita ang lahat ng deadline ng mga client ko?",
+   "zh": "在哪里查看所有客户的截止日？"
+  },
+  "a": {
+   "en": "Compliance → Deadline calendar shows every client’s paydays and SSS, PhilHealth, Pag-IBIG and BIR due dates in one month. Green is done, amber is due within 3 days and red is late. Export it to Google Calendar or Outlook as a CSV.",
+   "tl": "Ipinapakita ng Compliance → Kalendaryo ng deadline ang sahuran at due date ng SSS, PhilHealth, Pag-IBIG at BIR ng bawat client sa isang buwan. Berde ang tapos, dilaw kung due sa loob ng 3 araw at pula kung huli. I-export ito sa Google Calendar o Outlook bilang CSV.",
+   "zh": "“合规 → 截止日日历”在一个月视图中显示所有客户的发薪日以及 SSS、PhilHealth、Pag-IBIG 和 BIR 到期日。绿色为已完成，黄色为 3 天内到期，红色为逾期。可导出为 CSV，导入 Google 日历或 Outlook。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-reports",
+  "category": "talaan",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "dashboard",
+    4
+   ],
+   [
+    "report",
+    3
+   ],
+   [
+    "reports",
+    3
+   ],
+   [
+    "analytics",
+    4
+   ],
+   [
+    "payroll cost",
+    3
+   ],
+   [
+    "ulat",
+    2
+   ],
+   [
+    "看板",
+    4
+   ],
+   [
+    "报表",
+    4
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Where are the dashboards and reports?",
+   "tl": "Nasaan ang dashboard at mga report?",
+   "zh": "看板和报表在哪里？"
+  },
+  "a": {
+   "en": "Analytics → Dashboard shows employees, payroll cost, government payments, on-time filing and cost by department, for all clients or one. Analytics → Reports downloads the payroll summary, year to date by employee, remittances, cost by department, leave balances and loans as CSV for Excel.",
+   "tl": "Ipinapakita ng Analytics → Dashboard ang empleyado, gastos sa payroll, bayad sa gobyerno, filing sa oras at gastos ayon sa department, para sa lahat ng client o isa. Dina-download ng Analytics → Mga report ang buod ng payroll, year to date bawat empleyado, remittance, gastos ayon sa department, balanse ng leave at loan bilang CSV para sa Excel.",
+   "zh": "“分析 → 看板”显示全部或单个客户的员工人数、工资成本、政府缴款、按时申报和各部门成本。“分析 → 报表”可将工资汇总、员工年初至今、缴款、各部门成本、假期余额和借款下载为 CSV，用 Excel 打开。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-history",
+  "category": "talaan",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "salary change",
+    4
+   ],
+   [
+    "who changed",
+    5
+   ],
+   [
+    "history",
+    3
+   ],
+   [
+    "audit trail",
+    4
+   ],
+   [
+    "kasaysayan",
+    4
+   ],
+   [
+    "变更记录",
+    5
+   ],
+   [
+    "调薪",
+    3
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I see who changed an employee’s salary?",
+   "tl": "Paano makita kung sino ang nagpalit ng sahod ng empleyado?",
+   "zh": "怎么查看谁修改了员工工资？"
+  },
+  "a": {
+   "en": "Open the client, then the 🕘 button next to the employee, or HR → People. Every change to salary, position, bank account or ID numbers is recorded with who made it, when and the reason given. Bank and ID numbers are masked in the history.",
+   "tl": "Buksan ang client, saka ang 🕘 na button sa tabi ng empleyado, o ang HR → Mga tao. Naitatala ang bawat pagbabago sa sahod, posisyon, bank account o ID number kasama kung sino, kailan at ang dahilan. Nakatago ang bank at ID number sa kasaysayan.",
+   "zh": "打开客户，点击员工旁的 🕘 按钮，或进入“人事 → 员工”。工资、职位、银行账号或证件号码的每次修改都会记录操作人、时间和原因。银行账号和证件号码在记录中会被遮盖。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "how-support",
+  "category": "talaan",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "contact support",
+    5
+   ],
+   [
+    "report a problem",
+    5
+   ],
+   [
+    "ticket",
+    4
+   ],
+   [
+    "help desk",
+    4
+   ],
+   [
+    "support",
+    3
+   ],
+   [
+    "kontakin",
+    4
+   ],
+   [
+    "联系支持",
+    5
+   ],
+   [
+    "工单",
+    4
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I report a problem or ask Talaan support?",
+   "tl": "Paano mag-report ng problema o magtanong sa Talaan support?",
+   "zh": "怎么报告问题或联系 Talaan 支持？"
+  },
+  "a": {
+   "en": "Press Contact support at the top right of any page. Talaan attaches the page, your name and the app version automatically. Do not include salaries, ID numbers or bank details. Replies appear under My tickets in the same window and by email.",
+   "tl": "Pindutin ang Kontakin ang support sa kanang itaas ng kahit anong page. Kusang ilalakip ng Talaan ang page, pangalan mo at bersyon ng app. Huwag isama ang sahod, ID number o detalye ng bangko. Lalabas ang sagot sa Aking mga ticket sa parehong window at sa email.",
+   "zh": "点击任何页面右上角的“联系支持”。Talaan 会自动附上页面、你的姓名和应用版本。请不要填写工资、证件号码或银行信息。回复会显示在同一窗口的“我的工单”中，并通过邮件发送。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "emp-leave",
+  "category": "employees",
+  "audience": [
+   "employee"
+  ],
+  "kw": [
+   [
+    "request leave",
+    5
+   ],
+   [
+    "my leave",
+    4
+   ],
+   [
+    "leave left",
+    4
+   ],
+   [
+    "humiling ng leave",
+    5
+   ],
+   [
+    "申请请假",
+    5
+   ],
+   [
+    "剩余假期",
+    4
+   ]
+  ],
+  "source": "Talaan help",
+  "sourceUrl": "",
+  "effective": "2026-10",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "How do I request leave and see how many days I have left?",
+   "tl": "Paano humiling ng leave at makita ang natitirang araw?",
+   "zh": "怎么申请请假、查看剩余天数？"
+  },
+  "a": {
+   "en": "Open My leave. Your balances for this year are at the top. Press Request leave, choose the type and dates, and send. Your employer approves it and you get a notice. Leave without pay is deducted from that cutoff’s pay.",
+   "tl": "Buksan ang Aking leave. Nasa itaas ang balanse mo ngayong taon. Pindutin ang Humiling ng leave, piliin ang uri at petsa, at ipadala. Aaprubahan ito ng employer mo at makakatanggap ka ng abiso. Ibinabawas sa sahod ng cutoff na iyon ang leave na walang bayad.",
+   "zh": "打开“我的假期”，顶部显示本年余额。点击“申请请假”，选择类型和日期后提交。雇主审批后你会收到通知。无薪假会从当期工资中扣除。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "holidays-2026",
+  "category": "pay",
+  "audience": [
+   "accountant",
+   "owner",
+   "employee"
+  ],
+  "kw": [
+   [
+    "holidays 2026",
+    5
+   ],
+   [
+    "holiday list",
+    5
+   ],
+   [
+    "2026 holidays",
+    5
+   ],
+   [
+    "proclamation 1006",
+    5
+   ],
+   [
+    "listahan ng holiday",
+    5
+   ],
+   [
+    "节假日",
+    4
+   ],
+   [
+    "假日表",
+    4
+   ],
+   [
+    "holiday sa 2026",
+    7
+   ],
+   [
+    "the 2026 holidays",
+    7
+   ],
+   [
+    "2026 年有哪些节假日",
+    7
+   ]
+  ],
+  "source": "Proclamation No. 1006 (s. 2025), 2026 regular holidays and special non-working days",
+  "sourceUrl": "https://www.officialgazette.gov.ph",
+  "effective": "2026-01",
+  "verified": "2026-10-19",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "What are the 2026 holidays?",
+   "tl": "Ano ang mga holiday sa 2026?",
+   "zh": "2026 年有哪些节假日？"
+  },
+  "a": {
+   "en": "Regular holidays: 1 January, 2 and 3 April (Maundy Thursday, Good Friday), 9 April, 1 May, 12 June, 31 August, 30 November, 25 and 30 December. Special non-working days: 21 August, 1 and 2 November, 8, 24 and 31 December, 4 April, and Chinese New Year (17 February). Eid holidays are set by separate proclamations.",
+   "tl": "Regular holiday: 1 Enero, 2 at 3 Abril (Huwebes at Biyernes Santo), 9 Abril, 1 Mayo, 12 Hunyo, 31 Agosto, 30 Nobyembre, 25 at 30 Disyembre. Special non-working day: 21 Agosto, 1 at 2 Nobyembre, 8, 24 at 31 Disyembre, 4 Abril, at Chinese New Year (17 Pebrero). Hiwalay na proklamasyon ang nagtatakda ng Eid.",
+   "zh": "法定节假日：1 月 1 日，4 月 2 日和 3 日（濯足节、耶稣受难日），4 月 9 日，5 月 1 日，6 月 12 日，8 月 31 日，11 月 30 日，12 月 25 日和 30 日。特别非工作日：8 月 21 日，11 月 1 日和 2 日，12 月 8 日、24 日和 31 日，4 月 4 日，以及春节（2 月 17 日）。开斋节和宰牲节另行公布。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "leave-monetize",
+  "category": "tax",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "unused leave",
+    4
+   ],
+   [
+    "leave conversion",
+    5
+   ],
+   [
+    "convert leave",
+    5
+   ],
+   [
+    "monetized",
+    4
+   ],
+   [
+    "commutation",
+    3
+   ],
+   [
+    "gawing pera",
+    4
+   ],
+   [
+    "假期折现",
+    5
+   ],
+   [
+    "未休假",
+    4
+   ]
+  ],
+  "source": "Labor Code Art. 95 (service incentive leave commutable to cash); RR 11-2018 (de minimis: monetized unused vacation leave up to 10 days)",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "2018-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Is converting unused leave to cash taxable?",
+   "tl": "May buwis ba ang hindi nagamit na leave na ginawang pera?",
+   "zh": "未休假期折现要缴税吗？"
+  },
+  "a": {
+   "en": "Unused service incentive leave must be paid in cash at year end or on separation. For private employees, cash for up to 10 days of unused vacation leave a year is a tax-free de minimis benefit; anything above that is taxable pay. Talaan applies the 10-day limit in final pay.",
+   "tl": "Dapat bayaran ng pera ang hindi nagamit na service incentive leave sa katapusan ng taon o sa paghihiwalay. Sa pribadong empleyado, walang buwis ang pera para sa hanggang 10 araw na hindi nagamit na vacation leave kada taon (de minimis); may buwis ang lampas doon. Inilalapat ng Talaan ang 10-araw na limit sa final pay.",
+   "zh": "未休的服务奖励假须在年底或离职时折现支付。私营企业员工每年最多 10 天未休年假的折现属于小额免税福利，超出部分为应税工资。Talaan 在离职结算中套用 10 天限额。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "reimburse-tax",
+  "category": "tax",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "reimbursement",
+    4
+   ],
+   [
+    "reimburse",
+    4
+   ],
+   [
+    "liquidated",
+    3
+   ],
+   [
+    "receipts",
+    2
+   ],
+   [
+    "ibinalik na gastos",
+    4
+   ],
+   [
+    "报销",
+    5
+   ]
+  ],
+  "source": "NIRC Sec. 32(A) and RR 2-98, Sec. 2.78.1 (expenses incurred for the employer, liquidated with receipts, are not compensation)",
+  "sourceUrl": "https://www.bir.gov.ph",
+  "effective": "1998-04",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Are reimbursements to employees taxable?",
+   "tl": "May buwis ba ang reimbursement sa empleyado?",
+   "zh": "给员工的报销要缴税吗？"
+  },
+  "a": {
+   "en": "Expenses an employee pays for the business, such as fuel, meals or training, are not compensation when they are reimbursed against receipts in the employer’s name and liquidated. They are added to net pay and not taxed. Fixed allowances paid without receipts are taxable unless they are de minimis.",
+   "tl": "Hindi sahod ang gastos na binayaran ng empleyado para sa negosyo, gaya ng fuel, pagkain o training, kapag ibinalik ito batay sa resibo sa pangalan ng employer at na-liquidate. Idinadagdag ito sa net pay at walang buwis. May buwis ang nakapirming allowance na walang resibo maliban kung de minimis.",
+   "zh": "员工为公司垫付的费用（如燃油、餐费或培训），如果凭以雇主名义开具的收据报销并已核销，不属于工资，加到实发工资中，不计税。无收据的固定津贴需计税，属于小额免税福利的除外。"
+  }
+ },
+ {
+  "product": "talaan",
+  "namespace": "talaan-ph-payroll",
+  "id": "loan-deduct",
+  "category": "contributions",
+  "audience": [
+   "accountant",
+   "owner"
+  ],
+  "kw": [
+   [
+    "loan amortization",
+    5
+   ],
+   [
+    "sss loan",
+    4
+   ],
+   [
+    "pag-ibig loan",
+    4
+   ],
+   [
+    "deduct loan",
+    4
+   ],
+   [
+    "kaltas sa loan",
+    5
+   ],
+   [
+    "贷款扣款",
+    5
+   ],
+   [
+    "代扣",
+    6
+   ],
+   [
+    "贷款还款",
+    6
+   ],
+   [
+    "loan payments",
+    6
+   ],
+   [
+    "bayad sa sss at pag-ibig loan",
+    7
+   ]
+  ],
+  "source": "SSS and Pag-IBIG employer obligations on member loans (salary deduction and monthly remittance)",
+  "sourceUrl": "https://www.sss.gov.ph",
+  "effective": "2026-01",
+  "verified": "2026-10-04",
+  "status": "Needs CPA review before production use",
+  "q": {
+   "en": "Must the employer deduct SSS and Pag-IBIG loan payments?",
+   "tl": "Kailangan bang kaltasan ng employer ang bayad sa SSS at Pag-IBIG loan?",
+   "zh": "雇主必须代扣 SSS 和 Pag-IBIG 贷款还款吗？"
+  },
+  "a": {
+   "en": "Yes. When SSS or Pag-IBIG bills a member loan, the employer deducts the monthly amortization from pay and remits it with the contributions (SSS ML-2, Pag-IBIG STLRF). Late remittance carries penalties. Record each loan in Talaan so the deduction and balance are tracked.",
+   "tl": "Oo. Kapag nag-bill ang SSS o Pag-IBIG ng loan ng miyembro, kinakaltas ng employer ang buwanang hulog sa sahod at nire-remit kasama ng kontribusyon (SSS ML-2, Pag-IBIG STLRF). May multa ang late na remittance. Itala ang bawat loan sa Talaan para masubaybayan ang kaltas at balanse.",
+   "zh": "是的。SSS 或 Pag-IBIG 对会员贷款出账后，雇主须从工资中扣除每月还款，并随缴款一起上缴（SSS ML-2、Pag-IBIG STLRF）。逾期上缴会被罚款。请在 Talaan 中登记每笔贷款，以便跟踪扣款和余额。"
   }
  }
 ]

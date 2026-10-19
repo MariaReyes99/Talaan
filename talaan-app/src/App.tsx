@@ -3,7 +3,7 @@ import { jsPDF } from 'jspdf';
 import TourHost from './tour/TourHost';
 import { makeT, LANG_NAMES, INTL_LOCALE, DICTS, type Lang } from './i18n';
 import { EMPTY_HOURS, idRules, journal, totals, r2, type Employee, type Hours, type Check, type Line } from './engine';
-import { USERS as SEED_USERS, SEED_REFS, inPeriod, sampleState, periodInfo, currentPeriod, shiftPeriod, linesFor, checksFor, filingsFor, tasksFor, daysBetween, iso, PORTAL,
+import { USERS as SEED_USERS, SEED_REFS, inPeriod, sampleState, migrate, refreshRun, runKind, isRegular, hasModule, modulesOf, MODULES, MODULE_PRICE, AI_INCLUDED, APP_VERSION, type ModuleKey, periodInfo, currentPeriod, shiftPeriod, linesFor, checksFor, filingsFor, tasksFor, daysBetween, iso, PORTAL,
   DEFAULT_CODES, type Notice, type Email, type Invoice, type InvoiceLine, type Rates, type Contact, type Region, type Holiday, type WatchSource, type ReviewItem, type Role, type AccountKey, type BankTemplate, type BankColumn, type EmployerIds, type Remit, type CheckKey, type CheckValue, type PartnerCheck, type Activity, type State, type Run, type Client, type Task, type Filing, type FilingKind, type User } from './model';
 import { ask, KB, CATEGORIES, liveCorpus, checkCorpus, type Entry } from './kb';
 import { addDoc, listDocs, getDoc, deleteDoc, MAX_DOC_BYTES, ACCEPT_DOCS, type DocMeta } from './docs';
@@ -13,22 +13,32 @@ import { form2316Pdf } from './pdf2316';
 import { continuityPack } from './continuity';
 import { encryptFile, decryptFile, passwordProblems, DecryptError } from './secure';
 import { strToU8, zipSync } from 'fflate';
+import MARK from '../assets/talaan-mark-96.png';
+import { PayrollSetup, OffCycleForm, FinalPayForm, RunKindChip, RunTools, RunPrefillNote } from './modules/payroll';
+import { HR, MyLeave, EmployeeHistory, logEmployeeChanges } from './modules/hr';
+import { ComplianceCalendar, ImportPayroll } from './modules/compliance';
+import { Books } from './modules/books';
+import { Analytics } from './modules/analytics';
+import { Hq, SupportForm, WhatsNew } from './modules/hq';
+import { GlobalSearch, ModulesCard, ClientSetup, MoreMenu, ModuleBadge, BRAND_MARK } from './modules/shell';
 import { yearEnd } from './engine';
 import { birFile, payoutFile, xeroJournalCsv, genericJournalCsv, employeesCsv, registerCsv, calendarCsv, parseTable } from './files';
 
-const KEY = 'talaan-prototype-v8';
+const KEY = 'talaan-prototype-v9';
+const OLD_KEY = 'talaan-prototype-v8';
 let USERS: User[] = SEED_USERS; // the live user list, refreshed from stored data on every render
 const TOUR_SEEN = 'talaan-tour-seen';
 const tourSeen = () => { try { return localStorage.getItem(TOUR_SEEN) === '1'; } catch { return false; } };
-type Route = { page: 'home' | 'clients' | 'client' | 'payruns' | 'run' | 'files' | 'payslips' | 'ask' | 'faqs' | 'plans' | 'connections' | 'admin' | 'billing'; id?: string; step?: number };
+export type Route = { page: 'home' | 'clients' | 'client' | 'payruns' | 'run' | 'files' | 'payslips' | 'ask' | 'faqs' | 'plans' | 'connections' | 'admin' | 'billing' | 'payroll' | 'hr' | 'books' | 'analytics' | 'hq' | 'myleave'; id?: string; step?: number };
 type T = ReturnType<typeof makeT>;
 
 function load(): { s: State; lang: Lang; user: string } {
-  try { const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (raw?.s?.v === 8) return raw; } catch { /* empty */ }
+  try { const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (raw?.s?.v === 9) return raw; } catch { /* empty */ }
+  try { const old = JSON.parse(localStorage.getItem(OLD_KEY) ?? 'null'); if (old?.s?.v === 8) return { ...old, s: migrate(old.s) }; } catch { /* empty */ }
   return { s: sampleState(), lang: 'en', user: 'jun' };
 }
-const peso = (n: number) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const today = () => new Date();
+export const peso = (n: number) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const today = () => new Date();
 
 export default function App() {
   const init = useMemo(load, []);
@@ -47,7 +57,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify({ s, lang, user: userId })); } catch { /* empty */ } }, [s, lang, userId]);
   useEffect(() => { document.documentElement.lang = lang === 'zh' ? 'zh-Hans' : lang; }, [lang]);
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(''), 2600); return () => clearTimeout(id); }, [toast]);
-  useEffect(() => { if (user.role === 'employee') setRoute({ page: 'payslips' }); else if (route.page === 'payslips') setRoute({ page: 'home' }); }, [userId]);
+  useEffect(() => { if (user.role === 'employee') setRoute({ page: 'payslips' }); else if (user.role === 'talaanAdmin') setRoute({ page: 'hq' }); else if (['payslips', 'myleave', 'hq'].includes(route.page)) setRoute({ page: 'home' }); }, [userId]);
 
   const fmt = (d: Date) => d.toLocaleDateString(INTL_LOCALE[lang], { month: 'short', day: 'numeric', year: 'numeric' });
   const monthLabel = (m: string) => new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1).toLocaleDateString(INTL_LOCALE[lang], { month: 'long', year: 'numeric' });
@@ -60,17 +70,24 @@ export default function App() {
     log('act_email', { subject }, clientId); return true; };
   const ctx: Ctx = { s, setS, t, lang, user, go: setRoute, fmt, monthLabel, periodLabel, modal: setModal, toast: setToast, openTour: () => setTourOpen(true), log, notify, email };
 
-  const nav: [Route['page'], string][] = user.role === 'employee' ? [['payslips', 'myPayslips'], ['faqs', 'faqs'], ['ask', 'ask']]
-    : [['home', 'home'], ['clients', 'clients'], ['payruns', 'payRuns'], ['files', 'remitPay'], ['connections', 'connections'], ...(user.role !== 'client' ? [['billing', 'billing']] as [Route['page'], string][] : []), ['faqs', 'faqs'], ['ask', 'ask'], ...(user.role === 'firmOwner' ? [['admin', 'admin']] as [Route['page'], string][] : [])];
-  const active = route.page === 'client' ? 'clients' : route.page === 'run' ? 'payruns' : route.page;
+  const mods = new Set<ModuleKey>(visibleClients(ctx).flatMap(x => modulesOf(x).filter(m => hasModule(x, m))));
+  const navMods: [Route['page'], string, ModuleKey][] = [['payruns', 'navPayroll', 'payroll'], ['hr', 'navHR', 'hr'], ['files', 'navCompliance', 'compliance'], ['books', 'navBooks', 'books'], ['analytics', 'navAnalytics', 'analytics'], ['ask', 'ask', 'ai']];
+  const nav: [Route['page'], string][] = user.role === 'employee' ? [['payslips', 'myPayslips'], ['myleave', 'myLeave'], ['faqs', 'faqs'], ['ask', 'ask']]
+    : user.role === 'talaanAdmin' ? [['hq', 'navHq']]
+    : [['home', 'home'], ['clients', 'clients'], ...navMods.filter(([, , m]) => mods.has(m)).map(([p, k]) => [p, k] as [Route['page'], string])];
+  const more: [Route['page'], string][] = user.role === 'employee' || user.role === 'talaanAdmin' ? [] : [['connections', 'connections'], ...(user.role !== 'client' ? [['billing', 'billing']] as [Route['page'], string][] : []), ['faqs', 'faqs'], ['plans', 'plans'], ...(user.role === 'firmOwner' ? [['admin', 'admin']] as [Route['page'], string][] : [])];
+  const active = route.page === 'client' ? 'clients' : route.page === 'run' || route.page === 'payroll' ? 'payruns' : route.page;
+  const ctxClient = route.page === 'client' ? s.clients.find(x => x.id === route.id) : route.page === 'run' ? s.clients.find(x => x.id === s.runs.find(r => r.id === route.id)?.clientId) : user.role === 'client' || user.role === 'employee' ? s.clients.find(x => x.id === user.clientId) : undefined;
 
   return (
     <div className="app">
       <div className="banner">{t('banner')}</div>
       <header className="bar">
-        <button className="logo" onClick={() => setRoute({ page: user.role === 'employee' ? 'payslips' : 'home' })}><Star size={24} /><span>talaan</span></button>
-        <nav>{nav.map(([p, k]) => <button key={p} className={active === p ? 'on' : ''} onClick={() => setRoute({ page: p })}>{t(k)}</button>)}</nav>
+        <button className="logo" onClick={() => setRoute({ page: user.role === 'employee' ? 'payslips' : 'home' })}><img src={MARK} alt="" /><span className="wordmark">TALAAN</span></button>
+        <nav>{nav.map(([p, k]) => <button key={p} className={active === p ? 'on' : ''} onClick={() => setRoute({ page: p })}>{t(k)}</button>)}
+          {more.length > 0 && <MoreMenu c={ctx} items={more} active={active} />}</nav>
         <div className="right">
+          {user.role !== 'employee' && user.role !== 'talaanAdmin' && <GlobalSearch c={ctx} />}
           <Bell c={ctx} />
           <button className="helpbtn" aria-pressed={s.prefs?.help !== false} title={s.prefs?.help !== false ? t('hideHelp') : t('showHelp')} onClick={() => setS(p => ({ ...p, prefs: { ...p.prefs, help: p.prefs?.help === false } }))}>?<span>{t('help')}</span></button>
           <button className="tourbtn" aria-label={t('tour')} title={t('tour')} onClick={() => setTourOpen(true)}><Star size={16} /><span>{t('tour')}</span></button>
@@ -85,7 +102,12 @@ export default function App() {
           </label>
         </div>
       </header>
+      <div className="ctxbar" aria-label={t('ctxLabel')}><span>{t('signedInAs')} <b>{user.name}</b> · {t(roleKey(user))}</span>
+        {user.role !== 'talaanAdmin' && <span>{t('firmLbl')} <b>{s.billing.firmName}</b></span>}
+        {ctxClient && <span className="ctxclient">{t('workingOn')} <b>{ctxClient.name}</b></span>}
+        <span className="grow" />{user.role !== 'talaanAdmin' && <button className="link" onClick={() => setModal(<SupportForm c={ctx} page={route.page} clientId={ctxClient?.id} />)}>{t('contactSupport')}</button>}</div>
       <main className="main">
+        {user.role !== 'talaanAdmin' && <WhatsNew c={ctx} />}
         {s.prefs?.help !== false && <PageHelp c={ctx} page={route.page} />}
         {route.page === 'home' && <Home c={ctx} />}
         {route.page === 'clients' && <Clients c={ctx} />}
@@ -100,10 +122,18 @@ export default function App() {
         {route.page === 'billing' && (user.role === 'firmOwner' || user.role === 'preparer' ? <BillingPage c={ctx} tab={route.id} /> : null)}
         {route.page === 'admin' && (user.role === 'firmOwner' ? <Admin c={ctx} tab={route.id} /> : <p className="warn">{t('adminOnly')}</p>)}
         {route.page === 'plans' && <Plans c={ctx} />}
+        {route.page === 'payroll' && <PayrollSetup c={ctx} tab={route.id} />}
+        {route.page === 'hr' && <HR c={ctx} tab={route.id} />}
+        {route.page === 'myleave' && <MyLeave c={ctx} />}
+        {route.page === 'books' && <Books c={ctx} />}
+        {route.page === 'analytics' && <Analytics c={ctx} tab={route.id} />}
+        {route.page === 'hq' && (user.role === 'talaanAdmin' ? <Hq c={ctx} tab={route.id} /> : <p className="warn">{t('hqOnly')}</p>)}
       </main>
       <footer className="foot">
         <button className="link tourlink" onClick={() => setTourOpen(true)}><Star size={16} /> {t('tour')}</button>
         <button className="link" onClick={() => setRoute({ page: 'plans' })}>{t('plans')}</button>
+        {user.role !== 'talaanAdmin' && <button className="link" onClick={() => setModal(<SupportForm c={ctx} page={route.page} clientId={ctxClient?.id} />)}>{t('contactSupport')}</button>}
+        <span className="muted small">Talaan {APP_VERSION} · {t('tagline')}</span>
         <button className="link" onClick={() => { const fresh = sampleState(); setS(fresh); setToast(t('resetDemo')); setRoute({ page: 'home' }); }}>{t('resetDemo')}</button>
       </footer>
       {modal && <div className="scrim" onClick={() => setModal(null)}><div className="modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>{modal}</div></div>}
@@ -113,21 +143,22 @@ export default function App() {
   );
 }
 
-interface Ctx { s: State; setS: (f: State | ((p: State) => State)) => void; t: T; lang: Lang; user: User; go: (r: Route) => void; fmt: (d: Date) => string;
+export interface Ctx { s: State; setS: (f: State | ((p: State) => State)) => void; t: T; lang: Lang; user: User; go: (r: Route) => void; fmt: (d: Date) => string;
   monthLabel: (m: string) => string; periodLabel: (p: string) => string; modal: (n: ReactNode) => void; toast: (s: string) => void; openTour: () => void; log: (action: string, detail?: Activity['detail'], clientId?: string) => void;
   notify: (to: string[], key: string, vars: Notice['vars'], route: Route) => void; email: (to: string[], subject: string, body: string, kind: string, clientId?: string) => boolean }
-const roleKey = (u: User) => ({ firmOwner: 'roleFirmOwner', preparer: 'rolePreparer', client: 'roleClient', employee: 'roleEmployee' } as const)[u.role];
-const visibleClients = (c: Ctx) => c.s.clients.filter(x => x.active !== false && (c.user.role !== 'client' || x.id === c.user.clientId));
+export const roleKey = (u: User) => ({ firmOwner: 'roleFirmOwner', preparer: 'rolePreparer', client: 'roleClient', employee: 'roleEmployee', talaanAdmin: 'roleTalaan' } as const)[u.role];
+export const usersNow = () => USERS;
+export const visibleClients = (c: Ctx) => c.s.clients.filter(x => x.active !== false && (c.user.role !== 'client' || x.id === c.user.clientId));
 const corpusOf = (c: Ctx) => liveCorpus(c.s.corpus.custom, c.s.corpus.removed);
 
-function Star({ size = 20 }: { size?: number }) {
+export function Star({ size = 20 }: { size?: number }) {
   const pts = Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 24 : 44; return `${(50 + r * Math.cos(a)).toFixed(1)},${(54 + r * Math.sin(a)).toFixed(1)}`; }).join(' ');
-  return <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true"><polygon points={pts} fill="#F6B21A" stroke="#F6B21A" strokeWidth={10} strokeLinejoin="round" /></svg>;
+  return <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true"><polygon points={pts} fill="#E2B13C" stroke="#E2B13C" strokeWidth={10} strokeLinejoin="round" /></svg>;
 }
-const Chip = ({ u, children }: { u: 'late' | 'soon' | 'ok' | 'info'; children: ReactNode }) => <span className={`chip ${u}`}>{children}</span>;
-const Why = ({ children }: { children: ReactNode }) => <p className="why"><Star size={18} />{children}</p>;
+export const Chip = ({ u, children }: { u: 'late' | 'soon' | 'ok' | 'info'; children: ReactNode }) => <span className={`chip ${u}`}>{children}</span>;
+export const Why = ({ children }: { children: ReactNode }) => <p className="why"><Star size={18} />{children}</p>;
 
-function dueText(c: Ctx, d: Date) {
+export function dueText(c: Ctx, d: Date) {
   const n = daysBetween(today(), d);
   return n < -1 ? c.t('daysLate', { days: -n }) : n === -1 ? c.t('dayLate') : n === 0 ? c.t('dueToday') : n === 1 ? c.t('dueTomorrow') : c.t('dueIn', { days: n });
 }
@@ -136,7 +167,7 @@ function taskText(c: Ctx, k: Task) {
   return c.t(k.kind === 'approve' ? 'taskPayRun' : 'taskStart', { period: c.periodLabel(k.period!) });
 }
 const LIT: Record<string, string> = { sss: 'SSS', philhealth: 'PhilHealth', pagibig: 'Pag-IBIG' };
-const fileKey = (k: FilingKind) => ({ bir: 'fileBIR', sss: 'fileSSS', ph: 'filePH', pi: 'filePI' } as const)[k];
+export const fileKey = (k: FilingKind) => ({ bir: 'fileBIR', sss: 'fileSSS', ph: 'filePH', pi: 'filePI' } as const)[k];
 function openTask(c: Ctx, k: Task) {
   if (k.kind === 'file') return c.go({ page: 'files' });
   if (k.kind === 'approve') return c.go({ page: 'run', id: k.runId });
@@ -196,13 +227,16 @@ function ClientPage({ c, id }: { c: Ctx; id: string }) {
   const num = (v: string, lo: number, hi: number) => Math.min(hi, Math.max(lo, Number(v) || lo));
   return (<>
     <div className="head"><div><h1>{cl.name}</h1><p className="muted">{t('employeesCount', { n: emps.length })}</p></div>
-      {canEdit && <button className="btn" onClick={() => c.go({ page: 'payruns', id: `${id}|${currentPeriod(cl.freq)}` })}>{t('startPayRun')}</button>}</div>
+      {canEdit && hasModule(cl, 'payroll') && <button className="btn" onClick={() => c.go({ page: 'payruns', id: `${id}|${currentPeriod(cl.freq)}` })}>{t('startPayRun')}</button>}</div>
+    <ClientSetup c={c} cl={cl} />
+    <ModulesCard c={c} cl={cl} canEdit={c.user.role === 'firmOwner'} onChange={p => upd(p)} />
     <section className="card"><div className="row between"><h2>{t('employeesTitle')}</h2>{canEdit && <button className="btn small" onClick={() => c.modal(<EmployeeForm c={c} clientId={id} />)}>{t('addEmployee')}</button>}</div>
-      <table className="tbl"><thead><tr><th>{t('name')}</th><th>{t('position')}</th><th className="num">{t('monthlyRate')}</th><th>{t('tin')}</th><th>{t('sss')}</th><th></th></tr></thead>
+      <div className="scroll"><table className="tbl"><thead><tr><th>{t('name')}</th><th>{t('position')}</th><th>{t('department')}</th><th className="num">{t('monthlyRate')}</th><th>{t('tin')}</th><th>{t('sss')}</th><th></th></tr></thead>
         <tbody>{emps.map(e => { const bad = !idRules.tin(e.tin) || !idRules.sss(e.sss) || !idRules.philhealth(e.philhealth) || !idRules.pagibig(e.pagibig) || !idRules.bankAccount(e.bankAccount);
-          return (<tr key={e.id}><td><b>{e.name}</b>{bad && <> <Chip u="late">!</Chip></>}</td><td>{e.position}</td><td className="num">{peso(e.monthlyRate)}</td><td>{e.tin}</td><td>{e.sss}</td>
+          return (<tr key={e.id} className={e.active ? '' : 'inactive'}><td><b>{e.name}</b>{bad && <> <Chip u="late">!</Chip></>}{e.separationDate && <div className="muted small">{t('separatedOn', { date: e.separationDate })}</div>}</td><td>{e.position}</td><td>{e.department ?? '—'}</td><td className="num">{peso(e.monthlyRate)}</td><td>{e.tin}</td><td>{e.sss}</td>
             <td>{canEdit && <button className="btn small ghost" onClick={() => c.modal(<EmployeeForm c={c} clientId={id} emp={e} />)}>{t('editEmployee')}</button>}
-              <button className="btn small ghost" onClick={() => c.modal(<div><h2>{e.name}</h2><DocsPanel c={c} owner={`emp:${e.id}`} title={t('docsTitle')} /><div className="row end"><button className="btn" onClick={() => c.modal(null)}>{t('close')}</button></div></div>)}>📎</button></td></tr>); })}</tbody></table></section>
+              <button className="btn small ghost" onClick={() => c.modal(<div><h2>{e.name}</h2><DocsPanel c={c} owner={`emp:${e.id}`} title={t('docsTitle')} /><div className="row end"><button className="btn" onClick={() => c.modal(null)}>{t('close')}</button></div></div>)}>📎</button>
+              <button className="btn small ghost" title={t('historyNotes')} aria-label={`${t('historyNotes')}: ${e.name}`} onClick={() => c.modal(<EmployeeHistory c={c} e={e} />)}>🕘</button></td></tr>); })}</tbody></table></div></section>
     <section className="card"><h2>{t('settings')}</h2>
       <div className="form">
         <label>{t('region')}<select disabled={!canEdit} value={cl.region ?? ''} onChange={e => { const r = c.s.refs.regions.find(x => x.id === e.target.value); upd({ region: e.target.value, ...(r ? { minWage: r.nonAgri } : {}) }); }}><option value="">—</option>{c.s.refs.regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
@@ -231,7 +265,7 @@ function ClientPage({ c, id }: { c: Ctx; id: string }) {
     </>);
 }
 
-function EmployeeForm({ c, clientId, emp }: { c: Ctx; clientId: string; emp?: Employee }) {
+export function EmployeeForm({ c, clientId, emp }: { c: Ctx; clientId: string; emp?: Employee }) {
   const { t } = c; const cl = c.s.clients.find(x => x.id === clientId)!;
   const [e, setE] = useState<Employee>(emp ?? { id: `${clientId}-${Date.now()}`, clientId, name: '', position: '', monthlyRate: 0, workdays: cl.workdays, tin: '', sss: '', philhealth: '', pagibig: '', bankAccount: '', active: true });
   const d = (v: string) => v.replace(/\D/g, '').length;
@@ -241,11 +275,14 @@ function EmployeeForm({ c, clientId, emp }: { c: Ctx; clientId: string; emp?: Em
     ...((e.payout ?? 'bank') === 'bank' ? [['bankAccount', idRules.bankAccount, t('bankHelp')]] as typeof fields : [['mobile', idRules.mobile, t('mobileHelp')]] as typeof fields)];
   const ok = e.name.trim().length > 1 && e.monthlyRate > 0 && fields.every(([k, f]) => f(String(e[k] ?? '')));
   const set = (k: keyof Employee, v: string | number) => setE({ ...e, [k]: v });
-  const save = () => { if (!ok) return; c.setS(s => ({ ...s, employees: emp ? s.employees.map(x => x.id === e.id ? e : x) : [...s.employees, e] })); c.log('act_emp', { name: e.name }, clientId); c.modal(null); c.toast(t('saved')); };
+  const [why, setWhy] = useState('');
+  const sensitive = !!emp && (emp.monthlyRate !== e.monthlyRate || emp.position !== e.position || (emp.bankAccount ?? '') !== (e.bankAccount ?? ''));
+  const save = () => { if (!ok || (sensitive && why.trim().length < 3)) return; c.setS(s => ({ ...logEmployeeChanges(s, emp, e, c.user.id, why.trim()), employees: emp ? s.employees.map(x => x.id === e.id ? e : x) : [...s.employees, e] })); c.log('act_emp', { name: e.name }, clientId); c.modal(null); c.toast(t('saved')); };
   return (<div><h2>{emp ? t('editEmployee') : t('addEmployee')}</h2>
     <div className="form">
       <label>{t('name')}<input value={e.name} onChange={x => set('name', x.target.value)} />{e.name.trim().length < 2 && <small className="bad">{t('requiredField')}</small>}</label>
       <label>{t('position')}<input value={e.position} onChange={x => set('position', x.target.value)} /></label>
+      <label>{t('department')}<input list={`depts-${clientId}`} value={e.department ?? ''} onChange={x => setE({ ...e, department: x.target.value.slice(0, 40) })} /><datalist id={`depts-${clientId}`}>{(cl.departments ?? []).map(d => <option key={d} value={d} />)}</datalist></label>
       <label>{t('monthlyRate')}<input type="number" min={0} step="0.01" value={e.monthlyRate || ''} onChange={x => set('monthlyRate', Math.max(0, Number(x.target.value) || 0))} />{!(e.monthlyRate > 0) && <small className="bad">{t('requiredField')}</small>}</label>
       <label>{t('hireDate')}<input type="date" value={e.hireDate ?? ''} onChange={x => setE({ ...e, hireDate: x.target.value })} /></label>
       <label>{t('birthDate')}<input type="date" value={e.birthDate ?? ''} onChange={x => setE({ ...e, birthDate: x.target.value })} /></label>
@@ -254,8 +291,9 @@ function EmployeeForm({ c, clientId, emp }: { c: Ctx; clientId: string; emp?: Em
         <label key={k} className={good ? 'good' : 'badfield'}>{t(k)}<input inputMode="numeric" value={v} onChange={x => set(k, x.target.value.replace(/[^\d-]/g, ''))} />
           <small className={good ? 'ok' : 'bad'}>{good ? '✓ ' + t('looksRight') : help}</small></label>); })}
     </div>
+    {sensitive && <div className="warnbox small"><b>{t('changeReasonTitle')}</b><label>{t('changeReason')}<input value={why} placeholder={t('changeReasonPh')} onChange={x => setWhy(x.target.value.slice(0, 200))} /></label></div>}
     {!ok && <p className="bad small">{t('fixIdsFirst')}</p>}
-    <div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button><button className="btn" disabled={!ok} onClick={save}>{t('save')}</button></div></div>);
+    <div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button><button className="btn" disabled={!ok || (sensitive && why.trim().length < 3)} onClick={save}>{t('save')}</button></div></div>);
 }
 
 /* ---------------- Pay runs ---------------- */
@@ -271,13 +309,13 @@ function runEligibility(c: Ctx, r?: Run): string | null {
   return null;
 }
 function payRows(c: Ctx, clients: Client[]): PayRow[] {
-  const rows: PayRow[] = c.s.runs.filter(r => clients.some(x => x.id === r.clientId)).map(r => {
+  const rows: PayRow[] = c.s.runs.filter(r => clients.some(x => x.id === r.clientId) && runKind(r) !== 'imported').map(r => {
     const payDate = periodInfo(r.period).payDate; let status: PsStatus = 'approved';
     if (r.status === 'draft') { const ch = checksFor(c.s, r);
       status = r.submitted ? 'waiting' : daysBetween(today(), payDate) < 0 ? 'late' : r.returned ? 'returned' : ch.some(k => k.level === 'red') ? 'blocked' : ch.filter(k => k.level === 'amber').some(k => (r.reasons[checkKey(k)] ?? '').trim().length < 3) ? 'needsReason' : 'ready'; }
     return { key: r.id, clientId: r.clientId, period: r.period, run: r, status, payDate, net: totals(linesFor(c.s, r)).net };
   });
-  for (const cl of clients) { const p = currentPeriod(cl.freq); if (!c.s.runs.some(r => r.clientId === cl.id && r.period === p)) rows.push({ key: `new|${cl.id}|${p}`, clientId: cl.id, period: p, status: 'notStarted', payDate: periodInfo(p).payDate, net: 0 }); }
+  for (const cl of clients.filter(x => hasModule(x, 'payroll'))) { const p = currentPeriod(cl.freq); if (!c.s.runs.some(r => r.clientId === cl.id && r.period === p && isRegular(r))) rows.push({ key: `new|${cl.id}|${p}`, clientId: cl.id, period: p, status: 'notStarted', payDate: periodInfo(p).payDate, net: 0 }); }
   return rows.sort((a, b) => a.payDate.getTime() - b.payDate.getTime() || a.clientId.localeCompare(b.clientId));
 }
 const PS_CHIP: Record<PsStatus, 'late' | 'soon' | 'ok' | 'info'> = { notStarted: 'info', late: 'late', blocked: 'late', needsReason: 'soon', ready: 'ok', waiting: 'soon', returned: 'late', approved: 'ok' };
@@ -285,8 +323,12 @@ function MultiFilter({ label, options, value, onChange }: { label: string; optio
   return (<div className="mf"><span className="mf-label">{label}</span><div className="pills" role="group" aria-label={label}>{options.map(([k, l]) =>
     <button key={k} aria-pressed={value.has(k)} onClick={() => { const n = new Set(value); if (n.has(k)) n.delete(k); else n.add(k); onChange(n); }}>{l}</button>)}</div></div>);
 }
+export function PayrollTabs({ c, cur }: { c: Ctx; cur: string }) {
+  const tabs: [string, string][] = [['runs', 'tabPayRuns'], ['items', 'tabPayItems'], ['templates', 'tabTemplates'], ['loans', 'tabLoans']];
+  return <div className="pills tabs" role="tablist">{tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={cur === k} aria-pressed={cur === k} onClick={() => c.go(k === 'runs' ? { page: 'payruns' } : { page: 'payroll', id: k })}>{c.t(l)}</button>)}</div>;
+}
 function PayRuns({ c }: { c: Ctx }) {
-  const { t } = c; const clients = visibleClients(c);
+  const { t } = c; const clients = visibleClients(c).filter(x => hasModule(x, 'payroll'));
   const canStart = c.user.role === 'firmOwner' || c.user.role === 'preparer';
   const all = payRows(c, clients);
   const [fCo, setFCo] = useState<Set<string>>(new Set()); const [fSt, setFSt] = useState<Set<string>>(new Set()); const [fCut, setFCut] = useState<Set<string>>(new Set());
@@ -303,8 +345,8 @@ function PayRuns({ c }: { c: Ctx }) {
   const shownStartable = shown.filter(startable);
   const allShownSelected = shownStartable.length > 0 && shownStartable.every(r => sel.has(r.key));
 
-  const makeRun = (r: PayRow): Run => ({ id: `${r.clientId}-${r.period}`, clientId: r.clientId, period: r.period, status: 'draft', reasons: {}, preparedBy: c.user.id,
-      hours: Object.fromEntries(c.s.employees.filter(e => e.clientId === r.clientId && inPeriod(e, r.period)).map(e => [e.id, { ...EMPTY_HOURS }])) });
+  const makeRun = (r: PayRow): Run => { const base: Run = { id: `${r.clientId}-${r.period}`, clientId: r.clientId, period: r.period, status: 'draft', reasons: {}, preparedBy: c.user.id,
+      hours: Object.fromEntries(c.s.employees.filter(e => e.clientId === r.clientId && inPeriod(e, r.period)).map(e => [e.id, { ...EMPTY_HOURS }])) }; return { ...base, ...refreshRun(c.s, base) }; };
   const startRows = (rows: PayRow[]) => { const made = rows.map(makeRun);
     c.setS(s => ({ ...s, runs: [...s.runs, ...made.filter(m => !s.runs.some(x => x.id === m.id))] }));
     made.forEach(m => c.log('act_created', { period: m.period }, m.clientId)); return made; };
@@ -312,8 +354,13 @@ function PayRuns({ c }: { c: Ctx }) {
   const startOne = (r: PayRow) => { const [m] = startRows([r]); c.go({ page: 'run', id: m.id, step: 2 }); };
 
   return (<>
-    <div className="head"><h1>{t('payRunsTitle')}</h1></div>
-    {canStart && <NewPayRun c={c} clients={clients} />}
+    <ModuleBadge c={c} m="payroll" />
+    <div className="head"><h1>{t('payRunsTitle')}</h1>{canStart && clients.length > 0 && <div className="row">
+      <button className="btn ghost" onClick={() => c.modal(<OffCycleForm c={c} clients={clients} />)}>+ {t('offCycleNew')}</button>
+      <button className="btn ghost" onClick={() => c.modal(<FinalPayForm c={c} clients={clients} />)}>+ {t('finalPayNew')}</button></div>}</div>
+    <PayrollTabs c={c} cur="runs" />
+    {!clients.length && <p className="warnbox">{t('noPayrollClients')}</p>}
+    {canStart && clients.length > 0 && <NewPayRun c={c} clients={clients} />}
     <section className="card">
       <p className="muted small">{t('batchIntro')}</p>
       <div className="filterbar">
@@ -331,7 +378,7 @@ function PayRuns({ c }: { c: Ctx }) {
         <th>{t('colClient')}</th><th>{t('period')}</th><th>{t('payDate', { date: '' }).trim()}</th><th>{t('colStatus')}</th><th className="num">{t('netPay')}</th><th></th></tr></thead>
         <tbody>{shown.map(r => { const cl = c.s.clients.find(x => x.id === r.clientId)!; return (
           <tr key={r.key} className={sel.has(r.key) && startable(r) ? 'selrow' : ''}><td>{canStart && startable(r) && <input type="checkbox" aria-label={`${t('start')}: ${cl.name}, ${c.periodLabel(r.period)}`} checked={sel.has(r.key)} onChange={() => toggle(r.key)} />}</td>
-            <td><b>{cl.name}</b></td><td>{c.periodLabel(r.period)}</td><td>{c.fmt(r.payDate)}{r.status !== 'approved' && <div className="muted small">{dueText(c, r.payDate)}</div>}</td>
+            <td><b>{cl.name}</b></td><td>{c.periodLabel(r.period)}{r.run && !isRegular(r.run) && <div><RunKindChip c={c} run={r.run} /></div>}</td><td>{c.fmt(r.payDate)}{r.status !== 'approved' && <div className="muted small">{dueText(c, r.payDate)}</div>}</td>
             <td><Chip u={PS_CHIP[r.status]}>{t('ps_' + r.status)}</Chip></td><td className="num">{r.run ? peso(r.net) : '—'}</td>
             <td>{r.run ? <button className="btn small ghost" onClick={() => c.go({ page: 'run', id: r.run!.id })}>{t('open')}</button> : canStart && <button className="btn small" onClick={() => startOne(r)}>{t('start')}</button>}</td></tr>); })}</tbody></table></div>
       {!shown.length && <p className="muted">{t('noRows')}</p>}
@@ -360,11 +407,12 @@ function NewPayRun({ c, clients }: { c: Ctx; clients: Client[] }) {
   const options = [-1, 0, 1].map(n => shiftPeriod(currentPeriod(cl.freq), cl.freq, n));
   const [period, setPeriod] = useState(currentPeriod(cl.freq));
   useEffect(() => { setPeriod(currentPeriod(cl.freq)); }, [clientId]);
-  const existing = c.s.runs.find(r => r.clientId === clientId && r.period === period);
+  const existing = c.s.runs.find(r => r.clientId === clientId && r.period === period && isRegular(r));
   const start = () => {
     if (existing) return c.go({ page: 'run', id: existing.id });
     const emps = c.s.employees.filter(e => e.clientId === clientId && inPeriod(e, period));
-    const run: Run = { id: `${clientId}-${period}`, clientId, period, status: 'draft', hours: Object.fromEntries(emps.map(e => [e.id, { ...EMPTY_HOURS }])), reasons: {}, preparedBy: c.user.id };
+    const base: Run = { id: `${clientId}-${period}`, clientId, period, status: 'draft', hours: Object.fromEntries(emps.map(e => [e.id, { ...EMPTY_HOURS }])), reasons: {}, preparedBy: c.user.id };
+    const run: Run = { ...base, ...refreshRun(c.s, base) };
     c.setS(s => ({ ...s, runs: [...s.runs, run] })); c.log('act_created', { period }, clientId); c.go({ page: 'run', id: run.id, step: 2 });
   };
   return (<section className="card accent"><Stepper c={c} step={1} /><h2>{t('newPayRun')}</h2><Why>{t('why1')}</Why>
@@ -382,8 +430,9 @@ function Stepper({ c, step }: { c: Ctx; step: number }) {
     <li key={n} className={n < step ? 'done' : n === step ? 'cur' : ''} aria-current={n === step ? 'step' : undefined}><b>{n < step ? '✓' : n}</b><span>{c.t('step' + n)}</span></li>))}</ol>;
 }
 
-const HOUR_FIELDS: (keyof Hours)[] = ['absentDays', 'otHours', 'ndHours', 'regHolidayDays', 'specialDays', 'restDays', 'taxableAllowance', 'deMinimis', 'sssLoan', 'pagibigLoan', 'otherDeduction'];
+const HOUR_FIELDS: (keyof Hours)[] = ['absentDays', 'otHours', 'ndHours', 'regHolidayDays', 'specialDays', 'restDays', 'taxableAllowance', 'deMinimis', 'reimbursement', 'sssLoan', 'pagibigLoan', 'otherDeduction'];
 const GUIDED_FIELDS: (keyof Hours)[] = ['absentDays', 'otHours', 'ndHours', 'regHolidayDays'];
+const KIND_FIELDS: Record<string, (keyof Hours)[]> = { bonus: ['bonus', 'taxableAllowance'], reimbursement: ['reimbursement'], final: ['absentDays', 'otHours', 'bonus', 'leaveDays', 'leaveConversion', 'taxAdjustment', 'otherDeduction'] };
 const checkKey = (k: Check) => `${k.code}|${k.empId ?? ''}`;
 
 function RunPage({ c, id, startStep }: { c: Ctx; id: string; startStep?: number }) {
@@ -394,13 +443,13 @@ function RunPage({ c, id, startStep }: { c: Ctx; id: string; startStep?: number 
   if (!run) return null;
   const cl = c.s.clients.find(x => x.id === run.clientId)!;
   const lines = linesFor(c.s, run); const tot = totals(lines);
-  const emps = c.s.employees.filter(e => e.clientId === run.clientId && (run.status === 'approved' ? lines.some(l => l.empId === e.id) : inPeriod(e, run.period)));
-  const checks = checksFor(c.s, run);
+  const emps = c.s.employees.filter(e => e.clientId === run.clientId && (run.status === 'approved' || run.empIds ? lines.some(l => l.empId === e.id) : inPeriod(e, run.period)));
+  const checks = checksFor(c.s, run); const kind = runKind(run); const fieldsFor = (m: 'guided' | 'advanced') => KIND_FIELDS[kind] ?? (m === 'guided' ? GUIDED_FIELDS : HOUR_FIELDS);
   const red = checks.filter(k => k.level === 'red'), amber = checks.filter(k => k.level === 'amber'), green = checks.filter(k => k.level === 'green');
   const amberDone = amber.every(k => (run.reasons[checkKey(k)] ?? '').trim().length >= 3);
   const locked = run.status === 'approved'; const waiting = !locked && !!run.submitted; const editLocked = locked || waiting;
   const updRun = (patch: Partial<Run>) => c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === id ? { ...r, ...patch } : r) }));
-  const setHour = (empId: string, k: keyof Hours, v: string) => { const n = Math.max(0, Math.min(k.endsWith('Days') ? 31 : 999999, r2(Number(v) || 0)));
+  const setHour = (empId: string, k: keyof Hours, v: string) => { const n = Math.max(k === 'taxAdjustment' ? -999999 : 0, Math.min(k.endsWith('Days') ? 31 : 999999, r2(Number(v) || 0)));
     updRun({ hours: { ...run.hours, [empId]: { ...(run.hours[empId] ?? EMPTY_HOURS), [k]: n } } }); };
   const preparer = USERS.find(u => u.id === run.preparedBy)!;
   const canApproveRole = c.user.role === 'firmOwner' || (c.user.role === 'client' && c.user.clientId === run.clientId);
@@ -413,20 +462,22 @@ function RunPage({ c, id, startStep }: { c: Ctx; id: string; startStep?: number 
     <button className="btn green" onClick={() => { updRun({ status: 'approved', approvedBy: c.user.id, approvedAt: iso(today()), lines }); c.log('act_approved', { period: run.period }, run.clientId); afterApproval(c, run, lines); c.modal(null); c.toast(t('approvedBy', { name: c.user.name, date: c.fmt(today()) })); setStep(5); }}>{t('approveAs', { name: c.user.name })}</button></div></div>);
 
   return (<>
-    <div className="head"><div><h1>{cl.name}</h1><p className="muted">{c.periodLabel(run.period)}, {t('payDate', { date: c.fmt(periodInfo(run.period).payDate) })}</p></div>
+    <div className="head"><div><h1>{cl.name} {!isRegular(run) && <RunKindChip c={c} run={run} />}</h1><p className="muted">{run.label ? `${run.label} · ` : ''}{c.periodLabel(run.period)}, {t('payDate', { date: c.fmt(periodInfo(run.period).payDate) })}</p></div>
       {locked && <Chip u="ok">🔒 {t('approvedBy', { name: USERS.find(u => u.id === run.approvedBy)?.name ?? '', date: c.fmt(new Date(run.approvedAt!)) })}</Chip>}</div>
     <section className="card"><Stepper c={c} step={step} />
 
     {step === 2 && (<>
       <div className="row between"><h2>{t('step2')}</h2>
-        <div className="seg">{(['guided', 'advanced'] as const).map(m => <button key={m} aria-pressed={mode === m} onClick={() => setMode(m)}>{t(m)}</button>)}</div></div>
-      <Why>{t('why2')}</Why>
+        {isRegular(run) && <div className="seg">{(['guided', 'advanced'] as const).map(m => <button key={m} aria-pressed={mode === m} onClick={() => setMode(m)}>{t(m)}</button>)}</div>}</div>
+      <Why>{t(isRegular(run) ? 'why2' : 'why2_' + kind)}</Why>
+      {!editLocked && isRegular(run) && <RunTools c={c} run={run} />}
+      <RunPrefillNote c={c} run={run} />
       {(() => { const pi = periodInfo(run.period); const hs = c.s.refs.holidays.filter(h => h.date >= iso(pi.start) && h.date <= iso(pi.end)); return hs.length ? <p className="small holidays">📅 {t('holidaysInCutoff', { list: hs.map(h => `${c.fmt(new Date(h.date + 'T00:00'))} ${h.name} (${t(h.type === 'regular' ? 'regularH' : 'specialH')})`).join('; ') })}</p> : null; })()}
       {waiting && <p className="warnbox small">🔒 {t('submittedLocked')}</p>}{!editLocked && <ImportBox c={c} run={run} emps={emps} cl={cl} onApply={h => updRun({ hours: h })} />}
-      <div className="scroll"><table className="tbl hours"><thead><tr><th>{t('colEmployee')}</th>{(mode === 'guided' ? GUIDED_FIELDS : HOUR_FIELDS).map(k => <th key={k}>{t(k)}</th>)}<th className="num">{t('colNet')}</th></tr></thead>
+      <div className="scroll"><table className="tbl hours"><thead><tr><th>{t('colEmployee')}</th>{fieldsFor(mode).map(k => <th key={k}>{t(k)}</th>)}<th className="num">{t('colNet')}</th></tr></thead>
         <tbody>{emps.map(e => { const h = run.hours[e.id] ?? EMPTY_HOURS; const l = lines.find(x => x.empId === e.id)!; return (
           <tr key={e.id}><td><b>{e.name}</b><div className="muted small">{e.position}</div></td>
-            {(mode === 'guided' ? GUIDED_FIELDS : HOUR_FIELDS).map(k => <td key={k}><input type="number" min={0} step={k.endsWith('Days') ? 0.5 : 0.25} disabled={editLocked} value={h[k] || ''} placeholder="0" aria-label={`${e.name} ${t(k)}`} onChange={x => setHour(e.id, k, x.target.value)} /></td>)}
+            {fieldsFor(mode).map(k => <td key={k}><input type="number" min={k === 'taxAdjustment' ? undefined : 0} step={k.endsWith('Days') ? 0.5 : 0.25} disabled={editLocked} value={h[k] || ''} placeholder="0" aria-label={`${e.name} ${t(k)}`} onChange={x => setHour(e.id, k, x.target.value)} /></td>)}
             <td className="num"><b>{peso(l.net)}</b></td></tr>); })}</tbody></table></div>
       <div className="row end"><button className="btn" onClick={() => setStep(3)}>{t('next')}</button></div>
     </>)}
@@ -499,7 +550,7 @@ function ImportBox({ c, run, emps, cl, onApply }: { c: Ctx; run: Run; emps: Empl
 
 type FileData = string | ArrayBuffer | Uint8Array;
 let sessionPassword: string | null = null; // kept in memory only, never saved
-async function saveFile(c: Ctx, filename: string, data: FileData, opts: { plain?: boolean } = {}) {
+export async function saveFile(c: Ctx, filename: string, data: FileData, opts: { plain?: boolean } = {}) {
   if (c.s.prefs?.protect && !opts.plain) {
     const go = async (pw: string) => saveRaw(c, `${filename}.talaan.json`, await encryptFile(filename, data, pw));
     if (sessionPassword) return go(sessionPassword);
@@ -545,10 +596,10 @@ function payslipHtml(c: Ctx, run: Run, cl: Client) {
   const row = (k: string, v: number, neg = false) => v ? `<tr><td>${LIT[k] ?? t(k)}</td><td style="text-align:right">${neg ? '−' : ''}${peso(v)}</td></tr>` : '';
   const slips = lines.map(l => { const e = c.s.employees.find(x => x.id === l.empId)!; return `<section style="page-break-after:always;border:1px solid #ccd;border-radius:10px;padding:18px;margin:16px 0;max-width:520px">
     <h2 style="margin:0">${t('payslip')}: ${e.name}</h2><p>${cl.name}<br>${c.periodLabel(run.period)}</p><table style="width:100%">
-    ${row('basicPay', l.basic)}${row('absences', l.absences, true)}${row('overtime', l.ot)}${row('nightDiff', l.nd)}${row('holidayPay', l.holiday)}${row('specialPay', l.special)}${row('restDayPay', l.restDay)}${row('allowances', l.taxableAllowance + l.deMinimis)}
+    ${row('basicPay', l.basic)}${row('absences', l.absences, true)}${row('overtime', l.ot)}${row('nightDiff', l.nd)}${row('holidayPay', l.holiday)}${row('specialPay', l.special)}${row('restDayPay', l.restDay)}${row('allowances', l.taxableAllowance + l.deMinimis)}${row('bonus', l.bonus ?? 0)}${row('leaveConversion', l.leaveConversion ?? 0)}
     <tr><td><b>${t('gross')}</b></td><td style="text-align:right"><b>${peso(l.gross)}</b></td></tr>
-    ${row('sss', l.sssEE, true)}${row('philhealth', l.phEE, true)}${row('pagibig', l.piEE, true)}${row('wht', l.wht, true)}${row('sssLoan', l.sssLoan, true)}${row('pagibigLoan', l.pagibigLoan, true)}${row('otherDeduction', l.otherDeduction, true)}
-    <tr><td><b>${t('netPay')}</b></td><td style="text-align:right"><b>${peso(l.net)}</b></td></tr></table>${l.mwe ? `<p>${t('mweNote')}</p>` : ''}</section>`; }).join('');
+    ${row('sss', l.sssEE, true)}${row('philhealth', l.phEE, true)}${row('pagibig', l.piEE, true)}${row('wht', l.wht, true)}${row('sssLoan', l.sssLoan, true)}${row('pagibigLoan', l.pagibigLoan, true)}${row('otherDeduction', l.otherDeduction, true)}${row('reimbursement', l.reimbursement ?? 0)}
+    <tr><td><b>${t('netPay')}</b></td><td style="text-align:right"><b>${peso(l.net)}</b></td></tr></table>${l.mwe ? `<p>${t('mweNote')}</p>` : ''}<p style="margin-top:14px;font-size:11px;color:#667;display:flex;align-items:center;gap:6px"><img src="${BRAND_MARK}" alt="" width="16" height="16"> Prepared with Talaan</p></section>`; }).join('');
   return `<!doctype html><html lang="${c.lang}"><head><meta charset="utf-8"><title>${t('payslipsFile')}</title></head><body style="font-family:system-ui,'Noto Sans SC',sans-serif">${slips}</body></html>`;
 }
 
@@ -574,7 +625,7 @@ function RunFiles({ c, run, cl }: { c: Ctx; run: Run; cl: Client }) {
 }
 
 /* ---------------- Compliance: remit and pay, new hires, year-end, layouts ---------------- */
-const AGENCY_FORMS: Record<FilingKind, string> = { sss: 'SSS: R-3 + ML-2', ph: 'PhilHealth: RF-1', pi: 'Pag-IBIG: MCRF + STLRF', bir: 'BIR: 1601-C' };
+export const AGENCY_FORMS: Record<FilingKind, string> = { sss: 'SSS: R-3 + ML-2', ph: 'PhilHealth: RF-1', pi: 'Pag-IBIG: MCRF + STLRF', bir: 'BIR: 1601-C' };
 const blankIds: EmployerIds = { sss: '', philhealth: '', pagibig: '', tin: '', rdo: '', address: '' };
 function remitStatus(f: Filing): { u: 'ok' | 'soon' | 'late' | 'info'; key: string; amt?: number } {
   const r = f.remit;
@@ -596,10 +647,10 @@ function agencyFiles(c: Ctx, f: Filing): { label: string; file: string; make: ()
 }
 function Files({ c }: { c: Ctx }) {
   const { t } = c; const [tab, setTab] = useState('remit');
-  const tabs: [string, string][] = [['remit', 'tabRemit'], ['newhires', 'tabNewHires'], ['yearend', 'tabYearEnd'], ['layouts', 'tabLayouts']];
-  return (<><div className="head"><h1>{t('remitPay')}</h1></div>
+  const tabs: [string, string][] = [['remit', 'tabRemit'], ['calendar', 'tabCalendar'], ['import', 'tabImportPayroll'], ['newhires', 'tabNewHires'], ['yearend', 'tabYearEnd'], ['layouts', 'tabLayouts']];
+  return (<><ModuleBadge c={c} m="compliance" /><div className="head"><div><h1>{t('navCompliance')}</h1><p className="muted">{t('complianceSub')}</p></div></div>
     <div className="pills tabs" role="tablist">{tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} aria-pressed={tab === k} onClick={() => setTab(k)}>{t(l)}</button>)}</div>
-    {tab === 'remit' && <RemitTable c={c} />}{tab === 'newhires' && <NewHires c={c} />}{tab === 'yearend' && <YearEndView c={c} />}{tab === 'layouts' && <LayoutsView c={c} />}</>);
+    {tab === 'remit' && <RemitTable c={c} />}{tab === 'calendar' && <ComplianceCalendar c={c} />}{tab === 'import' && <ImportPayroll c={c} />}{tab === 'newhires' && <NewHires c={c} />}{tab === 'yearend' && <YearEndView c={c} />}{tab === 'layouts' && <LayoutsView c={c} />}</>);
 }
 function RemitTable({ c }: { c: Ctx }) {
   const { t } = c; const clients = visibleClients(c);
@@ -754,9 +805,9 @@ function Payslips({ c }: { c: Ctx }) {
     {!mine.length ? <p className="muted">{t('noPayslips')}</p> : <div className="split">
       <section className="card"><ul className="list">{mine.map(r => <li key={r.id}><button aria-pressed={r.id === sel} onClick={() => setSel(r.id)}>{c.periodLabel(r.period)}<b>{peso(r.lines!.find(x => x.empId === empId)!.net)}</b></button></li>)}</ul></section>
       {l && run && <section className="card slip"><h2>{t('payslip')}</h2><p className="muted">{c.s.clients.find(x => x.id === run.clientId)!.name}, {c.periodLabel(run.period)}</p>
-        <h3>{t('earnings')}</h3><Row k="basicPay" v={l.basic} /><Row k="absences" v={l.absences} neg /><Row k="overtime" v={l.ot} /><Row k="nightDiff" v={l.nd} /><Row k="holidayPay" v={l.holiday} /><Row k="specialPay" v={l.special} /><Row k="restDayPay" v={l.restDay} />
+        <h3>{t('earnings')}</h3><Row k="basicPay" v={l.basic} /><Row k="absences" v={l.absences} neg /><Row k="overtime" v={l.ot} /><Row k="nightDiff" v={l.nd} /><Row k="holidayPay" v={l.holiday} /><Row k="specialPay" v={l.special} /><Row k="restDayPay" v={l.restDay} /><Row k="allowances" v={l.taxableAllowance + l.deMinimis} /><Row k="bonus" v={l.bonus ?? 0} /><Row k="leaveConversion" v={l.leaveConversion ?? 0} />
         <div className="kv strong"><span>{t('gross')}</span><b>{peso(l.gross)}</b></div>
-        <h3>{t('deductions')}</h3><Row k="sss" v={l.sssEE} neg /><Row k="philhealth" v={l.phEE} neg /><Row k="pagibig" v={l.piEE} neg /><Row k="wht" v={l.wht} neg /><Row k="sssLoan" v={l.sssLoan} neg /><Row k="pagibigLoan" v={l.pagibigLoan} neg />
+        <h3>{t('deductions')}</h3><Row k="sss" v={l.sssEE} neg /><Row k="philhealth" v={l.phEE} neg /><Row k="pagibig" v={l.piEE} neg /><Row k="wht" v={l.wht} neg /><Row k="sssLoan" v={l.sssLoan} neg /><Row k="pagibigLoan" v={l.pagibigLoan} neg /><Row k="otherDeduction" v={l.otherDeduction} neg /><Row k="reimbursement" v={l.reimbursement ?? 0} />
         <div className="kv net"><span>{t('netPay')}</span><b>{peso(l.net)}</b></div>{l.mwe && <p className="okmsg small">{t('mweNote')}</p>}</section>}
       <section className="card"><h2>{t('ytdTitle')}</h2><div className="kv"><span>{t('gross')}</span><b>{peso(sum('gross'))}</b></div>
         <div className="kv"><span>{t('contribTotal')}</span><b>{peso(r2(sum('sssEE') + sum('phEE') + sum('piEE')))}</b></div>
@@ -776,8 +827,9 @@ function Ask({ c }: { c: Ctx }) {
   const { t } = c; const [q, setQ] = useState(''); const [log, setLog] = useState<{ q: string; a: Entry[] }[]>([]);
   const aud = audienceOf(c.user);
   const suggestions = corpusOf(c).filter(e => !aud || e.audience.includes(aud)).filter(e => ['thirteenth-tax', 'de-minimis', 'min-wage-ncr', 'deadline-1601c', 'emp-deductions', 'final-pay'].includes(e.id)).slice(0, 4).map(e => e.q[c.lang]);
-  const go = (text: string) => { if (!text.trim()) return; const a = ask(text, c.lang, aud, corpusOf(c)); setLog(l => [...l, { q: text, a }]); if (!a.length) c.setS(s => ({ ...s, askLog: [...s.askLog, text] })); setQ(''); };
-  return (<><div className="head"><h1>{t('askTitle')}</h1><button className="btn ghost" onClick={() => c.go({ page: 'faqs' })}>{t('browseFaqs')}</button></div><section className="card chat"><Why>{t('askIntro')}</Why>
+  const go = (text: string) => { if (!text.trim()) return; const a = ask(text, c.lang, aud, corpusOf(c)); setLog(l => [...l, { q: text, a }]); const m = iso(today()).slice(0, 7);
+    c.setS(s => ({ ...s, aiUsage: { ...s.aiUsage, [m]: (s.aiUsage?.[m] ?? 0) + 1 }, ...(a.length ? {} : { askLog: [...s.askLog, text] }) })); setQ(''); };
+  return (<><ModuleBadge c={c} m="ai" /><div className="head"><h1>{t('askTitle')}</h1><button className="btn ghost" onClick={() => c.go({ page: 'faqs' })}>{t('browseFaqs')}</button></div><section className="card chat"><Why>{t('askIntro')}</Why>
     {log.map((m, i) => <div key={i} className="turn"><div className="bub me">{m.q}</div>
       {m.a.length ? m.a.map(e => <div key={e.id} className="bub tala"><Star size={22} /><div><b>{e.q[c.lang]}</b><Answer c={c} e={e} /></div></div>)
         : <div className="bub tala"><Star size={22} /><div>{t('noSource')}</div></div>}</div>)}
@@ -807,15 +859,14 @@ function Faqs({ c }: { c: Ctx }) {
 
 /* ---------------- Plans ---------------- */
 function Plans({ c }: { c: Ctx }) {
-  const { t } = c;
-  return (<><div className="head"><h1>{t('plansTitle')}</h1></div><p className="muted">{t('hypothesis')}</p>
-    <div className="grid">
-      <section className="card plan"><h2>{t('firmPlan')}</h2><p className="muted small">{t('perClient')}</p>
-        {[['1–10', 499], ['11–50', 1299], ['51–200', 2999]].map(([r, p]) => <div key={r} className="kv"><span>{t('clientSize', { range: r })}</span><b>₱{p.toLocaleString('en-PH')}</b></div>)}
-        <p className="small">{t('firmIncludes')}</p></section>
-      <section className="card plan"><h2>{t('smePlan')}: {t('essentials')}</h2><p className="price">₱99 <span className="muted small">{t('perEmployee')}</span></p><p className="muted small">{t('minimum')}</p><p className="small">{t('essentialsIncludes')}</p></section>
-      <section className="card plan"><h2>{t('smePlan')}: {t('plus')}</h2><p className="price">₱149 <span className="muted small">{t('perEmployee')}</span></p><p className="small">{t('plusIncludes')}</p></section>
-    </div></>);
+  const { t } = c; const [n, setN] = useState(50); const [pick, setPick] = useState<Set<ModuleKey>>(new Set(['payroll', 'compliance']));
+  const per = MODULES.filter(m => pick.has(m)).reduce((a, m) => a + MODULE_PRICE[m], 0);
+  return (<><div className="head"><div><h1>{t('plansTitle')}</h1><p className="muted">{t('plansSub')}</p></div></div><p className="muted small">{t('hypothesis')}</p>
+    <div className="grid modgrid">{MODULES.map(m => <label key={m} className={`card plan mod ${pick.has(m) ? 'on' : ''}`}>
+      <span className="row between"><b className="modname"><img src={BRAND_MARK} alt="" className="modmark" />Talaan {t('mod_' + m)}</b><input type="checkbox" checked={pick.has(m)} onChange={() => { const x = new Set(pick); if (x.has(m)) x.delete(m); else x.add(m); setPick(x); }} /></span>
+      <span className="small muted">{t('modd_' + m)}</span><span className="price">₱{MODULE_PRICE[m]} <span className="muted small">{t('perEmployee')}</span></span></label>)}</div>
+    <section className="card"><h2>{t('estimate')}</h2><div className="form"><label>{t('activeEmployees')}<input type="number" min={1} value={n} onChange={e => setN(Math.max(1, Number(e.target.value) || 1))} /></label></div>
+      <p className="price">₱{(per * n).toLocaleString('en-PH')} <span className="muted small">{t('perMonth')}</span></p><p className="muted small">{t('estimateNote', { ai: AI_INCLUDED })}</p></section></>);
 }
 
 /* ---------------- Teamwork: activity and notes ---------------- */
@@ -1023,10 +1074,10 @@ function ProtectCard({ c }: { c: Ctx }) {
 }
 
 /* ---------------- Help, tips and getting started ---------------- */
-function Tip({ text }: { text: string }) {
+export function Tip({ text }: { text: string }) {
   return <span className="tip" tabIndex={0} role="note" aria-label={text}>i<span className="tipbox" aria-hidden="true">{text}</span></span>;
 }
-const PAGE_ICON: Record<string, string> = { home: '🏠', clients: '🏢', client: '🏢', payruns: '💵', run: '💵', files: '🧾', connections: '🔗', faqs: '❓', ask: '💬', plans: '🏷️', admin: '⚙️', payslips: '📄' };
+const PAGE_ICON: Record<string, string> = { home: '🏠', clients: '🏢', client: '🏢', payruns: '💵', run: '💵', files: '🧾', connections: '🔗', faqs: '❓', ask: '💬', plans: '🏷️', admin: '⚙️', payslips: '📄', payroll: '💵', hr: '👥', books: '📒', analytics: '📊', hq: '🛰️', myleave: '🌴' };
 function PageHelp({ c, page }: { c: Ctx; page: string }) {
   const { t } = c; const [open, setOpen] = useState(false);
   const key = page === 'client' ? 'client' : page; const lead = t(`h_${key}_lead`); if (lead.startsWith('h_')) return null;
@@ -1058,7 +1109,7 @@ function GettingStarted({ c }: { c: Ctx }) {
 }
 
 /* ---------------- Supporting documents ---------------- */
-function DocsPanel({ c, owner, title, kind, compact }: { c: Ctx; owner: string; title: string; kind?: string; compact?: boolean }) {
+export function DocsPanel({ c, owner, title, kind, compact }: { c: Ctx; owner: string; title: string; kind?: string; compact?: boolean }) {
   const { t } = c; const [docs, setDocs] = useState<DocMeta[]>([]); const [k, setK] = useState(kind ?? c.s.refs.docTypes[0] ?? 'Other');
   const refresh = () => listDocs(owner).then(setDocs).catch(() => setDocs([]));
   useEffect(() => { refresh(); }, [owner]);
@@ -1243,7 +1294,7 @@ function RecordChange({ c, onSave }: { c: Ctx; onSave: (it: ReviewItem) => void 
 }
 
 /* ---------------- Searchable multi-select dropdown ---------------- */
-function MultiSelect({ c, label, options, value, onChange }: { c: Ctx; label: string; options: [string, string][]; value: Set<string>; onChange: (v: Set<string>) => void }) {
+export function MultiSelect({ c, label, options, value, onChange }: { c: Ctx; label: string; options: [string, string][]; value: Set<string>; onChange: (v: Set<string>) => void }) {
   const { t } = c; const [open, setOpen] = useState(false); const [q, setQ] = useState('');
   const ref = useRefDiv();
   useEffect(() => { if (!open) return; const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
@@ -1293,7 +1344,7 @@ function submitRun(c: Ctx, run: Run) {
     c.t('em_approval_body', { name: u.name, preparer: c.user.name, client: cl.name, period: c.periodLabel(run.period), n: lines.length, net: peso(tot.net), date: c.fmt(periodInfo(run.period).payDate) }), 'approval', cl.id));
   c.log('act_submitted', { period: run.period }, run.clientId);
 }
-function afterApproval(c: Ctx, run: Run, lines: Line[]) {
+export function afterApproval(c: Ctx, run: Run, lines: Line[]) {
   const cl = c.s.clients.find(x => x.id === run.clientId)!; const tot = totals(lines); const govt = r2(tot.sssEE + tot.sssER + tot.ec + tot.phEE + tot.phER + tot.piEE + tot.piER);
   c.notify([run.preparedBy].filter(u => u !== c.user.id), 'n_approved', { name: c.user.name, client: cl.name, period: run.period }, { page: 'run', id: run.id, step: 5 });
   if (cl.notify?.approved !== false) (cl.contacts ?? []).forEach(ct => c.email([ct.email], c.t('em_approved_subj', { client: cl.name, period: c.periodLabel(run.period) }),
@@ -1453,6 +1504,7 @@ function invoicePdf(c: Ctx, inv: Invoice) {
   doc.setFont('helvetica', 'bold'); doc.text('Total due', 330, y); doc.text(P(inv.total), W - 40, y, { align: 'right' }); y += 30;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(120);
   doc.text(doc.splitTextToSize(`${EN('soaNote')} Prepared in Talaan from the transactions processed in ${inv.month}.`, W - 80), 40, y);
+  try { doc.addImage(BRAND_MARK, 'PNG', W - 58, doc.internal.pageSize.getHeight() - 52, 18, 18); doc.text('Talaan', W - 62, doc.internal.pageSize.getHeight() - 40, { align: 'right' }); } catch { /* the mark is optional */ }
   return doc.output('arraybuffer');
 }
 function InvoicesList({ c }: { c: Ctx }) {

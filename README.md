@@ -1,6 +1,10 @@
 # Talaan
 
+**Every payslip. Every deadline.**
+
 Philippine payroll and compliance for bookkeeping firms. Phase 1 prototype.
+
+Modules: Talaan Payroll, Compliance, Books, HR, AI and Analytics, plus Talaan HQ (staff-only: firms, billing, support, releases).
 
 Live demo: https://talaan-ivory.vercel.app
 
@@ -10,6 +14,7 @@ Live demo: https://talaan-ivory.vercel.app
 |---|---|
 | `talaan-app/` | The payroll app prototype (React + TypeScript, builds to one HTML file) |
 | `talaan-kit/` | Guided tour and server routes (Next.js): Stripe, Xero, email, source watch |
+| `brand/` | Talaan 3D logos (with and without slogan), the app icon, and `brand/modules/` lockups for each module (Payroll, Compliance, Books, HR, AI, Analytics, HQ) |
 
 ## Run locally
 
@@ -17,6 +22,10 @@ Live demo: https://talaan-ivory.vercel.app
 cd talaan-app
 npm install
 npm start        # http://localhost:3000
+npm test         # payroll engine, model, encryption and voice tests
+npm run check:ui # every screen's text exists in English, Tagalog and Chinese
+npm run check:corpus   # Ask Tala corpus: translations, sources, retrieval
+npm run build:tour     # the published guided tour as one HTML file
 ```
 
 ```

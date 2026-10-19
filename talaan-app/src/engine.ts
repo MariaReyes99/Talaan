@@ -14,6 +14,12 @@ export interface Employee {
   hireDate?: string; birthDate?: string; separationDate?: string;
   /** Year-to-date amounts from the previous payroll system, for firms joining Talaan mid-year. */
   opening?: { year: number; gross: number; taxable: number; withheld: number };
+  /** Department or branch, used for cost reports and journal tracking. */
+  department?: string;
+  /** Pay template: recurring allowances, deductions and reimbursements added to every regular pay run. */
+  template?: { itemId: string; amount: number }[];
+  /** Why the employee left (for final pay and the certificate of employment). */
+  separationReason?: string;
 }
 export interface Hours {
   absentDays: number; otHours: number; ndHours: number;
@@ -22,6 +28,14 @@ export interface Hours {
   sssLoan: number; pagibigLoan: number; otherDeduction: number;
   /** Year-end tax adjustment for the last pay run of the year: positive = collect more tax, negative = refund. */
   taxAdjustment?: number;
+  /** 13th month pay and other benefits (bonuses). Tax-free up to ₱90,000 a year in total; no SSS, PhilHealth or Pag-IBIG. */
+  bonus?: number;
+  /** Reimbursed expenses (fuel, meals, training). Not pay: added to net pay, not taxed, not in gross. */
+  reimbursement?: number;
+  /** Unused leave converted to cash (final pay or year end). Up to 10 days of vacation leave is de minimis. */
+  leaveConversion?: number;
+  /** Days of leave converted, used for the 10-day de minimis limit. */
+  leaveDays?: number;
 }
 export const EMPTY_HOURS: Hours = { absentDays: 0, otHours: 0, ndHours: 0, regHolidayDays: 0, specialDays: 0, restDays: 0, taxableAllowance: 0, deMinimis: 0, sssLoan: 0, pagibigLoan: 0, otherDeduction: 0, taxAdjustment: 0 };
 
@@ -31,7 +45,16 @@ export interface Line {
   taxableAllowance: number; deMinimis: number; gross: number;
   msc: number; sssEE: number; sssER: number; ec: number; phEE: number; phER: number; piEE: number; piER: number;
   taxable: number; wht: number; taxAdjustment: number; sssLoan: number; pagibigLoan: number; otherDeduction: number; net: number;
+  bonus?: number; bonusTaxable?: number; reimbursement?: number; leaveConversion?: number; offCycle?: boolean;
 }
+export interface LineOptions {
+  /** Off-cycle pay run (bonus, reimbursement): no basic pay and no SSS, PhilHealth or Pag-IBIG. */
+  offCycle?: boolean;
+  /** 13th month and other benefits already paid this year, for the ₱90,000 limit. */
+  ytdBenefits?: number;
+}
+export const BENEFITS_EXEMPT = 90000;
+export const DE_MINIMIS_LEAVE_DAYS = 10;
 
 export const RATES = {
   version: '2026-01 (prototype — confirm with CPA adviser)',
@@ -78,31 +101,40 @@ export function annualTax(taxable: number) {
   return r2(row[1] + (taxable - row[0]) * row[2]);
 }
 
-export function computeLine(e: Employee, h: Hours, freq: Freq, minWage: number): Line {
+export function computeLine(e: Employee, h: Hours, freq: Freq, minWage: number, opts: LineOptions = {}): Line {
   const per = freq === 'semi' ? 2 : 1;
   const daily = (e.monthlyRate * 12) / e.workdays, hourly = daily / 8;
   const P = RATES.premiums;
-  const basic = e.monthlyRate / per;
+  const off = !!opts.offCycle;
+  const basic = off ? 0 : e.monthlyRate / per;
+  const bonus = r2(h.bonus ?? 0), reimb = r2(h.reimbursement ?? 0), leaveCash = r2(h.leaveConversion ?? 0);
+  const exemptLeft = Math.max(0, BENEFITS_EXEMPT - (opts.ytdBenefits ?? 0));
+  const bonusTaxable = r2(Math.max(0, bonus - exemptLeft));
+  const leaveDays = h.leaveDays ?? (daily ? leaveCash / daily : 0);
+  const leaveTaxable = r2(leaveDays > DE_MINIMIS_LEAVE_DAYS ? leaveCash * (1 - DE_MINIMIS_LEAVE_DAYS / leaveDays) : 0);
   const absences = h.absentDays * daily;
   const ot = h.otHours * hourly * P.ot;
   const nd = h.ndHours * hourly * P.nd;
   const holiday = h.regHolidayDays * daily * P.regHolidayExtra;
   const special = h.specialDays * daily * P.specialExtra;
   const restDay = h.restDays * daily * P.restDay;
-  const gross = basic - absences + ot + nd + holiday + special + restDay + h.taxableAllowance + h.deMinimis;
-  const c = contributionsMonthly(e.monthlyRate);
+  const gross = basic - absences + ot + nd + holiday + special + restDay + h.taxableAllowance + h.deMinimis + bonus + leaveCash;
+  const c0 = contributionsMonthly(e.monthlyRate);
+  const c = off ? { ...c0, sssEE: 0, sssER: 0, ec: 0, phEE: 0, phER: 0, piEE: 0, piER: 0 } : c0;
   const sssEE = r2(c.sssEE / per), phEE = r2(c.phEE / per), piEE = r2(c.piEE / per);
   const mwe = daily <= minWage + 0.005;
-  const taxable = mwe ? h.taxableAllowance : Math.max(0, gross - h.deMinimis - sssEE - phEE - piEE);
+  const regularPart = gross - bonus - leaveCash;
+  const taxable = (mwe ? h.taxableAllowance : Math.max(0, regularPart - h.deMinimis - sssEE - phEE - piEE)) + bonusTaxable + leaveTaxable;
   const adj = r2(h.taxAdjustment ?? 0);
   const wht = r2(Math.max(0, withholding(taxable, freq) + adj));
-  const net = gross - sssEE - phEE - piEE - wht - h.sssLoan - h.pagibigLoan - h.otherDeduction;
+  const net = gross - sssEE - phEE - piEE - wht - h.sssLoan - h.pagibigLoan - h.otherDeduction + reimb;
   return {
     empId: e.id, daily: r2(daily), hourly: r2(hourly), mwe,
     basic: r2(basic), absences: r2(absences), ot: r2(ot), nd: r2(nd), holiday: r2(holiday), special: r2(special), restDay: r2(restDay),
     taxableAllowance: r2(h.taxableAllowance), deMinimis: r2(h.deMinimis), gross: r2(gross),
     msc: c.msc, sssEE, sssER: r2(c.sssER / per), ec: r2(c.ec / per), phEE, phER: r2(c.phER / per), piEE, piER: r2(c.piER / per),
     taxable: r2(taxable), wht, taxAdjustment: adj, sssLoan: h.sssLoan, pagibigLoan: h.pagibigLoan, otherDeduction: h.otherDeduction, net: r2(net),
+    ...(bonus ? { bonus, bonusTaxable } : {}), ...(reimb ? { reimbursement: reimb } : {}), ...(leaveCash ? { leaveConversion: leaveCash } : {}), ...(off ? { offCycle: true } : {}),
   };
 }
 
@@ -149,17 +181,18 @@ export function runChecks(emps: Employee[], lines: Line[], hours: Record<string,
 
 /* ---------- Totals and journal ---------- */
 export function totals(lines: Line[]) {
-  const s = (k: keyof Line) => r2(lines.reduce((a, l) => a + (l[k] as number), 0));
+  const s = (k: keyof Line) => r2(lines.reduce((a, l) => a + ((l[k] as number | undefined) ?? 0), 0));
   return {
     gross: s('gross'), net: s('net'), wht: s('wht'), sssEE: s('sssEE'), sssER: s('sssER'), ec: s('ec'), phEE: s('phEE'), phER: s('phER'), piEE: s('piEE'), piER: s('piER'),
     sssLoan: s('sssLoan'), pagibigLoan: s('pagibigLoan'), other: s('otherDeduction'), deMinimis: s('deMinimis'), taxable: s('taxable'),
+    bonus: s('bonus'), reimbursement: s('reimbursement'), leaveConversion: s('leaveConversion'),
   };
 }
 export function journal(lines: Line[]) {
   const t = totals(lines);
   const employer = r2(t.sssER + t.ec + t.phER + t.piER);
   const rows: [string, number, number][] = [
-    ['accSalaries', t.gross, 0], ['accEmployer', employer, 0],
+    ['accSalaries', r2(t.gross - t.bonus), 0], ['accBonus', t.bonus, 0], ['accEmployer', employer, 0], ['accReimb', t.reimbursement, 0],
     ['accSSS', 0, r2(t.sssEE + t.sssER + t.ec + t.sssLoan)], ['accPH', 0, r2(t.phEE + t.phER)], ['accPI', 0, r2(t.piEE + t.piER + t.pagibigLoan)],
     ['accWHT', 0, t.wht], ['accOther', 0, t.other], ['accNet', 0, t.net],
   ];

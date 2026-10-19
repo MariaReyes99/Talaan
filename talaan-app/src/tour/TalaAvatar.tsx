@@ -11,7 +11,7 @@ const STAR = starPoints(50, 54, 44, 24);
 export default function TalaAvatar({ label = 'Tala', gender = 'female' }: { label?: string; gender?: 'female' | 'male' }) {
   return (
     <svg className="tala-svg" viewBox="0 0 100 100" role="img" aria-label={label}>
-      <polygon points={STAR} fill="#F6B21A" stroke="#F6B21A" strokeWidth={10} strokeLinejoin="round" />
+      <polygon points={STAR} fill="#E2B13C" stroke="#E2B13C" strokeWidth={10} strokeLinejoin="round" />
       <polygon points={STAR} fill="none" stroke="#C98A00" strokeWidth={2} strokeLinejoin="round" opacity={0.35} />
       <ellipse cx={41} cy={52} rx={3.6} ry={4.6} fill="#1F2A37" />
       <ellipse cx={59} cy={52} rx={3.6} ry={4.6} fill="#1F2A37" />
@@ -25,7 +25,7 @@ export default function TalaAvatar({ label = 'Tala', gender = 'female' }: { labe
         <g transform="translate(66 30)"><circle r={3.2} cx={0} cy={-4} fill="#E8505B" /><circle r={3.2} cx={4} cy={-1} fill="#E8505B" /><circle r={3.2} cx={2.5} cy={4} fill="#E8505B" /><circle r={3.2} cx={-2.5} cy={4} fill="#E8505B" /><circle r={3.2} cx={-4} cy={-1} fill="#E8505B" /><circle r={2.4} fill="#FFF4D9" /></g>
       </g>) : (<g>
         <path d="M36 44.5 Q41 42 45.5 44.5 M54.5 44.5 Q59 42 64 44.5" stroke="#1F2A37" strokeWidth={2} fill="none" strokeLinecap="round" />
-        <g transform="translate(50 77)"><path d="M0 0 L-8 -4.5 L-8 4.5 Z M0 0 L8 -4.5 L8 4.5 Z" fill="#1E88C7" /><circle r={2.2} fill="#12355B" /></g>
+        <g transform="translate(50 77)"><path d="M0 0 L-8 -4.5 L-8 4.5 Z M0 0 L8 -4.5 L8 4.5 Z" fill="#1F5FAE" /><circle r={2.2} fill="#0B2350" /></g>
       </g>)}
     </svg>
   );
@@ -34,7 +34,7 @@ export default function TalaAvatar({ label = 'Tala', gender = 'female' }: { labe
 export function TalaMark({ size = 24 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
-      <polygon points={STAR} fill="#F6B21A" stroke="#F6B21A" strokeWidth={10} strokeLinejoin="round" />
+      <polygon points={STAR} fill="#E2B13C" stroke="#E2B13C" strokeWidth={10} strokeLinejoin="round" />
     </svg>
   );
 }

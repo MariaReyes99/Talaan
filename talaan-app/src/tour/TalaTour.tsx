@@ -7,8 +7,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { Lang } from '../i18n';
 import { LANG_NAMES } from '../i18n';
 import { tourT } from './messages';
-import TalaAvatar, { TalaMark } from './TalaAvatar';
-import { NAV_FOR, SCENES, Screen } from './Screens';
+import TalaAvatar from './TalaAvatar';
+import { NAV_FOR, NAV_KEYS, SCENES, Screen, TOUR_MARK } from './Screens';
 import { guessGender, loadVoices, pickName, rankVoices, speak, type Gender } from './voice';
 
 type VoiceMeta = Record<string, { gender: Gender; name: string; sure: boolean }>;
@@ -81,12 +81,12 @@ export default function TalaTour({ lang, onLang, onClose }: { lang: Lang; onLang
     window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey);
   }, [idx, go, close]);
 
-  const navKeys = ['home', 'clients', 'payRuns', 'files', 'employees'] as const;
+  const navKeys = NAV_KEYS;
   return (
     <div className="tt-overlay" role="dialog" aria-modal="true" aria-label={t('controls.tourTitle')} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="talaan-tour"><div className="page">
         <header className="top">
-          <div className="brand"><TalaMark size={30} /><span className="word">tala<i>a</i>n</span><span className="sub">{t('controls.tourTitle')}</span></div>
+          <div className="brand"><img src={TOUR_MARK} alt="" width={34} height={34} /><span className="word">TALAAN</span><span className="sub">{t('controls.tourTitle')}</span></div>
           <div className="row">
             <div className="langs" role="group" aria-label={t('controls.language')}>
               {(Object.keys(LANG_NAMES) as Lang[]).map(l => <button key={l} type="button" aria-pressed={l === lang} lang={l === 'zh' ? 'zh-Hans' : l} onClick={() => onLang(l)}>{LANG_NAMES[l]}</button>)}
@@ -97,7 +97,7 @@ export default function TalaTour({ lang, onLang, onClose }: { lang: Lang; onLang
         <main className={`player ${playing ? '' : 'paused'}`}>
           <div className="stage-wrap" ref={wrapRef} style={{ height: 540 * scale }}>
             <div className="stage" aria-hidden="true" style={{ transform: `scale(${scale})` }}>
-              <div className="appbar"><span className="mini"><TalaMark size={22} />talaan</span>
+              <div className="appbar"><span className="mini"><img src={TOUR_MARK} alt="" width={22} height={22} />TALAAN</span>
                 <nav>{navKeys.map(k => <span key={k} className={NAV_FOR[id] === k ? 'on' : ''}>{t(`nav.${k}`)}</span>)}</nav><span className="who">MS</span></div>
               <div className="screen" key={`${id}-${lang}`}><Screen id={id} t={t} name={name} gender={info.gender} onReplay={() => { go(0); setPlaying(true); }} onFinish={close} /></div>
             </div>

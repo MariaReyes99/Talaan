@@ -8,7 +8,7 @@ audience: [accountant, owner]
 source: "BIR Revenue Regulations No. 11-2018, Annex E (withholding tax table, 2023 onwards)"
 source_url: https://www.bir.gov.ph
 effective: 2023-01
-verified: 2026-10-04
+verified: 2026-10-19
 status: Needs CPA review before production use
 languages: [en, tl, zh-Hans]
 ---

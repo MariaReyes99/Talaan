@@ -8,7 +8,7 @@ audience: [accountant, owner, employee]
 source: "RA 11223 (Universal Health Care Act) premium schedule"
 source_url: https://www.philhealth.gov.ph
 effective: 2025-01
-verified: 2026-10-04
+verified: 2026-10-19
 status: Needs CPA review before production use
 languages: [en, tl, zh-Hans]
 ---

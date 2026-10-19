@@ -1,14 +1,16 @@
 {
-  "name": "talaan-prototype",
+  "name": "talaan-app",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
     "start": "node build.mjs && npx --yes serve dist -l 3000",
-    "test": "tsx src/engine.test.ts && tsx src/secure.test.ts && tsx src/tour/voice.test.ts",
+    "test": "tsx src/engine.test.ts && tsx src/model.test.ts && tsx src/secure.test.ts && tsx src/tour/voice.test.ts",
     "typecheck": "tsc -p .",
     "check:corpus": "tsx scripts/check-corpus.ts",
-    "export:corpus": "tsx scripts/export-corpus.ts"
+    "export:corpus": "tsx scripts/export-corpus.ts",
+    "check:ui": "tsx scripts/check-ui-text.ts",
+    "build:tour": "node build-tour.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.3",

@@ -16,7 +16,7 @@
     "language": "语言",
     "replay": "重新播放",
     "voiceMissing": "此设备没有该语言的语音，已开启字幕。",
-    "mockNote": "示例数据，仅供演示。Talaan 仍在设计中。",
+    "mockNote": "示例数据，仅供演示。Talaan 目前是原型。",
     "startUsing": "开始使用 Talaan",
     "close": "关闭导览",
     "voiceLabel": "语音",
@@ -33,59 +33,68 @@
   },
   "nav": {
     "home": "首页",
-    "clients": "客户",
-    "payRuns": "发薪",
-    "files": "文件",
-    "employees": "员工"
+    "payroll": "工资",
+    "hr": "人事",
+    "compliance": "合规",
+    "books": "账务",
+    "analytics": "分析"
   },
   "scenes": {
     "intro": {
       "title": "你好，我是 {name}",
-      "line": "你好！我是 {name}，你的 Talaan 向导。两分钟内，我会带你看看如何为所有客户处理工资，点击更少，错误更少。"
+      "line": "你好，我是 {name}，你的 Talaan 向导。Talaan 为事务所的每个客户处理工资和政府合规。接下来三分钟，我带你看看怎么用。"
     },
     "home": {
-      "title": "你的主页",
-      "line": "所有客户都在同一个页面上。绿色表示一切正常，黄色表示截止日期快到了，红色表示今天有事需要你处理。"
+      "title": "你的首页",
+      "line": "所有客户都在一个页面上。绿色表示正常，黄色表示截止日临近，红色表示今天就需要处理。搜索可以找到任何客户、员工或发薪批次。"
     },
     "payrun": {
       "title": "五步完成发薪",
-      "line": "选择客户和工资周期，导入工时，让 Talaan 检查，批准，然后获取文件。每个页面只做一步，你始终知道自己在哪里。"
+      "line": "选择客户和发薪期，导入工时。其余的交给 Talaan：工资模板中的津贴、借款扣款，以及已批准的无薪假。"
     },
     "checks": {
       "title": "Talaan 帮你发现错误",
-      "line": "付款之前，Talaan 会检查每一位员工。红色表示必须先修正才能继续；黄色需要你填写简短原因。每条提示都会告诉你如何修正。"
+      "line": "付款前，Talaan 会检查每一名员工。红色问题必须修正后才能继续，黄色问题需要填写简短原因。每条提示都会告诉你如何处理。"
     },
     "approve": {
       "title": "两人把关，一次批准",
-      "line": "准备工资的人不能自己批准。老板会在手机上收到简明摘要，点击“批准”即可。批准后，本期发薪会被锁定。"
+      "line": "准备工资的人不能自己批准。老板在手机上看到简明汇总，点一下批准。批准后，发薪批次即被锁定。"
     },
     "files": {
-      "title": "所有文件，命名就绪",
-      "line": "Talaan 会生成各政府机构需要的文件，名称和格式都已正确。清单会显示每个文件上传到哪里、何时截止。目前由你自行上传；Talaan 会提醒你并保存回执。"
+      "title": "每个文件，每个截止日",
+      "line": "Talaan 准备 SSS、PhilHealth、Pag-IBIG 和 BIR 文件以及银行文件。截止日日历在一个月视图中显示所有客户的到期日，每笔缴款都连同收据一起保存。"
     },
-    "xero": {
-      "title": "账簿始终同步",
-      "line": "一键即可把已批准的工资以凭证形式发送到客户的 Xero。无需重复录入，金额自动对上。"
+    "extra": {
+      "title": "第13个月工资、奖金和离职结算",
+      "line": "第13个月工资、奖金或报销可以单独发放，Talaan 会自动套用 ₱90,000 免税额度。员工离职时，离职结算会计算最后工资、未休假期和本年度税款。"
     },
-    "phone": {
-      "title": "手机查看工资单",
-      "line": "员工可以用手机查看自己的工资单和 BIR 2316 表格，支持英文、他加禄语和中文。不用再打印。"
+    "people": {
+      "title": "手机上请假、看工资单",
+      "line": "员工在手机上申请请假，查看工资单和 BIR 2316 表。你一键批准请假，每次调薪都会记录操作人和原因。"
+    },
+    "byo": {
+      "title": "支持其他工资系统",
+      "line": "继续使用其他工资系统的客户也能用 Talaan。上传他们的工资明细表，Talaan 核对缴费和税款，然后准备政府申报文件。"
+    },
+    "books": {
+      "title": "账务同步",
+      "line": "已批准的工资会生成平衡的分录，对应到客户的会计科目，并按部门拆分。可以发送到 Xero，或下载给任何会计软件使用。"
+    },
+    "analytics": {
+      "title": "一眼看清所有客户",
+      "line": "看板显示所有客户的工资成本、政府缴款和按时申报情况。每份报表都能下载到 Excel。"
     },
     "ask": {
-      "title": "问 Tala，附带出处",
-      "line": "对某条规定不确定？问我就好。我的回答来自官方发布的文件，并附上出处。如果找不到依据，我会如实告诉你，并转给你的顾问。"
-    },
-    "language": {
-      "title": "你的语言",
-      "line": "随时在英文、他加禄语和中文之间切换。SSS、BIR 等术语保持不变，信息不会走样。"
+      "title": "问 Tala，附出处",
+      "line": "不确定某条规定？问我。我根据官方发布的文件回答，并注明出处。如果找不到依据，我会直接说明，并转给你的顾问。"
     },
     "ready": {
-      "title": "准备好了吗",
-      "line": "这就是 Talaan：每一步都有引导，自动检查，所有文件随时备好。现在就开始你的第一次发薪吧。"
+      "title": "随时可以开始",
+      "line": "这就是 Talaan：每张工资单准确，每个截止日按时，支持英文、他加禄语和中文。现在就开始你的第一次发薪吧。"
     }
   },
   "ui": {
-    "welcome": "为每位客户处理工资与合规",
+    "welcome": "每一张工资单，每一个截止日。",
     "tilePayroll": "工资",
     "tileFiles": "政府申报文件",
     "tileXero": "Xero 同步",
@@ -169,8 +178,56 @@
     "askSource": "出处",
     "askPlaceholder": "向 Tala 提问",
     "approvedShort": "发薪已批准",
-    "readyPoint1": "每步有引导",
-    "readyPoint2": "自动检查",
-    "readyPoint3": "文件随时备好"
+    "readyPoint1": "分步引导和自动检查",
+    "readyPoint2": "所有政府文件和截止日",
+    "readyPoint3": "工资、人事、账务和看板集于一处",
+    "modPayroll": "工资",
+    "modCompliance": "合规",
+    "modBooks": "账务",
+    "modHR": "人事",
+    "modAI": "AI",
+    "modAnalytics": "分析",
+    "searchHint": "搜索客户、员工、发薪批次",
+    "prefillTitle": "已为你填写",
+    "prefill1": "38 名员工的大米补贴",
+    "prefill2": "SSS 贷款 ₱916.50，Ben Reyes",
+    "prefill3": "1 天无薪假，Liza Ocampo",
+    "calTitle": "截止日日历，2026年10月",
+    "calPay": "发薪日",
+    "calLate": "1 项逾期",
+    "calSoon": "2 项即将到期",
+    "calDone": "6 项已完成",
+    "bonusTitle": "第13个月工资，2026年12月",
+    "taxFree": "₱90,000 以内免税",
+    "finalTitle": "离职结算：Ana Cruz",
+    "fpSalary": "最后工资",
+    "fp13th": "第13个月工资（按比例）",
+    "fpLeave": "未休假期，10 天",
+    "fpTax": "本年度退税",
+    "fpCoe": "在职证明",
+    "leaveTitle": "我的假期",
+    "leaveVL": "年假",
+    "leaveSL": "病假",
+    "daysLeft": "剩余 {n} 天",
+    "requestLeave": "申请请假",
+    "approvalsTitle": "请假申请",
+    "leaveReq": "Rico Santos：年假 2 天",
+    "historyTitle": "员工变更记录",
+    "historyRow": "Vincent Go：月薪 ₱42,000 → ₱45,000",
+    "historyWhy": "“老板批准的年度调薪”",
+    "byoTitle": "导入工资：Davao Fresh Logistics",
+    "byoFrom": "来自 Sprout Solutions，2026年9月",
+    "matches": "一致",
+    "phDiff": "PhilHealth 少了 ₱50",
+    "byoSave": "保存 4 名员工",
+    "colDept": "部门",
+    "deptOps": "运营",
+    "deptAdmin": "行政",
+    "deptSales": "销售",
+    "kpiCost": "工资成本",
+    "kpiGovt": "政府缴费和税款",
+    "kpiOnTime": "按时申报",
+    "kpiEmployees": "员工",
+    "chartTitle": "每月工资成本"
   }
 }

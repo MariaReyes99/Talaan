@@ -8,7 +8,7 @@ audience: [accountant, owner, employee]
 source: "RA 11199 (Social Security Act of 2018), contribution schedule from January 2025"
 source_url: https://www.sss.gov.ph
 effective: 2025-01
-verified: 2026-10-04
+verified: 2026-10-19
 status: Needs CPA review before production use
 languages: [en, tl, zh-Hans]
 ---
