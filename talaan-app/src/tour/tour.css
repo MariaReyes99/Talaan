@@ -7,7 +7,7 @@
   --ube:#6E56CF; --ube-pale:#EEEAFB;
   --font:"Plus Jakarta Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-@media (prefers-color-scheme: dark){.talaan-tour{ --page:#0F1B29; --page-ink:#E6EEF6; --page-muted:#9DB0C3; --card:#16263A; --card-line:#27405C; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .talaan-tour{ --page:#0F1B29; --page-ink:#E6EEF6; --page-muted:#9DB0C3; --card:#16263A; --card-line:#27405C; }
  }
 [data-theme="dark"] .talaan-tour{ --page:#0F1B29; --page-ink:#E6EEF6; --page-muted:#9DB0C3; --card:#16263A; --card-line:#27405C; }
 .talaan-tour *{box-sizing:border-box}

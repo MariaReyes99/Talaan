@@ -87,6 +87,8 @@ export const zhModules: Record<string, string> = {
   analyticsSub: '客户的工资和合规情况一览。', tabDashboard: '看板', tabReports: '报表', scope: '显示',
   kpiEmployees: '员工', kpiClients: '{n} 个客户', kpiCost: '工资成本，{month}', kpiGovt: '政府缴费和税款', kpiOnTime: '按时申报', kpiOnTimeOf: '已过截止日的 {m} 项中有 {n} 项', kpiApprovals: '待审批', kpiApprovalsSub: '已提交审批的发薪批次', kpiAi: '本月问 Tala',
   chartCost: '每月工资成本', chartCostNote: '应发工资加雇主缴费，仅含已批准的发薪。将鼠标悬停在柱上查看详情。', showTable: '以表格显示', showChart: '以图表显示',
+  dashHello: '欢迎回来，', dashDownload: '下载报表', dashPayrollCost: '工资总成本', dashPaidIn: '{month}已发薪 {n} 人', dashRange: '显示月份', range6: '6 个月', range12: '12 个月',
+  dashGovtSub: '{month}的 SSS、PhilHealth、Pag-IBIG 和 BIR', dashTotal: '合计', dashHealthSub: '各客户的下一个截止日和状态', dashBelowTarget: '低于 90% 目标', dashNoneWaiting: '没有待审批的事项，全部处理完毕。', dashAiLeft: '本月还可提问 {n} 次', dashCostCol: '成本，{month}',
   chartDept: '各部门成本，{month}', noData: '暂无数据。', complianceHealth: '各客户合规状况', nextDeadline: '下一个截止日', lateN: '{n} 项逾期', onTrack: '正常',
   reportsIntro: '任何报表都可下载为 CSV，用 Excel 或 Google 表格打开。', downloadCsv: '下载 CSV',
   rp_summary: '工资汇总', rpd_summary: '每次已批准的发薪：应发、雇主缴费、税款和实发。', rp_ytd: '员工年初至今', rpd_ytd: '本年应发工资、应税工资、代扣税和福利。',

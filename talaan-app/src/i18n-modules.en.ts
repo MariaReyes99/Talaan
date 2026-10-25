@@ -95,6 +95,8 @@ export const enModules: Record<string, string> = {
   analyticsSub: 'How your clients’ payroll and compliance are going.', tabDashboard: 'Dashboard', tabReports: 'Reports', scope: 'Show',
   kpiEmployees: 'Employees', kpiClients: '{n} clients', kpiCost: 'Payroll cost, {month}', kpiGovt: 'Government and tax', kpiOnTime: 'Filed on time', kpiOnTimeOf: '{n} of {m} past deadlines', kpiApprovals: 'Waiting for approval', kpiApprovalsSub: 'Pay runs sent for approval', kpiAi: 'Ask Tala this month',
   chartCost: 'Payroll cost by month', chartCostNote: 'Gross pay plus employer contributions, approved pay runs only. Hover a bar for details.', showTable: 'Show as table', showChart: 'Show as chart',
+  dashHello: 'Welcome back,', dashDownload: 'Download reports', dashPayrollCost: 'Total payroll cost', dashPaidIn: '{n} paid in {month}', dashRange: 'Months shown', range6: '6 months', range12: '12 months',
+  dashGovtSub: 'SSS, PhilHealth, Pag-IBIG and BIR for {month}', dashTotal: 'Total', dashHealthSub: 'Next deadline and status for each client', dashBelowTarget: 'Below 90% target', dashNoneWaiting: 'Nothing waiting. You’re all caught up.', dashAiLeft: '{n} questions left this month', dashCostCol: 'Cost, {month}',
   chartDept: 'Cost by department, {month}', noData: 'No data yet.', complianceHealth: 'Compliance health by client', nextDeadline: 'Next deadline', lateN: '{n} late', onTrack: 'On track',
   reportsIntro: 'Download any report as a CSV that opens in Excel or Google Sheets.', downloadCsv: 'Download CSV',
   rp_summary: 'Payroll summary', rpd_summary: 'Every approved pay run: gross, employer contributions, tax and net pay.', rp_ytd: 'Year to date by employee', rpd_ytd: 'Gross, taxable pay, tax withheld and benefits for this year.',

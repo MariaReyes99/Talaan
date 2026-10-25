@@ -18,7 +18,7 @@ import { PayrollSetup, OffCycleForm, FinalPayForm, RunKindChip, RunTools, RunPre
 import { HR, MyLeave, EmployeeHistory, logEmployeeChanges } from './modules/hr';
 import { ComplianceCalendar, ImportPayroll } from './modules/compliance';
 import { Books } from './modules/books';
-import { Analytics } from './modules/analytics';
+import { Analytics, Dashboard } from './modules/analytics';
 import { Hq, SupportForm, WhatsNew } from './modules/hq';
 import { GlobalSearch, ModulesCard, ClientSetup, MoreMenu, ModuleBadge, BRAND_MARK } from './modules/shell';
 import { yearEnd } from './engine';
@@ -183,10 +183,14 @@ function Home({ c }: { c: Ctx }) {
   const upcoming = tasks.filter(k => k.urgency === 'ok' && daysBetween(today(), k.due) <= 14);
   const statusOf = (id: string) => { const ks = tasks.filter(k => k.clientId === id); return ks.some(k => k.urgency === 'late') ? 'late' : ks.some(k => k.urgency === 'soon') ? 'soon' : 'ok'; };
   const label = { late: t('statusLate'), soon: t('statusSoon'), ok: t('statusOk') };
+  const homeActions = <>
+    <button className="dbtn" onClick={c.openTour}><Star size={16} /> {t('tour')}</button>
+    {(c.user.role === 'preparer' || c.user.role === 'firmOwner') && <button className="dbtn primary" onClick={() => c.go({ page: 'payruns' })}>{t('startPayRun')}</button>}</>;
+  const showDash = clients.some(x => hasModule(x, 'analytics'));
   return (<>
-    <div className="head"><div><h1>{t('greeting', { name: c.user.name.split(' ')[0] })}</h1><p className="muted">{t('clientsSummary', { n: clients.length })}</p></div>
-      <div className="row"><button className="btn ghost" onClick={c.openTour}><Star size={16} /> {t('tour')}</button>
-        {(c.user.role === 'preparer' || c.user.role === 'firmOwner') && <button className="btn" onClick={() => c.go({ page: 'payruns' })}>{t('startPayRun')}</button>}</div></div>
+    {/* Dashboard */}
+    {showDash ? <Dashboard c={c} actions={homeActions} /> : <div className="head"><div><h1>{t('greeting', { name: c.user.name.split(' ')[0] })}</h1><p className="muted">{t('clientsSummary', { n: clients.length })}</p></div>
+      <div className="row">{homeActions}</div></div>}
     {(c.user.role === 'firmOwner' || c.user.role === 'preparer') && <GettingStarted c={c} />}
     {c.user.role === 'firmOwner' && (() => { const due = corpusDue(c); return due ? <div className="card duebar"><Chip u="soon">{t('reviewDueChip')}</Chip><span className="grow">{t('corpusDueTask', { n: due })}</span><button className="btn small" onClick={() => c.go({ page: 'admin', id: 'corpus' })}>{t('open')}</button></div> : null; })()}
     <ApprovalsWaiting c={c} />
