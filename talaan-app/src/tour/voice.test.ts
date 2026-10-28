@@ -1,0 +1,22 @@
+import assert from 'node:assert';
+import { guessGender, pickName, GUIDE_NAMES, rankVoices, chunks } from './voice';
+const v = (name: string, lang: string, localService = true) => ({ name, lang, localService, voiceURI: name, default: false }) as SpeechSynthesisVoice;
+assert.deepEqual(guessGender(v('Microsoft Blessica Online (Natural) - Filipino (Philippines)', 'fil-PH')), { gender: 'female', sure: true });
+assert.deepEqual(guessGender(v('Microsoft Angelo Online (Natural) - Filipino (Philippines)', 'fil-PH')), { gender: 'male', sure: true });
+assert.equal(guessGender(v('Google UK English Female', 'en-GB')).gender, 'female');
+assert.equal(guessGender(v('Google UK English Male', 'en-GB')).gender, 'male');
+assert.equal(guessGender(v('Microsoft Zira - English (United States)', 'en-US')).gender, 'female');
+assert.equal(guessGender(v('Microsoft David - English (United States)', 'en-US')).gender, 'male');
+assert.equal(guessGender(v('Microsoft Xiaoxiao Online (Natural) - Chinese (Mainland)', 'zh-CN')).gender, 'female');
+assert.equal(guessGender(v('Microsoft Yunxi Online (Natural) - Chinese (Mainland)', 'zh-CN')).gender, 'male');
+assert.equal(guessGender(v('Samantha', 'en-US')).gender, 'female'); assert.equal(guessGender(v('Daniel', 'en-GB')).gender, 'male');
+assert.equal(guessGender(v('Ting-Ting', 'zh-CN')).gender, 'female');
+assert.deepEqual(guessGender(v('Google 普通话（中国大陆）', 'zh-CN')), { gender: 'female', sure: false });
+for (let k = 0; k < 50; k++) { assert.ok(GUIDE_NAMES.female.includes(pickName('female'))); assert.ok(GUIDE_NAMES.male.includes(pickName('male'))); }
+assert.notEqual(pickName('male', 'Bayani'), 'Bayani');
+const ranked = rankVoices([v('Microsoft David', 'en-US'), v('Microsoft Angelo', 'fil-PH'), v('Microsoft James', 'en-PH'), v('Kangkang', 'zh-CN')], 'tl').map(x => x.v.name);
+assert.deepEqual(ranked.slice(0, 3), ['Microsoft Angelo', 'Microsoft James', 'Microsoft David']);
+assert.equal(rankVoices([v('A', 'en-US'), v('B', 'zh-CN')], 'zh')[0].v.name, 'B');
+assert.deepEqual(chunks('Hi, I’m Tala. In two minutes I’ll show you. Ready?'), ['Hi, I’m Tala.', 'In two minutes I’ll show you.', 'Ready?']);
+assert.deepEqual(chunks('你好！我是 Tala。两分钟内带你看看。'), ['你好！', '我是 Tala。', '两分钟内带你看看。']);
+console.log('voice tests passed');

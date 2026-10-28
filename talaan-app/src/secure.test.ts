@@ -1,0 +1,17 @@
+import assert from 'node:assert';
+import { encryptFile, decryptFile, passwordProblems, DecryptError } from './secure';
+const csv = 'SS number,Surname\n3412345678,DELA CRUZ\n';
+const env = await encryptFile('lim_SSS_R3.csv', csv, 'Talaan-2026-secret');
+assert.ok(!env.includes('DELA CRUZ'), 'contents must not be readable');
+const out = await decryptFile(env, 'Talaan-2026-secret');
+assert.equal(out.name, 'lim_SSS_R3.csv'); assert.equal(new TextDecoder().decode(out.data), csv);
+await assert.rejects(decryptFile(env, 'wrong-password-1'), (e: DecryptError) => e.code === 'wrong-password');
+const tampered = JSON.parse(env); tampered.data = tampered.data.slice(0, -4) + 'AAAA';
+await assert.rejects(decryptFile(JSON.stringify(tampered), 'Talaan-2026-secret'), (e: DecryptError) => e.code === 'wrong-password');
+const renamed = { ...JSON.parse(env), name: 'other.csv' };
+await assert.rejects(decryptFile(JSON.stringify(renamed), 'Talaan-2026-secret'), (e: DecryptError) => e.code === 'wrong-password');
+await assert.rejects(decryptFile('{"hello":1}', 'x'), (e: DecryptError) => e.code === 'not-envelope');
+const pdf = new Uint8Array([37, 80, 68, 70, 45, 0, 255, 128]); const b = await decryptFile(await encryptFile('a.pdf', pdf, 'Another-pass-99'), 'Another-pass-99');
+assert.deepEqual([...b.data], [...pdf]);
+assert.deepEqual(passwordProblems('short1'), ['length']); assert.deepEqual(passwordProblems('onlyletterslong'), ['mix']); assert.deepEqual(passwordProblems('Good-pass-2026'), []);
+console.log('encryption tests passed');
