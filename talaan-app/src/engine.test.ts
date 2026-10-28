@@ -49,4 +49,10 @@ assert.ok(Math.abs(lc.taxable - daily * 5) < 0.05, `leave taxable ${lc.taxable}`
 const j2 = journal([b2, rb, l]); const d2 = j2.reduce((a, r) => a + r[1], 0), c2 = j2.reduce((a, r) => a + r[2], 0);
 assert.ok(Math.abs(d2 - c2) < 0.02, `journal with bonus balances: ${d2} vs ${c2}`);
 assert.ok(j2.some(r => r[0] === 'accBonus') && j2.some(r => r[0] === 'accReimb'));
+// overtime on a rest/special day is 169% of the hourly rate; on a regular holiday 260% (Labor Code Arts. 87, 93, 94)
+const hourly = daily / 8;
+const otr = computeLine(e, { ...EMPTY_HOURS, otRestHours: 2 }, 'semi', 695);
+assert.ok(Math.abs(otr.ot - 2 * hourly * 1.69) < 0.01, `rest-day OT ${otr.ot}`);
+const oth = computeLine(e, { ...EMPTY_HOURS, otHolidayHours: 2 }, 'semi', 695);
+assert.ok(Math.abs(oth.ot - 2 * hourly * 2.6) < 0.01, `holiday OT ${oth.ot}`);
 console.log('engine tests passed', { wht: l.wht, net: l.net, journalDr: dr.toFixed(2), journalCr: cr.toFixed(2) });

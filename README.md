@@ -13,7 +13,9 @@ Live demo: https://talaan-ivory.vercel.app
 | Folder | What it is |
 |---|---|
 | `talaan-app/` | The payroll app prototype (React + TypeScript, builds to one HTML file) |
-| `talaan-kit/` | Guided tour and server routes (Next.js): Stripe, Xero, email, source watch |
+| `talaan-kit/` | Guided tour and server routes (Next.js): Ask Tala API, online payments (PayMongo), Stripe, Xero, email, source watch |
+| `talaan-ai/` | Ask Tala quality and safety: synthetic test data, metric targets and history, RAGAS, NeMo Guardrails, PyRIT red team |
+| `docs/ARCHITECTURE.md` | How Talaan scales to millions of employees: speed, security, cost |
 | `brand/` | Talaan 3D logos (with and without slogan), the app icon, and `brand/modules/` lockups for each module (Payroll, Compliance, Books, HR, AI, Analytics, HQ) |
 
 ## Run locally
@@ -22,11 +24,16 @@ Live demo: https://talaan-ivory.vercel.app
 cd talaan-app
 npm install
 npm start        # http://localhost:3000
-npm test         # payroll engine, model, encryption and voice tests
+npm test         # payroll engine, model, billing, entitlements, encryption, voice, Ask Tala and 3,000 synthetic employees
 npm run check:ui # every screen's text exists in English, Tagalog and Chinese
 npm run check:corpus   # Ask Tala corpus: translations, sources, retrieval
 npm run build:tour     # the published guided tour as one HTML file
+npm run eval:rag       # Ask Tala accuracy and safety against targets
+npm run redteam        # Ask Tala red team (offline)
+npm run bench          # hot-path timings in microseconds
 ```
+
+Every pull request runs the full quality gate (`.github/workflows/quality.yml`).
 
 ```
 cd talaan-kit

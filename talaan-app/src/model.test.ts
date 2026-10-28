@@ -31,5 +31,5 @@ assert.equal(filingsFor(s).filter(f => f.clientId === 'davao').length, 4);
 const e = s.employees.find(x => x.id === 'lim-1')!; const t13 = thirteenthDue(s, e, String(new Date().getFullYear())); assert.ok(Math.abs(t13.due - t13.basicEarned / 12) < 0.01);
 // data saved by the previous version loads without losing anything
 const old = { ...sampleState(new Date()), v: 8 } as unknown as State; delete (old as Partial<State>).loans; delete (old as Partial<State>).hq;
-const m = migrate(old); assert.equal(m.v, 9); assert.ok(Array.isArray(m.loans) && m.hq.firms.length > 0); assert.equal(m.clients.length, old.clients.length);
+const m = migrate(old); assert.equal(m.v, 10); assert.ok(Array.isArray(m.loans) && m.hq.firms.length > 0); assert.equal(m.clients.length, old.clients.length);
 console.log('model tests passed');

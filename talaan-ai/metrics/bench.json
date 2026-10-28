@@ -1,0 +1,31 @@
+{
+ "at": "2026-10-28T04:57:24.036Z",
+ "node": "v22.22.0",
+ "results": {
+  "payroll line (one employee, one cutoff)": {
+   "median_us": 0.36,
+   "p99_us": 2.31,
+   "per_second": 2739726
+  },
+  "leave/timesheet entry validation + access check": {
+   "median_us": 0.58,
+   "p99_us": 1.63,
+   "per_second": 1739130
+  },
+  "invoice balance and status": {
+   "median_us": 0.29,
+   "p99_us": 0.9,
+   "per_second": 3460208
+  },
+  "Ask Tala guardrails (input check)": {
+   "median_us": 11.19,
+   "p99_us": 49.55,
+   "per_second": 89397
+  },
+  "Ask Tala retrieval (65 entries, 3 languages)": {
+   "median_us": 127.02,
+   "p99_us": 391.47,
+   "per_second": 7873
+  }
+ }
+}

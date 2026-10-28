@@ -24,6 +24,8 @@
   "src/engine.test.ts",
   "src/secure.test.ts",
   "src/tour/voice.test.ts",
-  "src/model.test.ts"
+  "src/model.test.ts",
+  "src/billing.test.ts",
+  "src/rag/rag.test.ts"
  ]
 }

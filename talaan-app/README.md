@@ -1,5 +1,21 @@
 # Talaan Phase 1 prototype
 
+## Update of 28 October 2026
+
+- **Modules by subscription** (`src/entitlements.ts`): every screen and API belongs to a module (Payroll, Compliance,
+  HR, Books, AI, Analytics); persona rules decide who may open it; records are checked against the clients a person can
+  see. Turning on Books or Analytics needs Payroll or Compliance; a module others depend on cannot be turned off first.
+- **Billing and payments at both levels** (`src/receivables.ts`, `src/modules/receivables.tsx`, `src/modules/payments.tsx`):
+  firm → client employers (Billing → Invoices; clients see More → Invoices) and Talaan HQ → accounting firms and direct
+  employers (Talaan HQ → Billing; firms see Billing → Talaan subscription). Pay now online (preferred; PayMongo on the
+  server), or upload proof of a payment made elsewhere for staff to confirm or reject (the sender cannot confirm their
+  own). Part payments, BIR 2307 withholding, ageing, days to collect, statements of account, receipts by email.
+- **Payroll and compliance**: overtime on rest/special days (169%) and regular holidays (260%); all 17 regional wage
+  orders; statutory leave types (RA 9710, RA 9262; maternity details); 1604-C summary reconciled to monthly 1601-C;
+  2316/alphalist non-taxable breakdown; agency payment schedules (SSS, PhilHealth by PEN, Pag-IBIG by name).
+- **Ask Tala** (`src/rag/`): guardrails, hybrid retriever, citations and a human handoff for questions it cannot answer.
+  Evaluated, red-teamed and benchmarked: see `../talaan-ai/README.md` and `../docs/ARCHITECTURE.md`.
+
 Needs Node.js 20 or newer (https://nodejs.org). Then, in this folder:
 
     npm install        # once, installs React, esbuild and TypeScript
@@ -8,12 +24,16 @@ Needs Node.js 20 or newer (https://nodejs.org). Then, in this folder:
     npm start          # builds and serves it at http://localhost:3000
     npm run check:corpus   # checks the FAQ/Ask Tala corpus (languages, sources, retrieval)
     npm run export:corpus  # writes RAG-ready Markdown to corpus/md
+    npm run eval:rag       # Ask Tala evaluation against metric targets (talaan-ai/metrics)
+    npm run redteam        # offline red team of Ask Tala's guardrails
+    npm run test:synthetic # 3,000 synthetic employees through the payroll engine
+    npm run bench          # microsecond timings of the hot paths
 
 You can also just double-click dist/index.html after `npm run build`.
 Data is saved in your browser only. Use "Reset demo data" in the footer to start over.
 
 Files: src/engine.ts (payroll maths + checks), src/model.ts (clients, runs, deadlines, sample data),
-src/files.ts (agency and bank CSVs), src/kb.ts (Ask Tala search), corpus/ (45 cited FAQs in EN/TL/ZH, see corpus/README.md), src/i18n.ts (EN/TL/ZH), src/App.tsx (screens), src/App.tsx Connections page (apps, import and export, team activity), src/tour/ (the guided tour, shown on first visit and from the "Guided tour" button; same message files as the published tour).
+src/files.ts (agency and bank CSVs), src/kb.ts and src/rag/ (Ask Tala: guardrails, hybrid retriever, pipeline), corpus/ (65 cited entries in EN/TL/ZH, see corpus/README.md), src/i18n.ts (EN/TL/ZH), src/App.tsx (screens), src/App.tsx Connections page (apps, import and export, team activity), src/tour/ (the guided tour, shown on first visit and from the "Guided tour" button; same message files as the published tour).
 
 ## Compliance files and controls (this version)
 

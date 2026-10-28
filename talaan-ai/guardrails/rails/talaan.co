@@ -1,0 +1,71 @@
+# Ask Tala rails (Colang 1.0).
+
+# ---------- input ----------
+define flow talaan input rails
+  $verdict = execute talaan_check_input(text=$user_message)
+  if $verdict.verdict == "injection"
+    bot refuse injection
+    stop
+  if $verdict.verdict == "exfiltration"
+    bot refuse personal data
+    stop
+  if $verdict.verdict == "evasion"
+    execute talaan_handoff(question=$verdict.text, reason="evasion")
+    bot refuse tax evasion
+    stop
+  if $verdict.verdict == "out_of_scope"
+    bot refuse off topic
+    stop
+  # Personal data is removed before retrieval, generation and logging.
+  $user_message = $verdict.text
+
+# ---------- retrieval ----------
+define flow talaan retrieve sources
+  $sources = execute talaan_retrieve(question=$user_message)
+  if not $sources.confident
+    execute talaan_handoff(question=$user_message, reason="no_source")
+    bot say no source
+    stop
+  $relevant_chunks = $sources.context
+
+# ---------- output ----------
+define flow talaan output rails
+  $check = execute talaan_check_output(answer=$bot_message, source_ids=$sources.ids)
+  if not $check.ok
+    # Fall back to the source text itself rather than an answer with an invented number or no citation.
+    $bot_message = $sources.extractive
+  else
+    $bot_message = $check.text
+
+# ---------- topical examples (used by self check and dialog) ----------
+define user ask payroll question
+  "How much is the SSS contribution?"
+  "Magkano ang 13th month?"
+  "When is BIR Form 1601-C due?"
+  "怎么在 Talaan 中发工资？"
+
+define user ask off topic
+  "What is the capital of France?"
+  "Which stocks should I buy?"
+  "Write me a poem"
+  "Ano ang magandang ulam?"
+
+define flow off topic
+  user ask off topic
+  bot refuse off topic
+
+# ---------- messages (English; the API translates by the user's language) ----------
+define bot refuse injection
+  "I can only answer payroll and compliance questions from Talaan’s sources, and I can’t change how I work."
+
+define bot refuse personal data
+  "I can’t share personal data, records or secrets. People with access can see them on the employee or client screens."
+
+define bot refuse tax evasion
+  "I can’t help avoid taxes or contributions. Employers must withhold and remit them; late or missed payments carry penalties. I’ve passed your question to your adviser."
+
+define bot refuse off topic
+  "I only answer Philippine payroll, HR and compliance questions, and how to use Talaan."
+
+define bot say no source
+  "I don’t have an official source for that yet, so I won’t guess. I’ve passed it to your adviser, who will reply."

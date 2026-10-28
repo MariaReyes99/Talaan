@@ -1,4 +1,5 @@
 /** App shell pieces: global search, the "More" menu, module switches and the client setup checklist. */
+import { dependents, missingDependencies } from '../entitlements';
 import { useEffect, useRef, useState } from 'react';
 import { MODULES, MODULE_PRICE, modulesOf, isRegular, type Client, type ModuleKey } from '../model';
 import { Chip, visibleClients, type Ctx, type Route } from '../App';
@@ -37,7 +38,10 @@ export function GlobalSearch({ c }: { c: Ctx }) {
 
 export function ModulesCard({ c, cl, canEdit, onChange }: { c: Ctx; cl: Client; canEdit: boolean; onChange: (p: Partial<Client>) => void }) {
   const { t } = c; const mods = modulesOf(cl); const ext = cl.payrollSource === 'external';
-  const toggle = (m: ModuleKey) => onChange({ modules: mods.includes(m) ? mods.filter(x => x !== m) : MODULES.filter(x => x === m || mods.includes(x)) });
+  const toggle = (m: ModuleKey) => {
+    if (mods.includes(m)) { const broken = dependents(m, mods); if (broken.length) return c.toast(t('modStillNeeded', { mod: t('mod_' + m), others: broken.map(x => t('mod_' + x)).join(', ') })); return onChange({ modules: mods.filter(x => x !== m) }); }
+    const miss = missingDependencies(m, mods); if (miss.length) return c.toast(t('modNeedsFirst', { mod: t('mod_' + m), others: miss.map(x => t('mod_' + x)).join(` ${t('or')} `) }));
+    onChange({ modules: MODULES.filter(x => x === m || mods.includes(x)) }); };
   return (<section className="card"><div className="row between"><h2>{t('modulesTitle')}</h2><span className="muted small">{t('modulesPrice', { amt: MODULES.filter(m => mods.includes(m) && !(m === 'payroll' && ext)).reduce((a, m) => a + MODULE_PRICE[m], 0) })}</span></div>
     <p className="muted small">{t('modulesIntro')}</p>
     <div className="modrow">{MODULES.map(m => { const on = mods.includes(m) && !(m === 'payroll' && ext); return (

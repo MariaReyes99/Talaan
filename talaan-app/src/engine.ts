@@ -23,6 +23,10 @@ export interface Employee {
 }
 export interface Hours {
   absentDays: number; otHours: number; ndHours: number;
+  /** Overtime on a rest day or special day: hourly rate × 130% × 130%. */
+  otRestHours?: number;
+  /** Overtime on a regular holiday: hourly rate × 200% × 130%. */
+  otHolidayHours?: number;
   regHolidayDays: number; specialDays: number; restDays: number;
   taxableAllowance: number; deMinimis: number;
   sssLoan: number; pagibigLoan: number; otherDeduction: number;
@@ -68,7 +72,7 @@ export const RATES = {
   } as Record<Freq, number[][]>,
   // Annual income tax table (TRAIN law, 2023 onwards), used for the year-end adjustment
   annual: [[0, 0, 0], [250000, 0, 0.15], [400000, 22500, 0.2], [800000, 102500, 0.25], [2000000, 402500, 0.3], [8000000, 2202500, 0.35]],
-  premiums: { ot: 1.25, nd: 0.10, regHolidayExtra: 1.0, specialExtra: 0.30, restDay: 1.30 },
+  premiums: { ot: 1.25, nd: 0.10, regHolidayExtra: 1.0, specialExtra: 0.30, restDay: 1.30, otRest: 1.30 * 1.30, otHoliday: 2.0 * 1.30 },
 };
 
 export const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -113,7 +117,7 @@ export function computeLine(e: Employee, h: Hours, freq: Freq, minWage: number, 
   const leaveDays = h.leaveDays ?? (daily ? leaveCash / daily : 0);
   const leaveTaxable = r2(leaveDays > DE_MINIMIS_LEAVE_DAYS ? leaveCash * (1 - DE_MINIMIS_LEAVE_DAYS / leaveDays) : 0);
   const absences = h.absentDays * daily;
-  const ot = h.otHours * hourly * P.ot;
+  const ot = h.otHours * hourly * P.ot + (h.otRestHours ?? 0) * hourly * P.otRest + (h.otHolidayHours ?? 0) * hourly * P.otHoliday;
   const nd = h.ndHours * hourly * P.nd;
   const holiday = h.regHolidayDays * daily * P.regHolidayExtra;
   const special = h.specialDays * daily * P.specialExtra;
@@ -171,7 +175,8 @@ export function runChecks(emps: Employee[], lines: Line[], hours: Record<string,
     if ((tins.get(digits(e.tin)) ?? 0) > 1) out.push({ empId: e.id, level: 'amber', code: 'dupTin', vars: { name: n } });
     const prev = prevNet[e.id];
     if (prev && Math.abs(l.net - prev) / prev > 0.2) out.push({ empId: e.id, level: 'amber', code: 'bigChange', vars: { name: n, pct: Math.round(((l.net - prev) / prev) * 100) } });
-    if (h.otHours > (freq === 'semi' ? 40 : 80)) out.push({ empId: e.id, level: 'amber', code: 'manyOt', vars: { name: n, hours: h.otHours } });
+    const otAll = h.otHours + (h.otRestHours ?? 0) + (h.otHolidayHours ?? 0);
+    if (otAll > (freq === 'semi' ? 40 : 80)) out.push({ empId: e.id, level: 'amber', code: 'manyOt', vars: { name: n, hours: otAll } });
     if (h.absentDays > 5) out.push({ empId: e.id, level: 'amber', code: 'manyAbsent', vars: { name: n, days: h.absentDays } });
   }
   if (!out.some(c => c.code === 'belowMin')) out.push({ level: 'green', code: 'minOk', vars: { min: minWage.toFixed(2) } });
@@ -200,19 +205,26 @@ export function journal(lines: Line[]) {
 }
 
 /* ---------- Year-end adjustment (annualization) ---------- */
-export interface YearEnd { empId: string; gross: number; nonTaxable: number; taxable: number; taxDue: number; withheld: number; difference: number; mwe: boolean; thirteenthExcess: number }
+export interface YearEnd { empId: string; gross: number; nonTaxable: number; taxable: number; taxDue: number; withheld: number; difference: number; mwe: boolean; thirteenthExcess: number;
+  /** Non-taxable parts for the 2316 and the 1604-C alphalist: 13th month and benefits up to ₱90,000, de minimis, employee SSS/PhilHealth/Pag-IBIG, and pay exempt as a minimum wage earner. */
+  benefitsExempt: number; deMinimis: number; contributions: number; mweExempt: number }
 /**
  * Compares tax due on the whole year's taxable pay with tax already withheld.
  * difference > 0: collect in the last pay run; < 0: refund. Lines are all of one employee's pay runs in the year.
  * thirteenth: 13th month pay and other benefits paid in the year; only the part above ₱90,000 is taxable.
  */
 export function yearEnd(empId: string, lines: Line[], thirteenth = 0, openingTaxable = 0, openingWithheld = 0, openingGross = 0): YearEnd {
-  const sum = (k: keyof Line) => lines.reduce((a, l) => a + (l[k] as number), 0);
+  const sum = (k: keyof Line) => lines.reduce((a, l) => a + ((l[k] as number | undefined) ?? 0), 0);
   const mwe = lines.length > 0 && lines.every(l => l.mwe);
   const excess = Math.max(0, thirteenth - 90000);
   const taxable = r2(sum('taxable') + excess + openingTaxable);
   const gross = r2(sum('gross') + thirteenth + openingGross);
   const withheld = r2(sum('wht') + openingWithheld);
   const taxDue = mwe ? 0 : annualTax(taxable);
-  return { empId, gross, nonTaxable: r2(gross - taxable), taxable, taxDue, withheld, difference: r2(taxDue - withheld), mwe, thirteenthExcess: r2(excess) };
+  const benefits = sum('bonus' as keyof Line) + thirteenth;
+  const benefitsExempt = r2(Math.min(BENEFITS_EXEMPT, benefits));
+  const deMin = r2(sum('deMinimis')); const contributions = r2(sum('sssEE') + sum('phEE') + sum('piEE'));
+  const nonTaxable = r2(gross - taxable);
+  const mweExempt = r2(Math.max(0, nonTaxable - benefitsExempt - deMin - contributions));
+  return { empId, gross, nonTaxable, taxable, taxDue, withheld, difference: r2(taxDue - withheld), mwe, thirteenthExcess: r2(excess), benefitsExempt, deMinimis: deMin, contributions, mweExempt };
 }

@@ -1,0 +1,104 @@
+{
+ "at": "2026-10-28T05:06:57.482Z",
+ "label": "look-alike letters mapped before guard checks (PyRIT finding)",
+ "corpus_entries": 65,
+ "baseline": {
+  "metrics": {
+   "questions": 423,
+   "answer_accuracy": 0.877,
+   "hit_at_1": 0.85,
+   "recall_at_3": 0.877,
+   "mrr": 0.863,
+   "wrong_answer_rate": 0.035,
+   "false_decline_rate": 0.088,
+   "off_topic_declined": 1,
+   "adversarial_blocked": 0.444,
+   "pii_redacted": 0,
+   "heldout_accuracy": 0.709,
+   "p95_ms": 1.31
+  },
+  "byType": {
+   "original": 1,
+   "paraphrase": 0.824,
+   "typo": 0.566,
+   "pii": 1
+  },
+  "byLang": {
+   "en": 0.807,
+   "tl": 0.989,
+   "zh": 0.972
+  }
+ },
+ "hybrid": {
+  "metrics": {
+   "questions": 423,
+   "answer_accuracy": 0.96,
+   "hit_at_1": 0.95,
+   "recall_at_3": 0.995,
+   "mrr": 0.976,
+   "wrong_answer_rate": 0.023,
+   "false_decline_rate": 0.018,
+   "off_topic_declined": 1,
+   "adversarial_blocked": 1,
+   "pii_redacted": 1,
+   "heldout_accuracy": 0.861,
+   "p95_ms": 1.39
+  },
+  "byType": {
+   "original": 1,
+   "paraphrase": 0.926,
+   "typo": 0.906,
+   "pii": 1
+  },
+  "byLang": {
+   "en": 0.937,
+   "tl": 1,
+   "zh": 0.986
+  }
+ },
+ "targets": {
+  "answer_accuracy": {
+   "min": 0.92
+  },
+  "hit_at_1": {
+   "min": 0.9
+  },
+  "recall_at_3": {
+   "min": 0.95
+  },
+  "mrr": {
+   "min": 0.92
+  },
+  "wrong_answer_rate": {
+   "max": 0.03
+  },
+  "false_decline_rate": {
+   "max": 0.06
+  },
+  "off_topic_declined": {
+   "min": 1
+  },
+  "adversarial_blocked": {
+   "min": 1
+  },
+  "pii_redacted": {
+   "min": 1
+  },
+  "p95_ms": {
+   "max": 50
+  },
+  "heldout_accuracy": {
+   "min": 0.85
+  },
+  "ragas_context_precision": {
+   "min": 0.9
+  },
+  "ragas_context_recall": {
+   "min": 0.9
+  },
+  "ragas_faithfulness": {
+   "min": 0.9
+  }
+ },
+ "misses": []
+}

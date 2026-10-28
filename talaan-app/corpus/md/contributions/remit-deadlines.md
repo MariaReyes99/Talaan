@@ -5,10 +5,10 @@ id: remit-deadlines
 category: contributions
 agency: SSS
 audience: [accountant, owner]
-source: "SSS, PhilHealth and Pag-IBIG employer payment schedules"
+source: "SSS (RA 11199) monthly payment deadline; PhilHealth EPRS schedule by PEN; Pag-IBIG schedule by employer name (RA 9679). Checked 28 Oct 2026 via employer guides; confirm in each portal"
 source_url: none
 effective: 2026-01
-verified: 2026-10-04
+verified: 2026-10-28
 status: Needs CPA review before production use
 languages: [en, tl, zh-Hans]
 ---
@@ -19,18 +19,18 @@ languages: [en, tl, zh-Hans]
 
 **When are SSS, PhilHealth and Pag-IBIG payments due?**
 
-Each agency sets its own monthly payment schedule, and the due day can depend on the employer number or name. Check each agency’s current schedule for the employer, then set the due days in Talaan’s client settings so reminders are right.
+For the following month: SSS by the last day of the month; PhilHealth on the 11th–15th if the PhilHealth employer number ends in 0–4, or the 16th–20th if it ends in 5–9; Pag-IBIG by the first letter of the employer’s name: A–D 10th–14th, E–L 15th–19th, M–Q 20th–24th, R–Z and numbers 25th to month end. Press Use the agencies’ schedules in the client’s settings, and confirm in each portal.
 
 ## Tagalog
 
 **Kailan ang deadline ng SSS, PhilHealth at Pag-IBIG?**
 
-May sariling buwanang schedule ang bawat ahensya, at puwedeng nakadepende ito sa employer number o pangalan. Tingnan ang kasalukuyang schedule ng bawat ahensya, saka itakda ang mga araw sa settings ng client sa Talaan para tama ang paalala.
+Para sa susunod na buwan: SSS hanggang sa huling araw ng buwan; PhilHealth sa ika-11 hanggang ika-15 kung nagtatapos sa 0–4 ang PhilHealth employer number, o ika-16 hanggang ika-20 kung 5–9; Pag-IBIG ayon sa unang letra ng pangalan ng employer: A–D ika-10 hanggang ika-14, E–L ika-15 hanggang ika-19, M–Q ika-20 hanggang ika-24, R–Z at numero ika-25 hanggang katapusan. Pindutin ang Gamitin ang iskedyul ng mga ahensya sa settings ng client, at kumpirmahin sa bawat portal.
 
 ## 中文
 
 **SSS、PhilHealth 和 Pag-IBIG 何时缴款？**
 
-各机构有自己的月度缴款时间表，截止日可能取决于雇主编号或名称。请核对各机构对该雇主的现行时间表，再在 Talaan 客户设置中填写截止日，确保提醒准确。
+均在次月缴纳：SSS 截至月末最后一天；PhilHealth 雇主编号尾数为 0–4 的在 11 日至 15 日，尾数为 5–9 的在 16 日至 20 日；Pag-IBIG 按雇主名称首字母：A–D 为 10 日至 14 日，E–L 为 15 日至 19 日，M–Q 为 20 日至 24 日，R–Z 及数字为 25 日至月末。可在客户设置中点击“使用各机构的缴款时间表”，并在各机构网站确认。
 
-Source: SSS, PhilHealth and Pag-IBIG employer payment schedules
+Source: SSS (RA 11199) monthly payment deadline; PhilHealth EPRS schedule by PEN; Pag-IBIG schedule by employer name (RA 9679). Checked 28 Oct 2026 via employer guides; confirm in each portal

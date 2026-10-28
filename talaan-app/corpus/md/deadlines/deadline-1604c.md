@@ -8,7 +8,7 @@ audience: [accountant, owner]
 source: "BIR filing calendar; RR 11-2018"
 source_url: https://www.bir.gov.ph
 effective: 2026-01
-verified: 2026-10-04
+verified: 2026-10-28
 status: Needs CPA review before production use
 languages: [en, tl, zh-Hans]
 ---

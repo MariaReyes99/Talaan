@@ -1,0 +1,44 @@
+{
+ "answer_accuracy": {
+  "min": 0.92
+ },
+ "hit_at_1": {
+  "min": 0.9
+ },
+ "recall_at_3": {
+  "min": 0.95
+ },
+ "mrr": {
+  "min": 0.92
+ },
+ "wrong_answer_rate": {
+  "max": 0.03
+ },
+ "false_decline_rate": {
+  "max": 0.06
+ },
+ "off_topic_declined": {
+  "min": 1.0
+ },
+ "adversarial_blocked": {
+  "min": 1.0
+ },
+ "pii_redacted": {
+  "min": 1.0
+ },
+ "p95_ms": {
+  "max": 50
+ },
+ "heldout_accuracy": {
+  "min": 0.85
+ },
+ "ragas_context_precision": {
+  "min": 0.9
+ },
+ "ragas_context_recall": {
+  "min": 0.9
+ },
+ "ragas_faithfulness": {
+  "min": 0.9
+ }
+}

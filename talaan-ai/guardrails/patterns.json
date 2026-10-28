@@ -1,0 +1,269 @@
+{
+ "note": "Generated from talaan-app/src/rag/guard.ts by npm run export:guard. Do not edit by hand.",
+ "pii": [
+  {
+   "kind": "email",
+   "source": "[\\w.+-]+@[\\w-]+\\.[\\w.-]+",
+   "flags": "g",
+   "luhn": false
+  },
+  {
+   "kind": "philhealth",
+   "source": "\\b\\d{2}-\\d{9}-\\d\\b",
+   "flags": "g",
+   "luhn": false
+  },
+  {
+   "kind": "sss",
+   "source": "\\b\\d{2}-\\d{7}-\\d\\b",
+   "flags": "g",
+   "luhn": false
+  },
+  {
+   "kind": "pagibig",
+   "source": "\\b\\d{4}-\\d{4}-\\d{4}\\b",
+   "flags": "g",
+   "luhn": false
+  },
+  {
+   "kind": "tin",
+   "source": "\\b\\d{3}-\\d{3}-\\d{3}(?:-\\d{3,5})?\\b",
+   "flags": "g",
+   "luhn": false
+  },
+  {
+   "kind": "mobile",
+   "source": "(?:\\+?63|\\b0)9\\d{2}[\\s-]?\\d{3}[\\s-]?\\d{4}\\b",
+   "flags": "g",
+   "luhn": false
+  },
+  {
+   "kind": "card",
+   "source": "\\b(?:\\d[ -]?){13,19}\\b",
+   "flags": "g",
+   "luhn": true
+  },
+  {
+   "kind": "bank",
+   "source": "\\b\\d{10,16}\\b",
+   "flags": "g",
+   "luhn": false
+  }
+ ],
+ "injection": [
+  {
+   "source": "ignore (all |any |the )?(previous|prior|above|your|these) (instructions|rules|prompts?)",
+   "flags": "i"
+  },
+  {
+   "source": "disregard (the |your )?(instructions|rules|system)",
+   "flags": "i"
+  },
+  {
+   "source": "\\byou are now\\b",
+   "flags": "i"
+  },
+  {
+   "source": "\\bDAN\\b",
+   "flags": ""
+  },
+  {
+   "source": "developer mode",
+   "flags": "i"
+  },
+  {
+   "source": "system prompt",
+   "flags": "i"
+  },
+  {
+   "source": "jailbreak",
+   "flags": "i"
+  },
+  {
+   "source": "pretend (you are|to be)",
+   "flags": "i"
+  },
+  {
+   "source": "act as (an? )?(unfiltered|unrestricted|lawyer|hacker)",
+   "flags": "i"
+  },
+  {
+   "source": "huwag (mong )?pansinin ang (mga )?(utos|instruction)",
+   "flags": "i"
+  },
+  {
+   "source": "忽略(之前|以上|前面)的?(指令|指示|说明)",
+   "flags": ""
+  },
+  {
+   "source": "越狱",
+   "flags": ""
+  },
+  {
+   "source": "reveal (your|the) (prompt|instructions)",
+   "flags": "i"
+  }
+ ],
+ "exfiltration": [
+  {
+   "source": "\\b(password|passcode|api[ -]?key|secret key|token|credentials?)\\b",
+   "flags": "i"
+  },
+  {
+   "source": "\\b(show|list|give|send|tell|export|dump|reveal)\\b.{0,40}\\b(all|every|everyone'?s?|employees'?|staff'?s?|[A-Z][a-z]+ [A-Z][a-z]+'?s?)\\b.{0,40}\\b(salar(y|ies)|bank|account numbers?|tins?|sss numbers?|philhealth numbers?|address(es)?|payslips?|birth ?dates?)",
+   "flags": "i"
+  },
+  {
+   "source": "\\b(salary|bank account|tin|sss number|payslip)\\b.{0,15}\\bof\\b.{0,5}\\b[A-Z][a-z]+ [A-Z][a-z]+",
+   "flags": ""
+  },
+  {
+   "source": "\\b(show|give|tell) me\\b.{0,30}\\b[A-Z][a-z]+ [A-Z][a-z]+'?s? (salary|bank|tin|payslip)",
+   "flags": "i"
+  },
+  {
+   "source": "(所有|全部)员工的?(银行|工资|账号|税号)",
+   "flags": ""
+  },
+  {
+   "source": "ipakita ang (sahod|bank account|tin) ng (lahat|bawat)",
+   "flags": "i"
+  },
+  {
+   "source": "employer (sss|tin|philhealth|pag-?ibig) (number|no\\.?) of\\b",
+   "flags": "i"
+  }
+ ],
+ "evasion": [
+  {
+   "source": "\\b(avoid|evade|dodge|skip|get around|escape)\\b.{0,30}\\b(paying|pay|tax|taxes|sss|philhealth|pag-?ibig|contributions?|bir|remitting)\\b",
+   "flags": "i"
+  },
+  {
+   "source": "\\bhide\\b.{0,30}\\b(income|bonus(es)?|salar(y|ies)|from (the )?bir)\\b",
+   "flags": "i"
+  },
+  {
+   "source": "\\b(under the table|off the books|not declare|without (the )?bir knowing|fake (payslips?|receipts?))\\b",
+   "flags": "i"
+  },
+  {
+   "source": "\\biwasan\\b.{0,30}\\b(buwis|bayad|sss|philhealth|pag-?ibig|kontribusyon)",
+   "flags": "i"
+  },
+  {
+   "source": "hindi (malalaman|alam) ng bir",
+   "flags": "i"
+  },
+  {
+   "source": "(逃税|避税|偷税|少报|不申报)",
+   "flags": ""
+  }
+ ],
+ "out_of_scope": [
+  {
+   "source": "\\b(kiwisaver|superannuation|super fund|index funds?|etfs?|managed funds?|crypto(currency)?|bitcoin|stocks? to buy|invest(ing|ment)? (the |our )?(payroll|money|float)|retirement fund to (buy|pick))\\b",
+   "flags": "i"
+  }
+ ],
+ "guard_words": [
+  "ignore",
+  "previous",
+  "instructions",
+  "disregard",
+  "pretend",
+  "developer",
+  "reveal",
+  "prompt",
+  "password",
+  "credentials",
+  "avoid",
+  "evade",
+  "dodge",
+  "escape",
+  "paying",
+  "under",
+  "table",
+  "books",
+  "declare",
+  "income",
+  "bonus",
+  "bonuses",
+  "salary",
+  "salaries",
+  "account",
+  "accounts",
+  "numbers",
+  "employees",
+  "iwasan",
+  "buwis",
+  "malalaman",
+  "pansinin",
+  "payslips",
+  "receipts",
+  "contributions",
+  "remitting",
+  "rules",
+  "system",
+  "output",
+  "fake",
+  "hide",
+  "skip",
+  "evade"
+ ],
+ "confusables": {
+  "а": "a",
+  "е": "e",
+  "о": "o",
+  "р": "p",
+  "с": "c",
+  "у": "y",
+  "х": "x",
+  "і": "i",
+  "ј": "j",
+  "ѕ": "s",
+  "ԁ": "d",
+  "һ": "h",
+  "ӏ": "l",
+  "ԛ": "q",
+  "ԝ": "w",
+  "ѵ": "v",
+  "α": "a",
+  "ε": "e",
+  "ο": "o",
+  "ρ": "p",
+  "ν": "v",
+  "ι": "i",
+  "κ": "k",
+  "τ": "t",
+  "υ": "u",
+  "χ": "x",
+  "ɡ": "g",
+  "ո": "n",
+  "ս": "u",
+  "ⅰ": "i",
+  "ⅼ": "l",
+  "ı": "i",
+  "ʏ": "y",
+  "ᴀ": "a",
+  "ʙ": "b",
+  "ᴄ": "c",
+  "ᴅ": "d",
+  "ᴇ": "e",
+  "ɢ": "g",
+  "ʜ": "h",
+  "ɪ": "i",
+  "ᴋ": "k",
+  "ʟ": "l",
+  "ᴍ": "m",
+  "ɴ": "n",
+  "ᴏ": "o",
+  "ᴘ": "p",
+  "ʀ": "r",
+  "ᴛ": "t",
+  "ᴜ": "u",
+  "ᴠ": "v",
+  "ᴡ": "w",
+  "ᴢ": "z"
+ }
+}

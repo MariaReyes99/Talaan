@@ -1,5 +1,7 @@
 import type { Lang } from './i18n';
 import corpus from '../corpus/corpus.json';
+import { HybridRetriever, topEntries, type RagEntry } from './rag/retriever';
+import { checkInput, type Redaction } from './rag/guard';
 /**
  * Ask Tala's source library (corpus/corpus.json). Every answer carries its official
  * source, effective date and the date it was last checked. No match, no answer.
@@ -22,7 +24,20 @@ const hasKw = (s: string, k: string) => { const kk = k.toLowerCase(); if (!ASCII
   return new RegExp(`(^|[^a-z0-9])${kk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(s|es)?($|[^a-z0-9])`).test(s); };
 const STOP = new Set(['what', 'when', 'much', 'does', 'paano', 'magkano', 'kailan', 'there', 'with', 'from', 'this', 'that', 'have', 'need', 'kung', 'ang', 'para']);
 
-export function ask(question: string, lang: Lang, audience?: string, entries: Entry[] = KB): Entry[] {
+/** Ask Tala, current pipeline: guardrails, then the hybrid retriever (src/rag). Returns up to two entries, or none. */
+export function ask(question: string, lang: Lang, audience?: string, entries: Entry[] = KB): Entry[] { return askFull(question, lang, audience, entries).entries; }
+const cache = new WeakMap<Entry[], HybridRetriever>();
+export interface AskResult { status: 'answered' | 'declined' | 'blocked'; entries: Entry[]; question: string; redactions: Redaction[]; reason?: string; handoff: boolean }
+export function askFull(question: string, lang: Lang, audience?: string, entries: Entry[] = KB): AskResult {
+  const inp = checkInput(question);
+  if (inp.verdict !== 'ok') return { status: 'blocked', entries: [], question: inp.text, redactions: inp.redactions, reason: inp.verdict, handoff: inp.verdict === 'evasion' };
+  let r = cache.get(entries); if (!r) { r = new HybridRetriever(entries as RagEntry[]); cache.set(entries, r); }
+  const res = r.search(inp.text, { lang, audience }); const found = topEntries(res) as Entry[];
+  return found.length ? { status: 'answered', entries: found, question: inp.text, redactions: inp.redactions, handoff: false } : { status: 'declined', entries: [], question: inp.text, redactions: inp.redactions, reason: res.reason, handoff: true };
+}
+
+/** The original keyword-only retriever, kept as the baseline the evaluation compares against (npm run eval:rag). */
+export function askKeyword(question: string, lang: Lang, audience?: string, entries: Entry[] = KB): Entry[] {
   const s = question.toLowerCase(); const qt = [...tokens(question)].filter(w => !STOP.has(w));
   const scored = entries.filter(e => !audience || e.audience.includes(audience)).map(e => {
     const kw = e.kw.reduce((a, [k, w]) => a + (hasKw(s, k) ? w : 0), 0);

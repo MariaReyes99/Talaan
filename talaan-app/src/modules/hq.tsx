@@ -4,9 +4,12 @@
  * support tickets raised from inside the app, and release notes shown to firms after each update.
  * In the live product this is a separate, staff-only area on the same deployment, reading across all firms.
  */
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { MODULES, MODULE_PRICE, AI_INCLUDED, APP_VERSION, filingsFor, iso, daysBetween, type Firm, type HqInvoice, type Ticket, type Release, type State } from '../model';
-import { Chip, Why, peso, today, roleKey, type Ctx } from '../App';
+import { Chip, Why, peso, today, roleKey, saveFile, type Ctx } from '../App';
+import { arStatus, balanceOf, statementCsv, daysBetweenIso, checkPayment, type ArDoc, type Payment } from '../receivables';
+import { PaymentForm, PaymentsList, AgingCard } from './receivables';
+import { ClaimsQueue, ClaimStatus, PayButtons } from './payments';
 import { ModuleBadge } from './shell';
 
 /** The demo firm's numbers come from its live data; the other firms are samples. */
@@ -16,7 +19,11 @@ export function firmsNow(s: State): Firm[] {
     users: s.users.filter(u => u.active !== false && u.role !== 'talaanAdmin').length, ai: s.aiUsage?.[month] ?? 0, lastActive: iso(today()), lateFilings: filingsFor(s).filter(x => !x.filed && x.due < today()).length });
 }
 export const mrrOf = (f: Firm) => f.plan === 'trial' ? 0 : MODULES.filter(m => f.modules.includes(m)).reduce((a, m) => a + MODULE_PRICE[m], 0) * f.employees;
-const invStatus = (i: HqInvoice): HqInvoice['status'] => i.status === 'sent' && i.due < iso(today()) ? 'overdue' : i.status;
+/** An HQ invoice as a receivable (customer = firm or direct employer). */
+export const hqDoc = (f: Firm, i: HqInvoice): ArDoc => ({ no: i.no, customerId: f.id, total: i.amount, issuedAt: i.sentAt ?? iso(new Date(new Date(i.due + 'T00:00').getTime() - 15 * 864e5)), dueAt: i.due, draft: i.status === 'draft', payments: i.payments, paidAt: i.status === 'paid' && !i.payments?.length ? (i.paidAt ?? i.due) : undefined });
+const invStatus = (i: HqInvoice, f?: Firm) => arStatus(hqDoc(f ?? ({ id: '' } as Firm), i), iso(today()));
+/** Days the oldest unpaid invoice is past due: 30+ puts access at risk, 60+ is a suspension candidate (firm keeps read-only access to its records). */
+export const daysPastDue = (f: Firm) => Math.max(0, ...f.invoices.filter(i => invStatus(i, f) === 'overdue').map(i => daysBetweenIso(i.due, iso(today()))));
 export function health(f: Firm): { u: 'ok' | 'soon' | 'late'; why: string[] } {
   const why: string[] = []; const idle = daysBetween(new Date(f.lastActive + 'T00:00'), today());
   if (idle > 7) why.push('h_idle'); if (f.lateFilings > 0) why.push('h_late'); if (f.errors7d > 2) why.push('h_errors'); if (f.invoices.some(i => invStatus(i) === 'overdue')) why.push('h_overdue');
@@ -42,7 +49,7 @@ function Overview({ c }: { c: Ctx }) {
       <div><span>{t('hqMrr')}</span><b>{peso(mrr)}</b><small className="muted">{t('hqArr', { amt: peso(mrr * 12) })}</small></div>
       <div><span>{t('hqEmployees')}</span><b>{emps.toLocaleString('en-PH')}</b><small className="muted">{t('hqPaidThrough')}</small></div>
       <div className={atRisk ? 'warnk' : ''}><span>{t('hqAtRisk')}</span><b>{atRisk}</b><small className="muted">{t('hqAtRiskSub')}</small></div>
-      <div className={overdue.length ? 'warnk' : ''}><span>{t('hqOverdue')}</span><b>{peso(overdue.reduce((a, i) => a + i.amount, 0))}</b><small className="muted">{t('hqInvoicesN', { n: overdue.length })}</small></div>
+      <div className={overdue.length ? 'warnk' : ''}><span>{t('hqOverdue')}</span><b>{peso(firms.reduce((a, f) => a + f.invoices.filter(i => invStatus(i, f) === 'overdue').reduce((x, i) => x + balanceOf(hqDoc(f, i)), 0), 0))}</b><small className="muted">{t('hqInvoicesN', { n: overdue.length })}</small></div>
       <div><span>{t('hqTickets')}</span><b>{c.s.hq.tickets.filter(x => x.status !== 'solved').length}</b><small className="muted">{t('hqTicketsSub')}</small></div>
     </div>
     <section className="card"><h2>{t('hqFirmsTitle')}</h2><div className="scroll"><table className="tbl"><thead><tr><th>{t('hqFirm')}</th><th>{t('modulesTitle')}</th><th className="num">{t('colClients')}</th><th className="num">{t('kpiEmployees')}</th><th className="num">{t('hqAiUse')}</th><th>{t('hqLastActive')}</th><th className="num">{t('hqMrr')}</th><th>{t('hqHealth')}</th></tr></thead>
@@ -53,25 +60,59 @@ function Overview({ c }: { c: Ctx }) {
       <p className="muted small">{t('hqMonitorNote')}</p></section></>);
 }
 
+/** Adds a payment to a Talaan HQ invoice and marks it paid when the balance reaches zero. */
+export function addHqPayment(c: Ctx, firmId: string, no: string, p: Payment) {
+  // Re-checked against the latest state: a stale form, two people confirming at once or a late webhook cannot overpay or pay twice.
+  const f0 = c.s.hq.firms.find(f => f.id === firmId); const i0 = f0?.invoices.find(i => i.no === no);
+  if (!f0 || !i0 || checkPayment(hqDoc(f0, i0), p, iso(today()))) { c.toast(c.t('payStale')); return; }
+  c.setS(s => ({ ...s, hq: { ...s.hq, firms: s.hq.firms.map(f => f.id !== firmId ? f : { ...f, invoices: f.invoices.map(i => { if (i.no !== no || checkPayment(hqDoc(f, i), p, iso(today())) || (i.payments ?? []).some(x => x.id === p.id)) return i; const pays = [...(i.payments ?? []), p];
+    return { ...i, payments: pays, ...(balanceOf({ ...hqDoc(f, i), payments: pays }) <= 0.005 ? { status: 'paid' as const, paidAt: p.date } : {}) }; }) }) } }));
+  c.log('act_hqPayment', { no });
+}
+/** The firm's (or direct employer's) own view of what Talaan has billed: pay online, upload proof, download the statement. */
+export function TalaanSubscription({ c }: { c: Ctx }) {
+  const { t } = c; const f = firmsNow(c.s).find(x => x.live); if (!f) return null;
+  const reviewers = c.s.users.filter(u => u.role === 'talaanAdmin').map(u => u.id);
+  const docs = f.invoices.filter(i => i.status !== 'draft').map(i => ({ i, d: hqDoc(f, i) })).sort((a, b) => b.i.month.localeCompare(a.i.month));
+  return (<><Why>{t('subIntro')}</Why>
+    <section className="card"><div className="row between"><h2>{t('subTitle')}</h2><button className="btn ghost small" onClick={() => saveFile(c, `talaan_statement_${iso(today())}.csv`, statementCsv(f.name, 'Talaan (SRBA Consulting Limited)', f.invoices.map(i => hqDoc(f, i)), f.id))}>{t('statementOfAccount')}</button></div>
+      <p className="muted small">{t('subPlan', { mods: f.modules.map(m => t('mod_' + m)).join(', '), n: f.employees, amt: peso(mrrOf(f)) })}</p>
+      {!docs.length ? <p className="muted">{t('noInvoices')}</p> : <div className="scroll"><table className="tbl"><thead><tr><th>{t('invoiceNo')}</th><th>{t('month')}</th><th className="num">{t('amount')}</th><th className="num">{t('balanceDue')}</th><th>{t('colDue')}</th><th>{t('colStatus')}</th><th></th></tr></thead>
+        <tbody>{docs.map(({ i, d }) => { const st = arStatus(d, iso(today())); return <Fragment key={i.no}><tr><td className="nowrap"><b>{i.no}</b></td><td>{c.monthLabel(i.month)}</td><td className="num">{peso(i.amount)}</td><td className="num">{peso(balanceOf(d))}</td><td>{i.due}</td>
+          <td><Chip u={st === 'paid' ? 'ok' : st === 'overdue' ? 'late' : 'soon'}>{t('hs_' + st)}</Chip></td>
+          <td>{c.user.role === 'firmOwner' && <PayButtons c={c} doc={d} level="hq" payee="Talaan" reviewers={reviewers} onPaid={p => addHqPayment(c, f.id, i.no, p)} />}<ClaimStatus c={c} docNo={i.no} /></td></tr>{(d.payments ?? []).length > 0 && <tr className="subrow"><td></td><td colSpan={6}><PaymentsList c={c} doc={d} /></td></tr>}</Fragment>; })}</tbody></table></div>}
+      {c.user.role !== 'firmOwner' && <p className="muted small">{t('subOwnerPays')}</p>}</section></>);
+}
+
 function Billing({ c }: { c: Ctx }) {
-  const { t } = c; const firms = firmsNow(c.s); const month = iso(today()).slice(0, 7);
+  const { t } = c; const firms = firmsNow(c.s); const month = iso(today()).slice(0, 7); const [kind, setKind] = useState<'all' | 'firm' | 'employer'>('all');
   const setInv = (firmId: string, no: string, p: Partial<HqInvoice>) => c.setS(s => ({ ...s, hq: { ...s.hq, firms: s.hq.firms.map(f => f.id !== firmId ? f : { ...f, invoices: f.invoices.map(i => i.no === no ? { ...i, ...p } : i) }) } }));
+  const addPayment = (f: Firm, i: HqInvoice, p: Payment) => addHqPayment(c, f.id, i.no, p);
   const toDraft = firms.filter(f => f.plan === 'active' && !f.invoices.some(i => i.month === month));
   const draftAll = () => { c.setS(s => { let n = s.hq.nextInvoice; const due = iso(new Date(today().getFullYear(), today().getMonth(), today().getDate() + 15));
     return { ...s, hq: { ...s.hq, firms: s.hq.firms.map(f => { const live = firmsNow(s).find(x => x.id === f.id)!; if (!toDraft.some(x => x.id === f.id)) return f;
-      return { ...f, invoices: [...f.invoices, { no: `AUR-${String(n++).padStart(4, '0')}`, month, amount: mrrOf(live), status: 'draft', due } as HqInvoice] }; }), nextInvoice: n } }; });
+      const lines = MODULES.filter(m => live.modules.includes(m)).map(m => ({ module: m, employees: live.employees, rate: MODULE_PRICE[m], amount: MODULE_PRICE[m] * live.employees }));
+      return { ...f, invoices: [...f.invoices, { no: `TAL-${String(n++).padStart(4, '0')}`, month, amount: mrrOf(live), status: 'draft', due, lines } as HqInvoice] }; }), nextInvoice: n } }; });
     c.toast(t('hqDrafted', { n: toDraft.length })); };
-  const rows = firms.flatMap(f => f.invoices.map(i => ({ f, i, st: invStatus(i) }))).sort((a, b) => b.i.month.localeCompare(a.i.month) || a.f.name.localeCompare(b.f.name));
+  const shown = firms.filter(f => kind === 'all' || (f.kind ?? 'firm') === kind);
+  const docs = shown.flatMap(f => f.invoices.map(i => hqDoc(f, i)));
+  const rows = shown.flatMap(f => f.invoices.map(i => ({ f, i, st: invStatus(i, f), bal: balanceOf(hqDoc(f, i)) }))).sort((a, b) => b.i.month.localeCompare(a.i.month) || a.f.name.localeCompare(b.f.name));
+  const statement = (id: string) => { const f = firms.find(x => x.id === id)!; saveFile(c, `talaan_statement_${id}_${iso(today())}.csv`, statementCsv(f.name, 'Talaan (SRBA Consulting Limited)', f.invoices.map(i => hqDoc(f, i)), id)); };
   return (<><Why>{t('hqBillingIntro')}</Why>
+    <div className="seg">{(['all', 'firm', 'employer'] as const).map(k => <button key={k} aria-pressed={kind === k} onClick={() => setKind(k)}>{t('ck_' + k)}</button>)}</div>
+    <ClaimsQueue c={c} level="hq" docOf={no => { for (const f of firms) { const i = f.invoices.find(x => x.no === no); if (i) return hqDoc(f, i); } return undefined; }} nameOf={id => firms.find(f => f.id === id)?.name ?? id}
+      onConfirm={(cl, p) => addHqPayment(c, cl.customerId, cl.docNo, p)} />
+    <AgingCard c={c} docs={docs} nameOf={id => firms.find(f => f.id === id)?.name ?? id} onStatement={statement} />
     <section className="card"><div className="row between"><h2>{t('hqSubs')}</h2>{toDraft.length > 0 && <button className="btn" onClick={draftAll}>{t('hqDraftMonth', { n: toDraft.length, month: c.monthLabel(month) })}</button>}</div>
-      <div className="scroll"><table className="tbl"><thead><tr><th>{t('hqFirm')}</th>{MODULES.map(m => <th key={m} className="num">{t('mod_' + m)}<div className="muted small">₱{MODULE_PRICE[m]}</div></th>)}<th className="num">{t('kpiEmployees')}</th><th className="num">{t('hqMrr')}</th></tr></thead>
-        <tbody>{firms.map(f => <tr key={f.id}><td><b>{f.name}</b>{f.plan === 'trial' && <> <Chip u="soon">{t('trial')}</Chip></>}</td>{MODULES.map(m => <td key={m} className="num">{f.modules.includes(m) ? '✓' : <span className="muted">—</span>}</td>)}<td className="num">{f.employees}</td><td className="num"><b>{peso(mrrOf(f))}</b></td></tr>)}</tbody></table></div></section>
-    <section className="card"><h2>{t('hqInvoices')}</h2><div className="scroll"><table className="tbl"><thead><tr><th>{t('invoiceNo')}</th><th>{t('hqFirm')}</th><th>{t('month')}</th><th className="num">{t('amount')}</th><th>{t('colDue')}</th><th>{t('colStatus')}</th><th></th></tr></thead>
-      <tbody>{rows.map(({ f, i, st }) => <tr key={i.no}><td><b>{i.no}</b>{i.inXero && <div className="muted small">{t('inXero')}</div>}</td><td>{f.name}</td><td>{c.monthLabel(i.month)}</td><td className="num">{peso(i.amount)}</td><td>{i.due}</td>
-        <td><Chip u={st === 'paid' ? 'ok' : st === 'overdue' ? 'late' : st === 'sent' ? 'soon' : 'info'}>{t('hs_' + st)}</Chip>{i.paidAt && <div className="muted small">{i.paidAt}</div>}</td>
+      <div className="scroll"><table className="tbl"><thead><tr><th>{t('hqCustomer')}</th>{MODULES.map(m => <th key={m} className="num">{t('mod_' + m)}<div className="muted small">₱{MODULE_PRICE[m]}</div></th>)}<th className="num">{t('kpiEmployees')}</th><th className="num">{t('hqMrr')}</th><th>{t('hqAccess')}</th></tr></thead>
+        <tbody>{shown.map(f => { const late = daysPastDue(f); return <tr key={f.id}><td><b>{f.name}</b> <span className="tag">{t('ck_' + (f.kind ?? 'firm'))}</span>{f.plan === 'trial' && <> <Chip u="soon">{t('trial')}</Chip></>}</td>{MODULES.map(m => <td key={m} className="num">{f.modules.includes(m) ? '✓' : <span className="muted">—</span>}</td>)}<td className="num">{f.employees}</td><td className="num"><b>{peso(mrrOf(f))}</b></td>
+          <td>{late >= 60 ? <Chip u="late">{t('accSuspend', { n: late })}</Chip> : late >= 30 ? <Chip u="soon">{t('accAtRisk', { n: late })}</Chip> : <Chip u="ok">{t('accOk')}</Chip>}</td></tr>; })}</tbody></table></div></section>
+    <section className="card"><h2>{t('hqInvoices')}</h2><div className="scroll"><table className="tbl"><thead><tr><th>{t('invoiceNo')}</th><th>{t('hqCustomer')}</th><th>{t('month')}</th><th className="num">{t('amount')}</th><th className="num">{t('balanceDue')}</th><th>{t('colDue')}</th><th>{t('colStatus')}</th><th></th></tr></thead>
+      <tbody>{rows.map(({ f, i, st, bal }) => <Fragment key={i.no}><tr><td className="nowrap"><b>{i.no}</b>{i.inXero && <div className="muted small">{t('inXero')}</div>}</td><td>{f.name}</td><td>{c.monthLabel(i.month)}</td><td className="num">{peso(i.amount)}</td><td className="num">{st === 'draft' ? '—' : peso(bal)}</td><td className="nowrap">{i.due}</td>
+        <td><Chip u={st === 'paid' ? 'ok' : st === 'overdue' ? 'late' : st === 'sent' || st === 'partial' ? 'soon' : 'info'}>{t('hs_' + st)}</Chip>{i.paidAt && st === 'paid' && <div className="muted small">{i.paidAt}</div>}</td>
         <td><div className="row">{st === 'draft' && <button className="btn small xero" onClick={() => { setInv(f.id, i.no, { status: 'sent', sentAt: iso(today()), inXero: true }); c.toast(t('hqSentXero', { no: i.no })); }}>{t('hqApproveSend')}</button>}
-          {(st === 'sent' || st === 'overdue') && <button className="btn small ghost" onClick={() => setInv(f.id, i.no, { status: 'paid', paidAt: iso(today()) })}>{t('markPaid')}</button>}
-          {st === 'overdue' && <button className="btn small ghost" onClick={() => c.toast(t('hqReminder', { firm: f.name }))}>{t('sendReminder')}</button>}</div></td></tr>)}</tbody></table></div>
+          {st !== 'draft' && st !== 'paid' && <button className="btn small green" onClick={() => c.modal(<PaymentForm c={c} doc={hqDoc(f, i)} title={f.name} onSave={p => addPayment(f, i, { ...p, source: 'staff' })} />)}>{t('recordPayment')}</button>}
+          {st === 'overdue' && <button className="btn small ghost" onClick={() => c.toast(t('hqReminder', { firm: f.name }))}>{t('sendReminder')}</button>}</div><ClaimStatus c={c} docNo={i.no} /></td></tr>{(i.payments ?? []).length > 0 && <tr className="subrow"><td></td><td colSpan={7}><PaymentsList c={c} doc={hqDoc(f, i)} /></td></tr>}</Fragment>)}</tbody></table></div>
       <p className="muted small">{t('hqBillingNote')}</p></section></>);
 }
 

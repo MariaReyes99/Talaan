@@ -108,9 +108,29 @@ export function birAlphalist(rows: { e: Employee; y: YearEnd }[], year: number, 
     'Taxable compensation', 'Tax due', 'Tax withheld (Jan–Nov and Dec)', 'Over-withheld refunded / (under-withheld collected)', 'Substituted filing (Y/N)'];
   const out: (string | number)[][] = [['Employer TIN', ids.tin], ['RDO', ids.rdo], ['Employer name', employerName], ['Year', year], []];
   const sched = (title: string, list: typeof rows) => { out.push([title], head); list.forEach(({ e, y }, i) => { const n = splitName(e.name);
-    out.push([i + 1, e.tin, n.last, n.first, n.middle, y.gross.toFixed(2), '', '', '', y.nonTaxable.toFixed(2), y.taxable.toFixed(2), y.taxDue.toFixed(2), y.withheld.toFixed(2), (-y.difference).toFixed(2), 'Y']); }); out.push([]); };
+    out.push([i + 1, e.tin, n.last, n.first, n.middle, y.gross.toFixed(2), y.benefitsExempt.toFixed(2), y.deMinimis.toFixed(2), y.contributions.toFixed(2), y.nonTaxable.toFixed(2), y.taxable.toFixed(2), y.taxDue.toFixed(2), y.withheld.toFixed(2), (-y.difference).toFixed(2), 'Y']); }); out.push([]); };
   sched('Schedule: employees other than minimum wage earners', rows.filter(r => !r.y.mwe));
   sched('Schedule: minimum wage earners', rows.filter(r => r.y.mwe));
+  return csv(out);
+}
+
+/**
+ * BIR Form 1604-C (Annual Information Return of Income Taxes Withheld on Compensation): the figures to key in,
+ * with the monthly 1601-C remittances that must reconcile to the year's tax withheld. Due 31 January with the alphalist.
+ */
+export function bir1604cSummary(rows: { e: Employee; y: YearEnd }[], monthly: { month: string; withheld: number; remitted?: number; ref?: string; date?: string }[], year: number, ids: EmployerIds, employerName: string) {
+  const t = (f: (y: YearEnd) => number) => rows.reduce((a, r) => a + f(r.y), 0).toFixed(2);
+  const totalMonthly = monthly.reduce((a, m) => a + m.withheld, 0);
+  const totalWithheld = rows.reduce((a, r) => a + r.y.withheld, 0);
+  const out: (string | number)[][] = [['BIR Form 1604-C summary (prototype)', year], ['Employer TIN', ids.tin], ['RDO', ids.rdo], ['Employer name', employerName], ['Due', `${year + 1}-01-31 (with the alphalist through eSubmission)`], [],
+    ['Part', 'Amount'], ['Number of employees', rows.length], ['  of which minimum wage earners', rows.filter(r => r.y.mwe).length],
+    ['Total gross compensation', t(y => y.gross)], ['Non-taxable: 13th month and other benefits (up to ₱90,000 each)', t(y => y.benefitsExempt)], ['Non-taxable: de minimis', t(y => y.deMinimis)],
+    ['Non-taxable: employee SSS, PhilHealth, Pag-IBIG', t(y => y.contributions)], ['Non-taxable: minimum wage earner exemptions', t(y => y.mweExempt)], ['Total non-taxable', t(y => y.nonTaxable)],
+    ['Total taxable compensation', t(y => y.taxable)], ['Total tax due', t(y => y.taxDue)], ['Total tax withheld', totalWithheld.toFixed(2)], [],
+    ['Monthly 1601-C remittances'], ['Month', 'Tax withheld', 'Amount remitted', 'Reference', 'Date paid'],
+    ...monthly.map(m => [m.month, m.withheld.toFixed(2), m.remitted !== undefined ? m.remitted.toFixed(2) : '', m.ref ?? '', m.date ?? '']),
+    ['Total', totalMonthly.toFixed(2)], [],
+    ['Check', Math.abs(totalMonthly - totalWithheld) < 1 ? 'Monthly remittances agree with the alphalist' : `Difference of ${(totalMonthly - totalWithheld).toFixed(2)}: check opening balances and year-end adjustments`]];
   return csv(out);
 }
 

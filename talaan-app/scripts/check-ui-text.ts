@@ -10,7 +10,7 @@ const dyn: Record<string, string[]> = {
   mod_: ['payroll', 'compliance', 'books', 'hr', 'ai', 'analytics'], modd_: ['payroll', 'compliance', 'books', 'hr', 'ai', 'analytics'], rk_: ['regular', 'bonus', 'reimbursement', 'final', 'imported'],
   pk_: ['allowance', 'deMinimis', 'deduction', 'reimbursement'], pkh_: ['allowance', 'deMinimis', 'deduction', 'reimbursement'], lk_: ['sss', 'pagibig', 'company', 'cashAdvance'],
   sr_: ['resigned', 'endContract', 'retired', 'terminated', 'redundancy'], src_: ['talaan', 'external'], ls_: ['pending', 'approved', 'rejected'], show_: ['pending', 'all'], tk_: ['open', 'all'],
-  tc_: ['problem', 'question', 'request'], ts_: ['open', 'waiting', 'solved'], hs_: ['draft', 'sent', 'paid', 'overdue'], hh_: ['ok', 'soon', 'late'], cs2_: ['done', 'late', 'soon', 'planned'], view_: ['month', 'list'],
+  tc_: ['problem', 'question', 'request'], ts_: ['open', 'waiting', 'solved'], hs_: ['draft', 'sent', 'partial', 'paid', 'overdue'], pm_: ['bank', 'gcash', 'maya', 'check', 'card', 'cash', 'other'], ag_: ['current', 'd1_30', 'd31_60', 'd61_90', 'd90p'], ck_: ['all', 'firm', 'employer'], ps_: ['online', 'staff', 'proof'], hr_: ['evasion', 'nosource'], pc_: ['card', 'bank'], hh_: ['ok', 'soon', 'late'], cs2_: ['done', 'late', 'soon', 'planned'], view_: ['month', 'list'],
   fld_: ['name', 'position', 'monthlyRate', 'department', 'bankAccount', 'payout', 'tin', 'sss', 'philhealth', 'pagibig', 'hireDate', 'separationDate'], why2_: ['bonus', 'reimbursement', 'final'],
   acch_: ['accSalaries', 'accBonus', 'accEmployer', 'accReimb', 'accSSS', 'accPH', 'accPI', 'accWHT', 'accOther', 'accNet'],
 };

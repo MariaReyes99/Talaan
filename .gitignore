@@ -14,9 +14,13 @@ Talaan *.md
 Talaan_*.html
 /package-lock.json
 Branding/
-brand/
 Enhancements/
 Products/
 Founder's Agreements_PrivacyContract/
 *.xlsx
 /talaan-guided-tour.html
+# Python tooling
+.venv/
+__pycache__/
+*.pyc
+.pyrit/

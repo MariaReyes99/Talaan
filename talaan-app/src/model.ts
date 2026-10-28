@@ -1,4 +1,5 @@
 import { computeLine, runChecks, yearEnd, EMPTY_HOURS, totals, r2, type Employee, type Freq, type Hours, type Line } from './engine';
+import type { Payment, PaymentClaim } from './receivables';
 export { r2 };
 
 export type Role = 'firmOwner' | 'preparer' | 'client' | 'employee' | 'talaanAdmin';
@@ -46,8 +47,8 @@ export interface LeaveRequest { id: string; empId: string; typeId: string; from:
 export interface EmpChange { at: string; user: string; field: string; from: string; to: string; reason?: string }
 
 /* ---------- Talaan HQ: the business behind Talaan ---------- */
-export interface HqInvoice { no: string; month: string; amount: number; status: 'draft' | 'sent' | 'paid' | 'overdue'; due: string; sentAt?: string; paidAt?: string; inXero?: boolean }
-export interface Firm { id: string; name: string; city: string; plan: 'trial' | 'active' | 'paused'; modules: ModuleKey[]; clients: number; employees: number; users: number; lastActive: string; ai: number; since: string; trialEnds?: string; invoices: HqInvoice[]; live?: boolean; errors7d: number; lateFilings: number }
+export interface HqInvoice { no: string; month: string; amount: number; status: 'draft' | 'sent' | 'paid' | 'overdue'; due: string; sentAt?: string; paidAt?: string; inXero?: boolean; payments?: Payment[]; lines?: { module: string; employees: number; rate: number; amount: number }[]; vat?: number }
+export interface Firm { /** 'firm' = accounting firm serving many employers; 'employer' = a company subscribing directly. */ kind?: 'firm' | 'employer'; billingEmail?: string; id: string; name: string; city: string; plan: 'trial' | 'active' | 'paused'; modules: ModuleKey[]; clients: number; employees: number; users: number; lastActive: string; ai: number; since: string; trialEnds?: string; invoices: HqInvoice[]; live?: boolean; errors7d: number; lateFilings: number }
 export interface TicketReply { at: string; by: string; text: string; staff?: boolean }
 export interface Ticket { id: string; firmId: string; user: string; userName: string; at: string; subject: string; body: string; category: 'problem' | 'question' | 'request'; priority: 'normal' | 'high'; page: string; clientId?: string; version: string; status: 'open' | 'waiting' | 'solved'; replies: TicketReply[] }
 export interface Release { id: string; version: string; date: string; title: string; notes: string; by: string }
@@ -58,7 +59,7 @@ export interface Remit { generatedAt?: string; uploadedAt?: string; reference?: 
 export type CheckKey = 'funds' | 'licence' | 'bcp' | 'export' | 'continuity';
 export type CheckValue = 'yes' | 'no' | 'unknown';
 export interface PartnerCheck { checks: Record<CheckKey, CheckValue>; licence: string; evidence: string; reviewed?: string }
-export interface Region { id: string; name: string; nonAgri: number; other: number; wageOrder: string; effective: string; checked?: string }
+export interface Region { id: string; name: string; nonAgri: number; other: number; wageOrder: string; effective: string; checked?: string; note?: string }
 export interface Holiday { date: string; name: string; type: 'regular' | 'special' }
 export interface Refs { banks: string[]; regions: Region[]; holidays: Holiday[]; docTypes: string[] }
 export interface WatchSource { id: string; agency: string; name: string; url: string; watches: string; every: 'daily' | 'weekly' | 'monthly'; lastChecked?: string; lastChange?: string }
@@ -67,9 +68,11 @@ export interface CorpusAdmin { custom: Record<string, unknown>[]; removed: strin
 export interface Notice { id: string; to: string; at: string; key: string; vars: Record<string, string | number>; route: { page: string; id?: string; step?: number }; read?: boolean }
 export interface Email { id: string; at: string; to: string[]; subject: string; body: string; kind: string; clientId?: string; status: 'queued' | 'sent' | 'failed'; by: string }
 export interface InvoiceLine { label: string; qty: number; rate: number; amount: number }
-export interface Invoice { no: string; clientId: string; month: string; lines: InvoiceLine[]; subtotal: number; vat: number; total: number; issuedAt: string; dueAt: string; status: 'issued' | 'paid'; paidAt?: string; by: string }
+export interface Invoice { no: string; clientId: string; month: string; lines: InvoiceLine[]; subtotal: number; vat: number; total: number; issuedAt: string; dueAt: string; status: 'issued' | 'paid'; paidAt?: string; by: string; payments?: Payment[] }
 export interface Billing { firmName: string; vatRegistered: boolean; termsDays: number; rates: Rates; invoices: Invoice[]; nextNo: number }
-export interface State { payItems: PayItem[]; loans: Loan[]; leaveTypes: LeaveType[]; leaveRequests: LeaveRequest[]; empHistory: Record<string, EmpChange[]>; hq: Hq; aiUsage: Record<string, number>; seenRelease?: string; notices: Notice[]; outbox: Email[]; billing: Billing; users: User[]; refs: Refs; corpus: CorpusAdmin; watch: { sources: WatchSource[]; queue: ReviewItem[] }; prefs?: { protect?: boolean; help?: boolean }; remits: Record<string, Remit>; partners: Record<string, PartnerCheck>; v: number; clients: Client[]; employees: Employee[]; runs: Run[]; filings: Record<string, { ref: string; date: string }>; askLog: string[]; activity: Activity[]; notes: Record<string, Note[]> }
+/** A question Ask Tala could not answer from a source, or refused: a person answers it (human in the loop). */
+export interface Handoff { id: string; at: string; user: string; question: string; lang: 'en' | 'tl' | 'zh'; reason: string; status: 'open' | 'answered'; answer?: string; answeredBy?: string; answeredAt?: string; forCorpus?: boolean }
+export interface State { /** Ask Tala questions handed to a person. */ handoffs?: Handoff[]; /** Payments customers say they made outside Talaan, waiting for staff to confirm. */ claims?: PaymentClaim[]; payItems: PayItem[]; loans: Loan[]; leaveTypes: LeaveType[]; leaveRequests: LeaveRequest[]; empHistory: Record<string, EmpChange[]>; hq: Hq; aiUsage: Record<string, number>; seenRelease?: string; notices: Notice[]; outbox: Email[]; billing: Billing; users: User[]; refs: Refs; corpus: CorpusAdmin; watch: { sources: WatchSource[]; queue: ReviewItem[] }; prefs?: { protect?: boolean; help?: boolean }; remits: Record<string, Remit>; partners: Record<string, PartnerCheck>; v: number; clients: Client[]; employees: Employee[]; runs: Run[]; filings: Record<string, { ref: string; date: string }>; askLog: string[]; activity: Activity[]; notes: Record<string, Note[]> }
 
 export const USERS: User[] = [
   { id: 'maricel', name: 'Maricel Santos', role: 'firmOwner' },
@@ -80,9 +83,26 @@ export const USERS: User[] = [
 ];
 export const SEED_REFS: Refs = {
   banks: ['BDO', 'BPI', 'Metrobank', 'UnionBank', 'Landbank', 'PNB', 'Security Bank', 'RCBC', 'China Bank', 'EastWest'],
+  // Highest daily non-agriculture floor per region ("other" = lowest tier: agriculture, small retail/service or lower area class).
+  // Checked 28 October 2026 against NWPC listings as summarised by SweldoPH (secondary source): confirm each with the RTWPB before live use.
   regions: [
-    { id: 'ncr', name: 'NCR (Metro Manila)', nonAgri: 755, other: 718, wageOrder: 'NCR-28', effective: '2026-09-26', checked: '2026-10-04' },
-    { id: 'r7', name: 'Region VII (Central Visayas)', nonAgri: 540, other: 540, wageOrder: 'To confirm with RTWPB VII', effective: '', checked: '' },
+    { id: 'ncr', name: 'NCR (Metro Manila)', nonAgri: 755, other: 718, wageOrder: 'NCR-28', effective: '2026-09-26', checked: '2026-10-28', note: 'NCR-27 (₱25 second tranche) is enjoined; floor before 26 Sep 2026 is contested.' },
+    { id: 'car', name: 'CAR (Cordillera)', nonAgri: 505, other: 505, wageOrder: 'CAR-24', effective: '2025-12-30', checked: '2026-10-28' },
+    { id: 'r1', name: 'Region I (Ilocos)', nonAgri: 505, other: 505, wageOrder: 'RB 1-24', effective: '2025-11-19', checked: '2026-10-28' },
+    { id: 'r2', name: 'Region II (Cagayan Valley)', nonAgri: 500, other: 500, wageOrder: 'RTWPB 2-24', effective: '2025-11-05', checked: '2026-10-28' },
+    { id: 'r3', name: 'Region III (Central Luzon)', nonAgri: 600, other: 600, wageOrder: 'RBIII-26', effective: '2026-04-16', checked: '2026-10-28' },
+    { id: 'r4a', name: 'Region IV-A (CALABARZON)', nonAgri: 645, other: 550, wageOrder: 'IVA-23', effective: '2026-10-26', checked: '2026-10-28', note: '₱550–₱645 by area and sector.' },
+    { id: 'r4b', name: 'Region IV-B (MIMAROPA)', nonAgri: 455, other: 455, wageOrder: 'RB-MIMAROPA-13', effective: '2026-01-01', checked: '2026-10-28' },
+    { id: 'r5', name: 'Region V (Bicol)', nonAgri: 455, other: 455, wageOrder: 'RBV-23', effective: '2026-04-08', checked: '2026-10-28' },
+    { id: 'r6', name: 'Region VI (Western Visayas)', nonAgri: 550, other: 550, wageOrder: 'RBVI-29', effective: '2025-11-19', checked: '2026-10-28' },
+    { id: 'r7', name: 'Region VII (Central Visayas)', nonAgri: 582, other: 542, wageOrder: 'ROVII-27', effective: '2026-10-14', checked: '2026-10-28', note: 'Class A ₱582, Class B ₱542.' },
+    { id: 'r8', name: 'Region VIII (Eastern Visayas)', nonAgri: 470, other: 470, wageOrder: 'RB VIII-25', effective: '2026-06-01', checked: '2026-10-28' },
+    { id: 'r9', name: 'Region IX (Zamboanga Peninsula)', nonAgri: 464, other: 464, wageOrder: 'RIX-24', effective: '2026-06-01', checked: '2026-10-28' },
+    { id: 'r10', name: 'Region X (Northern Mindanao)', nonAgri: 500, other: 500, wageOrder: 'RX-24', effective: '2026-05-01', checked: '2026-10-28' },
+    { id: 'r11', name: 'Region XI (Davao)', nonAgri: 540, other: 540, wageOrder: 'RB XI-24', effective: '2026-09-01', checked: '2026-10-28' },
+    { id: 'r12', name: 'Region XII (SOCCSKSARGEN)', nonAgri: 460, other: 460, wageOrder: 'RB XII-25', effective: '2025-12-15', checked: '2026-10-28' },
+    { id: 'r13', name: 'Region XIII (Caraga)', nonAgri: 475, other: 475, wageOrder: 'RXIII-20', effective: '2026-05-01', checked: '2026-10-28' },
+    { id: 'barmm', name: 'BARMM', nonAgri: 436, other: 436, wageOrder: 'BARMM-05', effective: '2026-08-06', checked: '2026-10-28', note: 'Rises to ₱461 on 1 December 2026. Sulu stays under BARMM-04.' },
   ],
   // Proclamation No. 1006 (2026 holidays), checked 19 October 2026. Eid holidays are proclaimed separately.
   holidays: [
@@ -152,7 +172,7 @@ export function sampleState(today = new Date()): State {
     { id: 'mabuhay', name: 'Mabuhay Bakery', freq: 'semi', minWage: MIN_NCR, workdays: 313, bank: 'BPI', xero: true, dueDays: { bir: 10, sss: 28, ph: 15, pi: 15 }, assignee: 'jun' },
     { id: 'santos', name: 'Santos Hardware', freq: 'semi', minWage: MIN_NCR, workdays: 313, bank: 'BDO', xero: false, dueDays: { bir: 10, sss: Math.min(28, today.getDate() + 1), ph: 15, pi: 15 }, assignee: 'jun' },
     { id: 'lim', name: 'Lim Trading Corp.', freq: 'semi', minWage: MIN_NCR, workdays: 261, bank: 'BDO', xero: true, dueDays: { bir: 10, sss: 28, ph: 15, pi: 15 }, assignee: 'jun' },
-    { id: 'cebu', name: 'Cebu Family Clinic', freq: 'monthly', minWage: 540, workdays: 261, bank: 'UnionBank', xero: true, dueDays: { bir: 10, sss: 28, ph: 15, pi: 20 }, assignee: 'maricel' },
+    { id: 'cebu', name: 'Cebu Family Clinic', freq: 'monthly', minWage: 582, region: 'r7', workdays: 261, bank: 'UnionBank', xero: true, dueDays: { bir: 10, sss: 28, ph: 15, pi: 20 }, assignee: 'maricel' },
   ];
   const ids = (n: number): EmployerIds => ({ sss: `03-${String(1234567 + n * 1111).slice(0, 7)}-0`, philhealth: `20-${String(500000000 + n * 12345).slice(0, 9)}-1`, pagibig: `2010-${String(1000 + n)}-${String(3000 + n * 7)}`, tin: `00${n}-123-45${n}-000`, rdo: n === 4 ? '081' : '039', address: n === 4 ? 'Cebu City' : 'Quezon City, Metro Manila' });
   clients.forEach((c, i) => { c.ids = ids(i + 1); });
@@ -206,7 +226,7 @@ export function sampleState(today = new Date()): State {
   ] };
   clients.forEach(c => { c.region = c.id === 'cebu' ? 'r7' : 'ncr'; c.active = true; });
     clients.forEach(c => { c.contacts = c.id === 'lim' ? [{ name: 'Teresita Lim', email: 'teresita@limtrading.ph', billing: true }] : [{ name: `${c.name} owner`, email: `owner@${c.id}.example.ph`, billing: true }]; c.notify = { approved: true, remitted: true, invoice: true }; });
-  const st: State = { ...seedExtras(today), v: 9, notices: [], outbox: [], billing: { firmName: 'Santos Bookkeeping Services', vatRegistered: true, termsDays: 15, rates: { perRun: 500, perPayslip: 60, perFiling: 250, perNewHire: 150, per2316: 100 }, invoices: [], nextNo: 1 }, clients, employees, runs, filings: {}, askLog: [], activity, notes, remits: {}, partners: {}, users: USERS.map(u => ({ ...u, active: true, email: u.id === 'teresita' ? 'teresita@limtrading.ph' : u.id === 'rico' ? '' : u.id === 'lisa' ? 'lisa@talaan.example' : `${u.id}@santosbookkeeping.ph` })), refs: JSON.parse(JSON.stringify(SEED_REFS)), corpus: { custom: [], removed: [], reviewEveryDays: 30 }, watch: { sources: SEED_SOURCES.map(x => ({ ...x })), queue: [{ id: 'q1', sourceId: 'nwpc', detectedAt: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2)), summary: 'Wage order page changed (example): check whether any region issued a new wage order.', status: 'open' }] } };
+  const st: State = { ...seedExtras(today), v: 10, notices: [], outbox: [], billing: { firmName: 'Santos Bookkeeping Services', vatRegistered: true, termsDays: 15, rates: { perRun: 500, perPayslip: 60, perFiling: 250, perNewHire: 150, per2316: 100 }, invoices: [], nextNo: 1 }, clients, employees, runs, filings: {}, askLog: [], activity, notes, remits: {}, partners: {}, users: USERS.map(u => ({ ...u, active: true, email: u.id === 'teresita' ? 'teresita@limtrading.ph' : u.id === 'rico' ? '' : u.id === 'lisa' ? 'lisa@talaan.example' : `${u.id}@santosbookkeeping.ph` })), refs: JSON.parse(JSON.stringify(SEED_REFS)), corpus: { custom: [], removed: [], reviewEveryDays: 30 }, watch: { sources: SEED_SOURCES.map(x => ({ ...x })), queue: [{ id: 'q1', sourceId: 'nwpc', detectedAt: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2)), summary: 'Wage order page changed (example): check whether any region issued a new wage order.', status: 'open' }] } };
   const prevMonth = iso(new Date(today.getFullYear(), today.getMonth() - 1, 1)).slice(0, 7);
   for (const f of filingsFor(st)) if (f.month < prevMonth) {
     const ref = `${f.kind.toUpperCase()}-${f.month.replace('-', '')}-${f.clientId.slice(0, 3).toUpperCase()}`;
@@ -214,6 +234,7 @@ export function sampleState(today = new Date()): State {
     st.remits[f.key] = { generatedAt: iso(f.due), uploadedAt: iso(f.due), reference: ref, channel: 'Bank online', amountPaid: f.expected, paidAt: iso(f.due), receipt: { name: `${ref}.pdf`, size: 48211 } };
   }
   seedPeople(st, today);
+  seedFirmInvoices(st, today);
   return st;
 }
 
@@ -230,12 +251,15 @@ export const DEFAULT_LEAVE_TYPES: LeaveType[] = [
   { id: 'lwop', name: 'Leave without pay', days: 0, paid: false, convertible: false },
   { id: 'pat', name: 'Paternity leave', days: 7, paid: true, convertible: false },
   { id: 'solo', name: 'Solo parent leave', days: 7, paid: true, convertible: false },
-  { id: 'mat', name: 'Maternity leave (SSS benefit, 105 days)', days: 105, paid: true, convertible: false },
+  { id: 'mat', name: 'Maternity leave (RA 11210: 105 days; solo mother 120; SSS benefit plus salary differential)', days: 105, paid: true, convertible: false },
+  { id: 'women', name: 'Special leave for women after gynaecological surgery (RA 9710: up to 2 months)', days: 60, paid: true, convertible: false },
+  { id: 'vawc', name: 'Leave for victims of violence against women and children (RA 9262: 10 days)', days: 10, paid: true, convertible: false },
 ];
 function seedExtras(today: Date): Pick<State, 'payItems' | 'loans' | 'leaveTypes' | 'leaveRequests' | 'empHistory' | 'hq' | 'aiUsage'> {
   const d = (n: number) => iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() + n));
   const m = (n: number) => iso(new Date(today.getFullYear(), today.getMonth() + n, 1)).slice(0, 7);
-  const inv = (no: string, month: string, amount: number, status: HqInvoice['status'], dueIn: number): HqInvoice => ({ no, month, amount, status, due: d(dueIn), ...(status !== 'draft' ? { sentAt: d(dueIn - 15), inXero: true } : {}), ...(status === 'paid' ? { paidAt: d(dueIn - 3) } : {}) });
+  const inv = (no: string, month: string, amount: number, status: HqInvoice['status'], dueIn: number, part = 0): HqInvoice => ({ no, month, amount, status, due: d(dueIn), ...(status !== 'draft' ? { sentAt: d(dueIn - 15), inXero: true } : {}),
+    ...(status === 'paid' ? { paidAt: d(Math.min(0, dueIn - 3)), payments: [{ id: `p-${no}`, date: d(Math.min(0, dueIn - 3)), amount, method: 'bank', reference: `BDO-${no.slice(4)}`, by: 'lisa' }] } : part ? { payments: [{ id: `p-${no}`, date: d(Math.min(0, dueIn - 10)), amount: part, method: 'gcash', reference: `GC-${no.slice(4)}`, by: 'lisa' }] } : {}) });
   return {
     payItems: DEFAULT_PAY_ITEMS.map(x => ({ ...x, active: true })), loans: [], leaveTypes: DEFAULT_LEAVE_TYPES.map(x => ({ ...x, active: true })), leaveRequests: [], empHistory: {},
     aiUsage: { [m(0)]: 23, [m(-1)]: 61 },
@@ -248,15 +272,35 @@ function seedExtras(today: Date): Pick<State, 'payItems' | 'loans' | 'leaveTypes
       { id: 't1019', firmId: 'vhub', user: 'x', userName: 'Grace Tan (Visayas Accounting Hub)', at: new Date(today.getTime() - 8 * 864e5).toISOString(), subject: 'Can we import the Sprout payroll register?', body: 'Most of our clients stay on Sprout. We only need the government files.', category: 'question', priority: 'normal', page: 'files', version: '0.8.4', status: 'solved',
         replies: [{ at: new Date(today.getTime() - 7 * 864e5).toISOString(), by: 'Lisa (Talaan HQ)', text: 'Yes: Compliance → Import payroll. Download the register from Sprout as CSV and upload it there.', staff: true }] },
     ], firms: [
-      { id: 'santos', name: 'Santos Bookkeeping Services', city: 'Quezon City', plan: 'active', modules: [...MODULES], clients: 0, employees: 0, users: 0, lastActive: d(0), ai: 0, since: d(-120), live: true, errors7d: 1, lateFilings: 0,
-        invoices: [inv('AUR-0231', m(-2), 3270, 'paid', -32), inv('AUR-0236', m(-1), 3410, 'sent', 6)] },
-      { id: 'dva', name: 'Dela Vega and Partners (sample)', city: 'Makati', plan: 'active', modules: [...MODULES], clients: 12, employees: 214, users: 6, lastActive: d(-1), ai: 182, since: d(-300), errors7d: 0, lateFilings: 1,
-        invoices: [inv('AUR-0229', m(-2), 41088, 'paid', -32), inv('AUR-0234', m(-1), 41088, 'paid', 6)] },
-      { id: 'vhub', name: 'Visayas Accounting Hub (sample)', city: 'Cebu City', plan: 'active', modules: ['compliance', 'books', 'analytics'], clients: 30, employees: 640, users: 9, lastActive: d(-9), ai: 0, since: d(-200), errors7d: 4, lateFilings: 3,
-        invoices: [inv('AUR-0230', m(-2), 46720, 'paid', -32), inv('AUR-0235', m(-1), 46720, 'overdue', -4)] },
-      { id: 'npb', name: 'Northpoint Bookkeepers (trial)', city: 'Baguio', plan: 'trial', modules: ['payroll', 'compliance'], clients: 2, employees: 19, users: 2, lastActive: d(-2), ai: 14, since: d(-16), trialEnds: d(14), errors7d: 0, lateFilings: 0, invoices: [] },
+      { id: 'santos', kind: 'firm', name: 'Santos Bookkeeping Services', city: 'Quezon City', plan: 'active', modules: [...MODULES], clients: 0, employees: 0, users: 0, lastActive: d(0), ai: 0, since: d(-120), live: true, errors7d: 1, lateFilings: 0,
+        invoices: [inv('TAL-0231', m(-2), 3270, 'paid', -32), inv('TAL-0236', m(-1), 3410, 'sent', 6)] },
+      { id: 'dva', kind: 'firm', name: 'Dela Vega and Partners (sample)', city: 'Makati', plan: 'active', modules: [...MODULES], clients: 12, employees: 214, users: 6, lastActive: d(-1), ai: 182, since: d(-300), errors7d: 0, lateFilings: 1,
+        invoices: [inv('TAL-0229', m(-2), 41088, 'paid', -32), inv('TAL-0234', m(-1), 41088, 'paid', 6)] },
+      { id: 'vhub', kind: 'firm', name: 'Visayas Accounting Hub (sample)', city: 'Cebu City', plan: 'active', modules: ['compliance', 'books', 'analytics'], clients: 30, employees: 640, users: 9, lastActive: d(-9), ai: 0, since: d(-200), errors7d: 4, lateFilings: 3,
+        invoices: [inv('TAL-0230', m(-2), 46720, 'paid', -32), inv('TAL-0235', m(-1), 46720, 'overdue', -4)] },
+      { id: 'mcl', kind: 'employer', name: 'Magsaysay Cold Chain Inc. (sample, direct employer)', city: 'Pasig', plan: 'active', modules: ['payroll', 'compliance', 'hr'], clients: 1, employees: 58, users: 3, lastActive: d(0), ai: 0, since: d(-75), errors7d: 0, lateFilings: 0,
+        invoices: [inv('TAL-0232', m(-2), 8526, 'paid', -32), inv('TAL-0237', m(-1), 8526, 'sent', 6, 4000)] },
+      { id: 'npb', kind: 'firm', name: 'Northpoint Bookkeepers (trial)', city: 'Baguio', plan: 'trial', modules: ['payroll', 'compliance'], clients: 2, employees: 19, users: 2, lastActive: d(-2), ai: 14, since: d(-16), trialEnds: d(14), errors7d: 0, lateFilings: 0, invoices: [] },
     ] },
   };
+}
+/** Sample invoices from the firm to its client employers, with full, part and no payment, so Billing and the client's Invoices page have something to show. */
+function seedFirmInvoices(st: State, today: Date) {
+  const d = (n: number) => iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() + n));
+  const mo = (n: number) => iso(new Date(today.getFullYear(), today.getMonth() + n, 1)).slice(0, 7);
+  const R = st.billing.rates;
+  const mk = (no: number, clientId: string, month: string, runs: number, payslips: number, filings: number, issued: number, payments: Payment[] = []): Invoice => {
+    const lines = [{ label: 'Pay runs processed', qty: runs, rate: R.perRun, amount: runs * R.perRun }, { label: 'Payslips', qty: payslips, rate: R.perPayslip, amount: payslips * R.perPayslip }, { label: 'Government filings', qty: filings, rate: R.perFiling, amount: filings * R.perFiling }];
+    const subtotal = lines.reduce((a, l) => a + l.amount, 0); const vat = r2(subtotal * 0.12); const total = r2(subtotal + vat);
+    const paid = payments.reduce((a, p) => a + p.amount + (p.cwt ?? 0), 0) >= total - 0.005;
+    return { no: `SOA-${month.replace('-', '')}-${String(no).padStart(4, '0')}`, clientId, month, lines, subtotal, vat, total, issuedAt: d(issued), dueAt: d(issued + st.billing.termsDays), status: paid ? 'paid' : 'issued', ...(paid ? { paidAt: payments[payments.length - 1].date } : {}), by: 'maricel', payments };
+  };
+  const lim = mk(1, 'lim', mo(-2), 2, 14, 4, -50); lim.payments = [{ id: 'sp1', date: d(-38), amount: r2(lim.total - lim.subtotal * 0.02), cwt: r2(lim.subtotal * 0.02), method: 'bank', reference: 'BDO-778120', by: 'maricel' }]; lim.status = 'paid'; lim.paidAt = d(-38);
+  const santos = mk(2, 'santos', mo(-1), 2, 6, 4, -20); santos.payments = [{ id: 'sp2', date: d(-6), amount: 2000, method: 'gcash', reference: 'GC-5521904', by: 'jun' }];
+  const mabuhay = mk(3, 'mabuhay', mo(-1), 2, 8, 4, -18);
+  const cebu = mk(4, 'cebu', mo(-2), 1, 4, 4, -64);
+  const lim2 = mk(5, 'lim', mo(-1), 2, 14, 4, -12);
+  st.billing.invoices = [lim2, santos, mabuhay, lim, cebu]; st.billing.nextNo = 6;
 }
 function seedPeople(st: State, today: Date) {
   const emp = (id: string) => st.employees.find(e => e.id === id)!;
@@ -285,18 +329,17 @@ function seedPeople(st: State, today: Date) {
   ];
   st.empHistory = { 'lim-5': [{ at: new Date(today.getFullYear(), today.getMonth() - 2, 1, 10).toISOString(), user: 'maricel', field: 'monthlyRate', from: '42000', to: '45000', reason: 'Annual increase approved by Ms. Lim' }] };
   // A client that keeps its own payroll system and uses Talaan only for government filings (bring your own payroll).
-  const dv: Client = { id: 'davao', name: 'Davao Fresh Logistics', freq: 'monthly', minWage: 510, workdays: 313, bank: 'Metrobank', xero: false, dueDays: { bir: 10, sss: 28, ph: 15, pi: 15 }, assignee: 'jun',
+  const dv: Client = { id: 'davao', name: 'Davao Fresh Logistics', freq: 'monthly', minWage: 540, workdays: 313, bank: 'Metrobank', xero: false, dueDays: { bir: 10, sss: 28, ph: 15, pi: 15 }, assignee: 'jun',
     ids: { sss: '03-9876543-2', philhealth: '20-765432109-8', pagibig: '2011-4455-6677', tin: '007-654-321-000', rdo: '113', address: 'Davao City' }, region: 'r11', active: true,
     contacts: [{ name: 'Ramil Dizon', email: 'ramil@davaofresh.example.ph', billing: true }], notify: { approved: true, remitted: true, invoice: true },
     modules: ['compliance', 'books', 'analytics'], payrollSource: 'external', externalSystem: 'Sprout Solutions', departments: ['Warehouse', 'Drivers', 'Office'] };
   st.clients.push(dv);
   const dEmps = [E('davao', 1, 'Ramil Dizon', 'Operations manager', 42000, 313, { department: 'Office' }), E('davao', 2, 'Nestor Abad', 'Driver', 16500, 313, { department: 'Drivers' }),
-    E('davao', 3, 'Marites Lagman', 'Warehouse lead', 19000, 313, { department: 'Warehouse' }), E('davao', 4, 'Jomar Villareal', 'Helper', 14000, 313, { department: 'Warehouse' })];
+    E('davao', 3, 'Marites Lagman', 'Warehouse lead', 19000, 313, { department: 'Warehouse' }), E('davao', 4, 'Jomar Villareal', 'Helper', 14500, 313, { department: 'Warehouse' })];
   dEmps.forEach((e, i) => { e.hireDate = `202${i}-03-01`; e.birthDate = `199${i}-06-1${i}`; }); st.employees.push(...dEmps);
   const lm = iso(new Date(today.getFullYear(), today.getMonth() - 1, 1)).slice(0, 7);
   st.runs.push({ id: `davao-${lm}-M-imported`, clientId: 'davao', period: `${lm}-M`, status: 'approved', kind: 'imported', source: 'Sprout Solutions', label: 'Imported from Sprout Solutions', hours: {}, reasons: {}, preparedBy: 'jun', approvedBy: 'jun', approvedAt: iso(today),
-    lines: dEmps.map(e => computeLine(e, EMPTY_HOURS, 'monthly', 510)) });
-  st.refs.regions.push({ id: 'r11', name: 'Region XI (Davao)', nonAgri: 510, other: 500, wageOrder: 'To confirm with RTWPB XI', effective: '', checked: '' });
+    lines: dEmps.map(e => computeLine(e, EMPTY_HOURS, 'monthly', 540)) });
   // The seeded Lim Trading draft: apply templates, loans and the approved leave, as Talaan does when a run is started.
   const draft = st.runs.find(r => r.clientId === 'lim' && r.status === 'draft');
   if (draft) { draft.hours['lim-6'] = { ...draft.hours['lim-6'], absentDays: 0 }; Object.assign(draft, refreshRun(st, draft)); }
@@ -363,11 +406,27 @@ export { yearEnd };
 /** Brings data saved by an earlier version (v8) up to date without losing it. */
 export function migrate(old: State): State {
   const x = seedExtras(new Date());
-  const s: State = { ...x, ...old, v: 9 };
+  const s: State = { ...x, ...old, v: 10 };
   if (!s.hq) s.hq = x.hq;
+  // Customers default to accounting firms. Existing invoice numbers are kept as issued (they are in Xero and with customers); new ones use TAL-.
+  s.hq = { ...s.hq, firms: s.hq.firms.map(f => ({ ...f, kind: f.kind ?? 'firm' })) };
+  // New statutory leave types (Oct 2026) are added for firms that started with the older list.
+  if (s.leaveTypes) for (const lt of DEFAULT_LEAVE_TYPES) if (!s.leaveTypes.some(x => x.id === lt.id)) s.leaveTypes = [...s.leaveTypes, { ...lt, active: true }];
+  // Wage table refreshed 28 Oct 2026: replace regions still marked "To confirm" and add missing ones; firm edits are kept.
+  if (s.refs?.regions) { const mine = new Map(s.refs.regions.filter(r => !/to confirm/i.test(r.wageOrder)).map(r => [r.id, r]));
+    const seedIds = new Set(SEED_REFS.regions.map(r => r.id));
+    s.refs = { ...s.refs, regions: [...SEED_REFS.regions.map(r => mine.get(r.id) && (mine.get(r.id)!.effective >= r.effective) ? mine.get(r.id)! : r), ...s.refs.regions.filter(r => !seedIds.has(r.id))] }; }
   s.clients = s.clients.map(c => ({ ...c, modules: c.modules ?? [...MODULES], payrollSource: c.payrollSource ?? 'talaan', departments: c.departments ?? ['Operations', 'Admin'] }));
+  // A client below its region's lowest new floor moves up to that floor (never down); a higher tier stays the firm's call,
+  // so the firm owner gets a review task (see wageReviewClients) instead of an automatic change.
+  s.clients = s.clients.map(c => { const r = s.refs?.regions?.find(x => x.id === c.region); return r && c.minWage < r.other ? { ...c, minWage: r.other } : c; });
   if (!s.users.some(u => u.role === 'talaanAdmin')) s.users = [...s.users, { id: 'lisa', name: 'Lisa (Talaan HQ)', role: 'talaanAdmin', active: true, email: 'lisa@talaan.example' }];
   return s;
+}
+
+/** Clients whose minimum wage is below their region's highest current floor: the firm owner confirms the right tier. */
+export function wageReviewClients(s: State) {
+  return s.clients.filter(c => c.active !== false).map(c => ({ c, r: s.refs.regions.find(x => x.id === c.region) })).filter(x => x.r && x.c.minWage < x.r.nonAgri);
 }
 
 /* ---------- Derived data ---------- */
@@ -398,6 +457,18 @@ export function checksFor(s: State, run: Run) {
 }
 
 export type FilingKind = 'bir' | 'sss' | 'ph' | 'pi';
+/**
+ * Suggested monthly due days from each agency's published schedule (checked 28 Oct 2026; confirm in each portal):
+ * BIR 1601-C manual/eBIRForms by the 10th (eFPS 11th–15th by group); SSS by the last day of the following month;
+ * PhilHealth EPRS 11th–15th if the PEN ends in 0–4, 16th–20th if 5–9; Pag-IBIG by employer name: A–D 10th–14th,
+ * E–L 15th–19th, M–Q 20th–24th, R–Z and numbers 25th to month end. 31 means the last day of the month.
+ */
+export function agencyDueDays(ids: Partial<EmployerIds> | undefined, employerName: string): Client['dueDays'] {
+  const pen = (ids?.philhealth ?? '').replace(/\D/g, ''); const last = pen ? Number(pen[pen.length - 1]) : 0;
+  const first = employerName.trim().toUpperCase()[0] ?? 'Z';
+  const pi = /[A-D]/.test(first) ? 14 : /[E-L]/.test(first) ? 19 : /[M-Q]/.test(first) ? 24 : 31;
+  return { bir: 10, sss: 31, ph: last <= 4 ? 15 : 20, pi };
+}
 export const PORTAL: Record<FilingKind, string> = { bir: 'BIR eFPS / eBIRForms', sss: 'My.SSS employer portal', ph: 'PhilHealth EPRS', pi: 'Virtual Pag-IBIG' };
 export interface Filing { key: string; clientId: string; month: string; kind: FilingKind; due: Date; lines: Line[]; expected: number; filed?: { ref: string; date: string }; remit?: Remit }
 export function filingsFor(s: State): Filing[] {

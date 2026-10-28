@@ -12,6 +12,7 @@
 import Stripe from 'stripe';
 import { assertTalaanEnv, envErrorResponse, required } from '../../../../lib/env';
 import { getJson, setIfNew, setJson } from '../../../../lib/store';
+import { saveEntitlement, type Entitlement } from '../../../../lib/entitlements';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,6 +48,8 @@ export async function POST(req: Request) {
       const s = event.data.object as Stripe.Checkout.Session;
       const orgId = s.client_reference_id ?? s.metadata?.orgId;
       if (orgId) await saveBilling(orgId, { status: 'active', plan: s.metadata?.plan, customerId: idOf(s.customer), subscriptionId: idOf(s.subscription) });
+      // Modules bought at checkout ("payroll,compliance,hr") become the org's entitlements.
+      if (orgId && s.metadata?.modules) await saveEntitlement(orgId, { modules: s.metadata.modules.split(',').map(x => x.trim()) as Entitlement['modules'], status: 'active' });
       break;
     }
     case 'customer.subscription.updated':
@@ -55,6 +58,7 @@ export async function POST(req: Request) {
       const customerId = idOf(sub.customer);
       const orgId = sub.metadata?.orgId ?? (customerId ? await getJson<string>(`stripe:customer:${customerId}`) : null);
       if (orgId) await saveBilling(orgId, { status: event.type === 'customer.subscription.deleted' ? 'canceled' : sub.status, priceId: sub.items.data[0]?.price.id, customerId, subscriptionId: sub.id });
+      if (orgId) await saveEntitlement(orgId, { status: event.type === 'customer.subscription.deleted' || sub.status === 'canceled' || sub.status === 'incomplete_expired' ? 'canceled' : sub.status === 'active' ? 'active' : sub.status === 'trialing' ? 'trial' : 'past_due', ...(sub.metadata?.modules ? { modules: sub.metadata.modules.split(',').map(x => x.trim()) as Entitlement['modules'] } : {}) });
       break;
     }
     case 'invoice.payment_failed': {
@@ -62,6 +66,8 @@ export async function POST(req: Request) {
       const customerId = idOf(inv.customer);
       const orgId = customerId ? await getJson<string>(`stripe:customer:${customerId}`) : null;
       if (orgId) await saveBilling(orgId, { status: 'past_due' });
+      // Access is not cut automatically: Talaan HQ reviews accounts 60+ days late before any move to read-only (human in the loop).
+      if (orgId) await saveEntitlement(orgId, { status: 'past_due' });
       break;
     }
     default:

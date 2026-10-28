@@ -1,0 +1,50 @@
+# Talaan quality gate: payroll and billing tests, synthetic payroll properties, UI text in 3 languages, the corpus,
+# Ask Tala evaluation against metric targets, the offline red team, RAGAS (offline) and guardrail parity.
+# A change that makes answers less accurate or lets an attack through fails here before it reaches Vercel.
+name: quality
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: talaan-app } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: talaan-app/package-lock.json }
+      - run: npm ci
+      - run: npx tsc -p .
+      - run: npm test                 # engine, model, billing/entitlements, encryption, voice, RAG units, 3,000 synthetic employees
+      - run: npm run check:ui
+      - run: npm run check:corpus
+      - run: npm run eval:rag -- --label "CI ${{ github.sha }}"
+      - run: npm run redteam
+      - run: npm run export:guard
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: ask-tala-metrics, path: talaan-ai/metrics }
+  ai:
+    needs: app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: talaan-ai/requirements.txt }
+      - run: cd talaan-app && npm ci && npm run eval:rag -- --label "CI ragas input" && npm run export:guard
+      - run: pip install -r talaan-ai/requirements.txt
+      - run: python -I talaan-ai/eval/ragas_eval.py           # add --llm with secrets.TALAAN_OPENAI_API_KEY for the LLM judge
+      - run: python -I talaan-ai/guardrails/test_guardrails.py
+  kit:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: talaan-kit } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: talaan-kit/package-lock.json }
+      - run: npm ci
+      - run: node scripts/sync-rag.mjs && git diff --exit-code lib/rag   # the server copy of Ask Tala must match the app
+      - run: npx tsc --noEmit -p .

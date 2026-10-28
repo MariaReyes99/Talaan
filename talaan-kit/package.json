@@ -3,9 +3,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/sync-rag.mjs && next build",
     "check:i18n": "tsx scripts/check-i18n.ts",
-    "review:translations": "tsx scripts/back-translate.ts"
+    "review:translations": "tsx scripts/back-translate.ts",
+    "sync:rag": "node scripts/sync-rag.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.39.0",

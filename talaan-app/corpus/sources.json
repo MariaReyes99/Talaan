@@ -40,7 +40,7 @@
     ]
   },
   {
-    "source": "SSS, PhilHealth and Pag-IBIG employer payment schedules",
+    "source": "SSS (RA 11199) monthly payment deadline; PhilHealth EPRS schedule by PEN; Pag-IBIG schedule by employer name (RA 9679). Checked 28 Oct 2026 via employer guides; confirm in each portal",
     "url": "",
     "agency": "SSS",
     "entries": [
@@ -104,7 +104,7 @@
     ]
   },
   {
-    "source": "Labor Code of the Philippines, Art. 87",
+    "source": "Labor Code of the Philippines, Arts. 87, 93 and 94 (overtime, rest day and holiday premiums)",
     "url": "https://www.dole.gov.ph",
     "agency": "DOLE",
     "entries": [
@@ -291,7 +291,10 @@
       "how-reports",
       "how-history",
       "how-support",
-      "emp-leave"
+      "emp-leave",
+      "how-pay-invoice",
+      "how-receivables",
+      "how-subscription"
     ]
   },
   {
@@ -324,6 +327,14 @@
     "agency": "SSS",
     "entries": [
       "loan-deduct"
+    ]
+  },
+  {
+    "source": "Regional wage orders listed by NWPC (CAR-24, RB 1-24, RTWPB 2-24, RBIII-26, IVA-23, RB-MIMAROPA-13, RBV-23, RBVI-29, ROVII-27, RB VIII-25, RIX-24, RX-24, RB XI-24, RB XII-25, RXIII-20, BARMM-05)",
+    "url": "https://nwpc.dole.gov.ph",
+    "agency": "NWPC/RTWPB",
+    "entries": [
+      "min-wage-regions"
     ]
   }
 ]

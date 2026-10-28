@@ -106,7 +106,7 @@ export function RunTools({ c, run }: { c: Ctx; run: Run }) {
   const upd = (patch: Partial<Run>) => c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === run.id ? { ...r, ...patch } : r) }));
   const prev = c.s.runs.filter(r => r.clientId === run.clientId && r.status === 'approved' && isRegular(r) && r.period < run.period).sort((a, b) => b.period.localeCompare(a.period))[0];
   const copy = () => { if (!prev) return c.toast(t('noPrevRun'));
-    const keep: (keyof Hours)[] = ['absentDays', 'otHours', 'ndHours', 'regHolidayDays', 'specialDays', 'restDays'];
+    const keep: (keyof Hours)[] = ['absentDays', 'otHours', 'otRestHours', 'otHolidayHours', 'ndHours', 'regHolidayDays', 'specialDays', 'restDays'];
     const hours = Object.fromEntries(Object.entries(run.hours).map(([id, h]) => [id, { ...h, ...Object.fromEntries(keep.map(k => [k, prev.hours[id]?.[k] ?? 0])) }]));
     upd({ hours }); c.toast(t('copiedFrom', { period: c.periodLabel(prev.period) })); };
   const refresh = () => { upd(refreshRun(c.s, run)); c.toast(t('refreshed')); };

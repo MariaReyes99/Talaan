@@ -254,3 +254,9 @@ label.block{display:flex;flex-direction:column;gap:6px;margin:10px 0;font-weight
 .modbadge img{width:24px;height:24px}.modbadge .mb-word{font-family:Montserrat,var(--font);font-weight:700;font-size:12px;letter-spacing:.16em;background:linear-gradient(180deg,#FBE3A0,#D4A12A);-webkit-background-clip:text;background-clip:text;color:transparent}
 .modbadge .mb-mod{color:#fff;font-weight:700;font-size:12.5px;letter-spacing:.02em;border-left:1px solid rgba(255,255,255,.25);padding-left:8px}
 .modmark{width:22px;height:22px;vertical-align:-5px;margin-right:6px}
+/* payments: pay now, proof of payment and the staff review queue */
+.steps{display:flex;gap:6px;list-style:none;padding:0;margin:4px 0 12px;counter-reset:st}.steps li{counter-increment:st;flex:1;padding:6px 10px;border-radius:8px;background:var(--soft);color:var(--muted);font-weight:600}
+.steps li::before{content:counter(st) ". "}.steps li.on{background:var(--blue-pale);color:var(--ink,#0b2350)}.steps li.done{color:var(--green)}
+.paychoices{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.card.attention{border-left:4px solid var(--amber);background:var(--amber-bg)}
+.tbl tr.subrow td{padding-top:0;border-top:0}.tbl tr.subrow ul.activity{margin:0}

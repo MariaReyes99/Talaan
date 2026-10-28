@@ -1,13 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef as useRefHook, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef as useRefHook, useState, type ReactNode } from 'react';
 import { jsPDF } from 'jspdf';
 import TourHost from './tour/TourHost';
 import { makeT, LANG_NAMES, INTL_LOCALE, DICTS, type Lang } from './i18n';
 import { EMPTY_HOURS, idRules, journal, totals, r2, type Employee, type Hours, type Check, type Line } from './engine';
-import { USERS as SEED_USERS, SEED_REFS, inPeriod, sampleState, migrate, refreshRun, runKind, isRegular, hasModule, modulesOf, MODULES, MODULE_PRICE, AI_INCLUDED, APP_VERSION, type ModuleKey, periodInfo, currentPeriod, shiftPeriod, linesFor, checksFor, filingsFor, tasksFor, daysBetween, iso, PORTAL,
-  DEFAULT_CODES, type Notice, type Email, type Invoice, type InvoiceLine, type Rates, type Contact, type Region, type Holiday, type WatchSource, type ReviewItem, type Role, type AccountKey, type BankTemplate, type BankColumn, type EmployerIds, type Remit, type CheckKey, type CheckValue, type PartnerCheck, type Activity, type State, type Run, type Client, type Task, type Filing, type FilingKind, type User } from './model';
-import { ask, KB, CATEGORIES, liveCorpus, checkCorpus, type Entry } from './kb';
+import { USERS as SEED_USERS, SEED_REFS, inPeriod, sampleState, migrate, refreshRun, runKind, isRegular, hasModule, modulesOf, MODULES, MODULE_PRICE, AI_INCLUDED, APP_VERSION, type ModuleKey, periodInfo, currentPeriod, shiftPeriod, linesFor, checksFor, filingsFor, tasksFor, agencyDueDays, wageReviewClients, daysBetween, iso, PORTAL,
+  DEFAULT_CODES, type Handoff, type Notice, type Email, type Invoice, type InvoiceLine, type Rates, type Contact, type Region, type Holiday, type WatchSource, type ReviewItem, type Role, type AccountKey, type BankTemplate, type BankColumn, type EmployerIds, type Remit, type CheckKey, type CheckValue, type PartnerCheck, type Activity, type State, type Run, type Client, type Task, type Filing, type FilingKind, type User } from './model';
+import { ask, askFull, KB, CATEGORIES, liveCorpus, checkCorpus, type Entry, type AskResult } from './kb';
+import { REFUSAL } from './rag/pipeline';
 import { addDoc, listDocs, getDoc, deleteDoc, MAX_DOC_BYTES, ACCEPT_DOCS, type DocMeta } from './docs';
-import { LAYOUTS, compareWithSample, sssR3, sssMl2, sssR1a, phRf1, phEr2, piMcrf, piStlrf, piNewMembers, birAlphalist, type LayoutInfo } from './layouts';
+import { arStatus, balanceOf, statementCsv, checkPayment, type ArDoc, type Payment } from './receivables';
+import { PaymentForm, PaymentsList, AgingCard } from './modules/receivables';
+import { ClaimsQueue, ClaimStatus, PayButtons } from './modules/payments';
+import { canOpen, type Persona } from './entitlements';
+import { LAYOUTS, compareWithSample, sssR3, sssMl2, sssR1a, phRf1, phEr2, piMcrf, piStlrf, piNewMembers, birAlphalist, bir1604cSummary, type LayoutInfo } from './layouts';
 import { BANK_PRESETS, buildPayoutFile } from './bank';
 import { form2316Pdf } from './pdf2316';
 import { continuityPack } from './continuity';
@@ -19,7 +24,7 @@ import { HR, MyLeave, EmployeeHistory, logEmployeeChanges } from './modules/hr';
 import { ComplianceCalendar, ImportPayroll } from './modules/compliance';
 import { Books } from './modules/books';
 import { Analytics } from './modules/analytics';
-import { Hq, SupportForm, WhatsNew } from './modules/hq';
+import { Hq, SupportForm, WhatsNew, TalaanSubscription } from './modules/hq';
 import { GlobalSearch, ModulesCard, ClientSetup, MoreMenu, ModuleBadge, BRAND_MARK } from './modules/shell';
 import { yearEnd } from './engine';
 import { birFile, payoutFile, xeroJournalCsv, genericJournalCsv, employeesCsv, registerCsv, calendarCsv, parseTable } from './files';
@@ -29,11 +34,11 @@ const OLD_KEY = 'talaan-prototype-v8';
 let USERS: User[] = SEED_USERS; // the live user list, refreshed from stored data on every render
 const TOUR_SEEN = 'talaan-tour-seen';
 const tourSeen = () => { try { return localStorage.getItem(TOUR_SEEN) === '1'; } catch { return false; } };
-export type Route = { page: 'home' | 'clients' | 'client' | 'payruns' | 'run' | 'files' | 'payslips' | 'ask' | 'faqs' | 'plans' | 'connections' | 'admin' | 'billing' | 'payroll' | 'hr' | 'books' | 'analytics' | 'hq' | 'myleave'; id?: string; step?: number };
+export type Route = { page: 'home' | 'clients' | 'client' | 'payruns' | 'run' | 'files' | 'payslips' | 'ask' | 'faqs' | 'plans' | 'connections' | 'admin' | 'billing' | 'payroll' | 'hr' | 'books' | 'analytics' | 'hq' | 'myleave' | 'invoices'; id?: string; step?: number };
 type T = ReturnType<typeof makeT>;
 
 function load(): { s: State; lang: Lang; user: string } {
-  try { const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (raw?.s?.v === 9) return raw; } catch { /* empty */ }
+  try { const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (raw?.s?.v === 10) return raw; if (raw?.s?.v === 9) return { ...raw, s: migrate(raw.s) }; } catch { /* empty */ }
   try { const old = JSON.parse(localStorage.getItem(OLD_KEY) ?? 'null'); if (old?.s?.v === 8) return { ...old, s: migrate(old.s) }; } catch { /* empty */ }
   return { s: sampleState(), lang: 'en', user: 'jun' };
 }
@@ -75,15 +80,25 @@ export default function App() {
   const nav: [Route['page'], string][] = user.role === 'employee' ? [['payslips', 'myPayslips'], ['myleave', 'myLeave'], ['faqs', 'faqs'], ['ask', 'ask']]
     : user.role === 'talaanAdmin' ? [['hq', 'navHq']]
     : [['home', 'home'], ['clients', 'clients'], ...navMods.filter(([, , m]) => mods.has(m)).map(([p, k]) => [p, k] as [Route['page'], string])];
-  const more: [Route['page'], string][] = user.role === 'employee' || user.role === 'talaanAdmin' ? [] : [['connections', 'connections'], ...(user.role !== 'client' ? [['billing', 'billing']] as [Route['page'], string][] : []), ['faqs', 'faqs'], ['plans', 'plans'], ...(user.role === 'firmOwner' ? [['admin', 'admin']] as [Route['page'], string][] : [])];
+  const more: [Route['page'], string][] = user.role === 'employee' || user.role === 'talaanAdmin' ? [] : [['connections', 'connections'], ...(user.role !== 'client' ? [['billing', 'billing']] as [Route['page'], string][] : [['invoices', 'myInvoices']] as [Route['page'], string][]), ['faqs', 'faqs'], ['plans', 'plans'], ...(user.role === 'firmOwner' ? [['admin', 'admin']] as [Route['page'], string][] : [])];
   const active = route.page === 'client' ? 'clients' : route.page === 'run' || route.page === 'payroll' ? 'payruns' : route.page;
   const ctxClient = route.page === 'client' ? s.clients.find(x => x.id === route.id) : route.page === 'run' ? s.clients.find(x => x.id === s.runs.find(r => r.id === route.id)?.clientId) : user.role === 'client' || user.role === 'employee' ? s.clients.find(x => x.id === user.clientId) : undefined;
 
+  // Page access (persona and subscribed modules), then the record itself: a client page or pay run must belong to a
+  // client this person can see, and that client must have the module the screen belongs to.
+  const access = (): { ok: boolean; module?: ModuleKey } => {
+    const acc = canOpen(user.role as Persona, route.page, mods); if (!acc.ok) return acc;
+    const vis = new Set(visibleClients(ctx).map(x => x.id));
+    if (route.page === 'client' && route.id && !vis.has(route.id)) return { ok: false };
+    if (route.page === 'run' && route.id) { const run = s.runs.find(r => r.id === route.id); const cl = run && s.clients.find(x => x.id === run.clientId);
+      if (!run || !cl || !vis.has(cl.id)) return { ok: false }; const need: ModuleKey = runKind(run) === 'imported' ? 'compliance' : 'payroll'; if (!hasModule(cl, need)) return { ok: false, module: need }; }
+    return { ok: true };
+  };
   return (
     <div className="app">
       <div className="banner">{t('banner')}</div>
       <header className="bar">
-        <button className="logo" onClick={() => setRoute({ page: user.role === 'employee' ? 'payslips' : 'home' })}><img src={MARK} alt="" /><span className="wordmark">TALAAN</span></button>
+        <button className="logo" onClick={() => setRoute({ page: homeOf(user.role) })}><img src={MARK} alt="" /><span className="wordmark">TALAAN</span></button>
         <nav>{nav.map(([p, k]) => <button key={p} className={active === p ? 'on' : ''} onClick={() => setRoute({ page: p })}>{t(k)}</button>)}
           {more.length > 0 && <MoreMenu c={ctx} items={more} active={active} />}</nav>
         <div className="right">
@@ -109,6 +124,8 @@ export default function App() {
       <main className="main">
         {user.role !== 'talaanAdmin' && <WhatsNew c={ctx} />}
         {s.prefs?.help !== false && <PageHelp c={ctx} page={route.page} />}
+        {(() => { const acc = access(); return acc.ok ? null : <NotAvailable c={ctx} module={acc.module} />; })()}
+        {access().ok && <>
         {route.page === 'home' && <Home c={ctx} />}
         {route.page === 'clients' && <Clients c={ctx} />}
         {route.page === 'client' && <ClientPage c={ctx} id={route.id!} />}
@@ -116,7 +133,7 @@ export default function App() {
         {route.page === 'run' && <RunPage c={ctx} id={route.id!} startStep={route.step} />}
         {route.page === 'files' && <Files c={ctx} />}
         {route.page === 'payslips' && <Payslips c={ctx} />}
-        {route.page === 'ask' && <Ask c={ctx} />}
+        {route.page === 'ask' && <Ask key={userId} c={ctx} />}
         {route.page === 'faqs' && <Faqs c={ctx} />}
         {route.page === 'connections' && <Connections c={ctx} tab={route.id} />}
         {route.page === 'billing' && (user.role === 'firmOwner' || user.role === 'preparer' ? <BillingPage c={ctx} tab={route.id} /> : null)}
@@ -128,13 +145,14 @@ export default function App() {
         {route.page === 'books' && <Books c={ctx} />}
         {route.page === 'analytics' && <Analytics c={ctx} tab={route.id} />}
         {route.page === 'hq' && (user.role === 'talaanAdmin' ? <Hq c={ctx} tab={route.id} /> : <p className="warn">{t('hqOnly')}</p>)}
+        {route.page === 'invoices' && <ClientInvoices c={ctx} />}</>}
       </main>
       <footer className="foot">
         <button className="link tourlink" onClick={() => setTourOpen(true)}><Star size={16} /> {t('tour')}</button>
         <button className="link" onClick={() => setRoute({ page: 'plans' })}>{t('plans')}</button>
         {user.role !== 'talaanAdmin' && <button className="link" onClick={() => setModal(<SupportForm c={ctx} page={route.page} clientId={ctxClient?.id} />)}>{t('contactSupport')}</button>}
         <span className="muted small">Talaan {APP_VERSION} · {t('tagline')}</span>
-        <button className="link" onClick={() => { const fresh = sampleState(); setS(fresh); setToast(t('resetDemo')); setRoute({ page: 'home' }); }}>{t('resetDemo')}</button>
+        <button className="link" onClick={() => { const fresh = sampleState(); setS(fresh); setToast(t('resetDemo')); setRoute({ page: homeOf(user.role) }); }}>{t('resetDemo')}</button>
       </footer>
       {modal && <div className="scrim" onClick={() => setModal(null)}><div className="modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>{modal}</div></div>}
       {toast && <div className="toast" role="status">{toast}</div>}
@@ -148,7 +166,7 @@ export interface Ctx { s: State; setS: (f: State | ((p: State) => State)) => voi
   notify: (to: string[], key: string, vars: Notice['vars'], route: Route) => void; email: (to: string[], subject: string, body: string, kind: string, clientId?: string) => boolean }
 export const roleKey = (u: User) => ({ firmOwner: 'roleFirmOwner', preparer: 'rolePreparer', client: 'roleClient', employee: 'roleEmployee', talaanAdmin: 'roleTalaan' } as const)[u.role];
 export const usersNow = () => USERS;
-export const visibleClients = (c: Ctx) => c.s.clients.filter(x => x.active !== false && (c.user.role !== 'client' || x.id === c.user.clientId));
+export const visibleClients = (c: Ctx) => c.s.clients.filter(x => x.active !== false && ((c.user.role !== 'client' && c.user.role !== 'employee') || x.id === c.user.clientId));
 const corpusOf = (c: Ctx) => liveCorpus(c.s.corpus.custom, c.s.corpus.removed);
 
 export function Star({ size = 20 }: { size?: number }) {
@@ -188,6 +206,7 @@ function Home({ c }: { c: Ctx }) {
       <div className="row"><button className="btn ghost" onClick={c.openTour}><Star size={16} /> {t('tour')}</button>
         {(c.user.role === 'preparer' || c.user.role === 'firmOwner') && <button className="btn" onClick={() => c.go({ page: 'payruns' })}>{t('startPayRun')}</button>}</div></div>
     {(c.user.role === 'firmOwner' || c.user.role === 'preparer') && <GettingStarted c={c} />}
+    {c.user.role === 'firmOwner' && (() => { const w = wageReviewClients(c.s); return w.length ? <div className="card duebar"><Chip u="soon">{t('wageReviewChip')}</Chip><span className="grow">{t('wageReview', { n: w.length, list: w.map(x => `${x.c.name} (₱${x.c.minWage} → ${x.r!.wageOrder} ₱${x.r!.other}–₱${x.r!.nonAgri})`).join('; ') })}</span><button className="btn small" onClick={() => c.go({ page: 'client', id: w[0].c.id })}>{t('open')}</button></div> : null; })()}
     {c.user.role === 'firmOwner' && (() => { const due = corpusDue(c); return due ? <div className="card duebar"><Chip u="soon">{t('reviewDueChip')}</Chip><span className="grow">{t('corpusDueTask', { n: due })}</span><button className="btn small" onClick={() => c.go({ page: 'admin', id: 'corpus' })}>{t('open')}</button></div> : null; })()}
     <ApprovalsWaiting c={c} />
     <section className="card"><h2>{t('needsYou')}</h2>
@@ -249,7 +268,7 @@ function ClientPage({ c, id }: { c: Ctx; id: string }) {
       </div>
       <h3>{t('dueDays')} <Tip text={t('tip_dueDays')} /></h3><div className="form four">
         {(['bir', 'sss', 'ph', 'pi'] as FilingKind[]).map(k => <label key={k}>{t(fileKey(k))}<input type="number" min={1} max={31} disabled={!canEdit} value={cl.dueDays[k]} onChange={e => upd({ dueDays: { ...cl.dueDays, [k]: num(e.target.value, 1, 31) } })} /></label>)}
-      </div><small className="muted">{t('dueDaysHint')}</small>
+      </div><small className="muted">{t('dueDaysHint')}</small>{canEdit && <button className="btn small ghost" onClick={() => upd({ dueDays: agencyDueDays(cl.ids, cl.name) })}>{t('useAgencySchedule')}</button>}
       <h3>{t('employerIds')}</h3><div className="form">
         {([['sss', 'idSss'], ['philhealth', 'idPh'], ['pagibig', 'idPi'], ['tin', 'idTin'], ['rdo', 'idRdo'], ['address', 'idAddress']] as [keyof EmployerIds, string][]).map(([k, l]) =>
           <label key={k}>{t(l)}<input disabled={!canEdit} value={cl.ids?.[k] ?? ''} onChange={e => upd({ ids: { ...(cl.ids ?? { sss: '', philhealth: '', pagibig: '', tin: '', rdo: '', address: '' }), [k]: e.target.value.slice(0, 120) } })} /></label>)}
@@ -430,7 +449,7 @@ function Stepper({ c, step }: { c: Ctx; step: number }) {
     <li key={n} className={n < step ? 'done' : n === step ? 'cur' : ''} aria-current={n === step ? 'step' : undefined}><b>{n < step ? '✓' : n}</b><span>{c.t('step' + n)}</span></li>))}</ol>;
 }
 
-const HOUR_FIELDS: (keyof Hours)[] = ['absentDays', 'otHours', 'ndHours', 'regHolidayDays', 'specialDays', 'restDays', 'taxableAllowance', 'deMinimis', 'reimbursement', 'sssLoan', 'pagibigLoan', 'otherDeduction'];
+const HOUR_FIELDS: (keyof Hours)[] = ['absentDays', 'otHours', 'otRestHours', 'otHolidayHours', 'ndHours', 'regHolidayDays', 'specialDays', 'restDays', 'taxableAllowance', 'deMinimis', 'reimbursement', 'sssLoan', 'pagibigLoan', 'otherDeduction'];
 const GUIDED_FIELDS: (keyof Hours)[] = ['absentDays', 'otHours', 'ndHours', 'regHolidayDays'];
 const KIND_FIELDS: Record<string, (keyof Hours)[]> = { bonus: ['bonus', 'taxableAllowance'], reimbursement: ['reimbursement'], final: ['absentDays', 'otHours', 'bonus', 'leaveDays', 'leaveConversion', 'taxAdjustment', 'otherDeduction'] };
 const checkKey = (k: Check) => `${k.code}|${k.empId ?? ''}`;
@@ -734,6 +753,7 @@ function YearEndView({ c }: { c: Ctx }) {
         <td className="num"><b className={y.difference < 0 ? 'okmsg' : ''}>{y.difference < 0 ? `(${peso(-y.difference)})` : peso(y.difference)}</b></td>
         <td><button className="btn small ghost" onClick={() => saveFile(c, `${clientId}_${year}_2316_${e.name.replace(/\W+/g, '_')}.pdf`, form2316Pdf({ e, y, lines: ls, year, employer: { name: cl.name, ids: cl.ids ?? blankIds } }))}>{t('pdf2316')}</button></td></tr>)}</tbody></table></div>
     <div className="row end"><button className="btn ghost" onClick={() => saveFile(c, `${clientId}_${year}_alphalist_1604C.csv`, birAlphalist(rows.map(r => ({ e: r.e, y: r.y })), year, cl.ids ?? blankIds, cl.name))}>{t('alphalist')}</button>
+      <button className="btn ghost" onClick={() => saveFile(c, `${clientId}_${year}_1604C_summary.csv`, bir1604cSummary(rows.map(r => ({ e: r.e, y: r.y })), filingsFor(c.s).filter(f => f.clientId === clientId && f.kind === 'bir' && f.month.startsWith(String(year))).map(f => ({ month: f.month, withheld: f.expected, remitted: f.remit?.amountPaid, ref: f.remit?.reference, date: f.remit?.paidAt })), year, cl.ids ?? blankIds, cl.name))}>{t('bir1604c')}</button>
       {(c.user.role === 'firmOwner' || c.user.role === 'preparer') && <button className="btn" onClick={apply}>{t('applyAdj')}</button>}</div></section></>);
 }
 function OpeningForm({ c, e, year }: { c: Ctx; e: Employee; year: number }) {
@@ -824,18 +844,40 @@ function Answer({ c, e }: { c: Ctx; e: Entry }) {
     <div className="meta">{t('effectiveFrom', { date: e.effective })} · {t('checkedOn', { date: e.verified })}{e.category !== 'talaan' && e.category !== 'employees' ? <> · {t('reviewNote')}</> : null}</div></div>);
 }
 function Ask({ c }: { c: Ctx }) {
-  const { t } = c; const [q, setQ] = useState(''); const [log, setLog] = useState<{ q: string; a: Entry[] }[]>([]);
-  const aud = audienceOf(c.user);
+  const { t } = c; const [q, setQ] = useState(''); const [log, setLog] = useState<{ q: string; r: AskResult }[]>([]);
+  const aud = audienceOf(c.user); const staff = c.user.role === 'firmOwner' || c.user.role === 'preparer';
   const suggestions = corpusOf(c).filter(e => !aud || e.audience.includes(aud)).filter(e => ['thirteenth-tax', 'de-minimis', 'min-wage-ncr', 'deadline-1601c', 'emp-deductions', 'final-pay'].includes(e.id)).slice(0, 4).map(e => e.q[c.lang]);
-  const go = (text: string) => { if (!text.trim()) return; const a = ask(text, c.lang, aud, corpusOf(c)); setLog(l => [...l, { q: text, a }]); const m = iso(today()).slice(0, 7);
-    c.setS(s => ({ ...s, aiUsage: { ...s.aiUsage, [m]: (s.aiUsage?.[m] ?? 0) + 1 }, ...(a.length ? {} : { askLog: [...s.askLog, text] }) })); setQ(''); };
-  return (<><ModuleBadge c={c} m="ai" /><div className="head"><h1>{t('askTitle')}</h1><button className="btn ghost" onClick={() => c.go({ page: 'faqs' })}>{t('browseFaqs')}</button></div><section className="card chat"><Why>{t('askIntro')}</Why>
+  const go = (text: string) => { if (!text.trim()) return; const r = askFull(text, c.lang, aud, corpusOf(c)); setLog(l => [...l, { q: r.question, r }]); const m = iso(today()).slice(0, 7);
+    // Human in the loop: anything Tala cannot answer from a source, or refuses for tax avoidance, goes to a person.
+    const h: Handoff | null = r.handoff ? { id: `h${Date.now().toString(36)}`, at: new Date().toISOString(), user: c.user.id, question: r.question, lang: c.lang, reason: r.reason ?? 'no_source', status: 'open' } : null;
+    c.setS(s => ({ ...s, aiUsage: { ...s.aiUsage, [m]: (s.aiUsage?.[m] ?? 0) + 1 }, ...(r.entries.length ? {} : { askLog: [...s.askLog, r.question] }), ...(h ? { handoffs: [h, ...(s.handoffs ?? [])] } : {}) }));
+    if (h) c.notify(c.s.users.filter(u => (u.role === 'firmOwner' || u.role === 'preparer') && u.id !== c.user.id).map(u => u.id), 'n_handoff', { who: c.user.name }, { page: 'ask' });
+    setQ(''); };
+  const mine = (c.s.handoffs ?? []).filter(h => h.user === c.user.id && h.status === 'answered').slice(0, 5);
+  return (<><ModuleBadge c={c} m="ai" /><div className="head"><h1>{t('askTitle')}</h1><button className="btn ghost" onClick={() => c.go({ page: 'faqs' })}>{t('browseFaqs')}</button></div>
+    {staff && <HandoffQueue c={c} />}
+    <section className="card chat"><Why>{t('askIntro')}</Why>
     {log.map((m, i) => <div key={i} className="turn"><div className="bub me">{m.q}</div>
-      {m.a.length ? m.a.map(e => <div key={e.id} className="bub tala"><Star size={22} /><div><b>{e.q[c.lang]}</b><Answer c={c} e={e} /></div></div>)
-        : <div className="bub tala"><Star size={22} /><div>{t('noSource')}</div></div>}</div>)}
+      {m.r.redactions.length > 0 && <div className="bub tala small"><Star size={22} /><div className="muted">{t('piiRemoved', { what: m.r.redactions.map(x => x.kind.toUpperCase()).join(', ') })}</div></div>}
+      {m.r.entries.length ? m.r.entries.map(e => <div key={e.id} className="bub tala"><Star size={22} /><div><b>{e.q[c.lang]}</b><Answer c={c} e={e} /></div></div>)
+        : <div className="bub tala"><Star size={22} /><div>{m.r.status === 'blocked' ? REFUSAL[m.r.reason ?? 'injection'][c.lang] : t('noSource')}{m.r.handoff && <div className="small okmsg">✓ {t('handedOff')}</div>}</div></div>}</div>)}
     {!log.length && <div className="sugg"><span className="muted small">{t('tryAsking')}</span>{suggestions.map(s => <button key={s} className="btn small ghost" onClick={() => go(s)}>{s}</button>)}</div>}
     <form className="askbar" onSubmit={e => { e.preventDefault(); go(q); }}><input value={q} placeholder={t('askPlaceholder')} onChange={e => setQ(e.target.value)} /><button className="btn" type="submit">{t('askButton')}</button></form>
-  </section></>);
+    <p className="muted small">{t('askPrivacy')}</p></section>
+    {mine.length > 0 && <section className="card"><h2>{t('answersFromPeople')}</h2><ul className="activity">{mine.map(h => <li key={h.id}><span className="grow"><b>{h.question}</b><div>{h.answer}</div><div className="muted small">{c.s.users.find(u => u.id === h.answeredBy)?.name} · {h.answeredAt?.slice(0, 10)}</div></span></li>)}</ul></section>}</>);
+}
+/** Questions Tala handed to a person. Staff answer them; the asker is notified; good answers are flagged for the corpus review. */
+function HandoffQueue({ c }: { c: Ctx }) {
+  const { t } = c; const open = (c.s.handoffs ?? []).filter(h => h.status === 'open'); const [ans, setAns] = useState<Record<string, string>>({}); const [corp, setCorp] = useState<Record<string, boolean>>({});
+  if (!open.length) return null;
+  const reply = (h: Handoff) => { const a = (ans[h.id] ?? '').trim(); if (a.length < 5) return;
+    c.setS(s => ({ ...s, handoffs: (s.handoffs ?? []).map(x => x.id === h.id ? { ...x, status: 'answered', answer: a.slice(0, 1500), answeredBy: c.user.id, answeredAt: new Date().toISOString(), forCorpus: !!corp[h.id] } : x) }));
+    c.notify([h.user], 'n_handoffDone', {}, { page: 'ask' }); c.log('act_handoff', {}); c.toast(t('handoffAnswered')); };
+  return (<section className="card attention"><h2>{t('handoffTitle', { n: open.length })} <Tip text={t('tip_handoff')} /></h2>
+    <ul className="activity">{open.map(h => <li key={h.id} style={{ display: 'block' }}><div><b>{h.question}</b> <span className="muted small">· {c.s.users.find(u => u.id === h.user)?.name} · {h.at.slice(0, 10)} · {t('hr_' + (h.reason === 'evasion' ? 'evasion' : 'nosource'))}</span></div>
+      <div className="row" style={{ marginTop: 6 }}><textarea rows={2} style={{ flex: 1 }} placeholder={t('handoffPh')} value={ans[h.id] ?? ''} onChange={e => setAns({ ...ans, [h.id]: e.target.value })} />
+        <label className="check small"><input type="checkbox" checked={!!corp[h.id]} onChange={e => setCorp({ ...corp, [h.id]: e.target.checked })} /> {t('handoffCorpus')}</label>
+        <button className="btn small" disabled={(ans[h.id] ?? '').trim().length < 5} onClick={() => reply(h)}>{t('sendReply')}</button></div></li>)}</ul></section>);
 }
 
 /* ---------------- FAQs ---------------- */
@@ -1077,7 +1119,7 @@ function ProtectCard({ c }: { c: Ctx }) {
 export function Tip({ text }: { text: string }) {
   return <span className="tip" tabIndex={0} role="note" aria-label={text}>i<span className="tipbox" aria-hidden="true">{text}</span></span>;
 }
-const PAGE_ICON: Record<string, string> = { home: '🏠', clients: '🏢', client: '🏢', payruns: '💵', run: '💵', files: '🧾', connections: '🔗', faqs: '❓', ask: '💬', plans: '🏷️', admin: '⚙️', payslips: '📄', payroll: '💵', hr: '👥', books: '📒', analytics: '📊', hq: '🛰️', myleave: '🌴' };
+const PAGE_ICON: Record<string, string> = { home: '🏠', clients: '🏢', client: '🏢', payruns: '💵', run: '💵', files: '🧾', connections: '🔗', faqs: '❓', ask: '💬', plans: '🏷️', admin: '⚙️', payslips: '📄', payroll: '💵', hr: '👥', books: '📒', analytics: '📊', hq: '🛰️', myleave: '🌴', invoices: '🧾' };
 function PageHelp({ c, page }: { c: Ctx; page: string }) {
   const { t } = c; const [open, setOpen] = useState(false);
   const key = page === 'client' ? 'client' : page; const lead = t(`h_${key}_lead`); if (lead.startsWith('h_')) return null;
@@ -1138,7 +1180,7 @@ function ClientForm({ c }: { c: Ctx }) {
   const save = () => { if (!ok) return; const r = refs.regions.find(x => x.id === f.region);
     const id = f.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) + '-' + Date.now().toString(36).slice(-4);
     const cl: Client = { id, name: f.name.trim(), freq: f.freq, region: f.region, minWage: r?.nonAgri ?? 0, workdays: f.workdays, bank: f.bank, xero: false, active: true,
-      dueDays: { bir: 10, sss: 28, ph: 15, pi: 15 }, assignee: c.user.role === 'preparer' ? c.user.id : undefined, ids: { sss: f.sss, philhealth: f.philhealth, pagibig: f.pagibig, tin: f.tin, rdo: f.rdo, address: f.address } };
+      dueDays: agencyDueDays({ philhealth: f.philhealth }, f.name), assignee: c.user.role === 'preparer' ? c.user.id : undefined, ids: { sss: f.sss, philhealth: f.philhealth, pagibig: f.pagibig, tin: f.tin, rdo: f.rdo, address: f.address } };
     c.setS(s => ({ ...s, clients: [...s.clients, cl] })); c.log('act_client', { name: cl.name }, id); c.modal(null); c.toast(t('clientAdded')); c.go({ page: 'client', id }); };
   return (<div><h2>{t('addClient')}</h2><div className="form">
     <label>{t('clientName')}<input autoFocus value={f.name} onChange={e => set({ name: e.target.value.slice(0, 80) })} />{!f.name.trim() ? <small className="bad">{t('nameNeeded')}</small> : taken && <small className="bad">{t('nameTaken')}</small>}</label>
@@ -1434,12 +1476,21 @@ function billable(c: Ctx, cl: Client, month: string) {
   const subtotal = r2(lines.reduce((a, l) => a + l.amount, 0)); const vat = c.s.billing.vatRegistered ? r2(subtotal * 0.12) : 0;
   return { lines, items: items.sort((a, b) => a.date.localeCompare(b.date)), subtotal, vat, total: r2(subtotal + vat), counts: { runs: runs.length, payslips, filings: filings.length, hires: hires.length, certs: certs.length } };
 }
+/** Shown instead of a screen the persona's role or subscribed modules do not include. */
+/** Each persona's landing page. */
+export const homeOf = (role: string): Route['page'] => role === 'employee' ? 'payslips' : role === 'talaanAdmin' ? 'hq' : 'home';
+function NotAvailable({ c, module }: { c: Ctx; module?: ModuleKey }) {
+  const { t } = c; const home = homeOf(c.user.role);
+  return (<section className="card"><h2>{module ? t('notInPlan', { mod: t('mod_' + module) }) : t('notForRole')}</h2>
+    <p className="muted">{module ? t('notInPlanHint') : t('notForRoleHint')}</p>
+    <div className="row">{module && c.user.role !== 'employee' && <button className="btn" onClick={() => c.go({ page: 'plans' })}>{t('plans')}</button>}<button className="btn ghost" onClick={() => c.go({ page: home })}>{t('backHome')}</button></div></section>);
+}
 function BillingPage({ c, tab }: { c: Ctx; tab?: string }) {
   const { t } = c; const cur = tab ?? 'summary';
-  const tabs: [string, string][] = [['summary', 'tabSummary'], ['invoices', 'tabInvoices'], ['rates', 'tabRates']];
+  const tabs: [string, string][] = [['summary', 'tabSummary'], ['invoices', 'tabInvoices'], ['rates', 'tabRates'], ['subscription', 'tabSubscription']];
   return (<><div className="head"><h1>{t('billing')}</h1></div>
     <div className="pills tabs" role="tablist">{tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={cur === k} aria-pressed={cur === k} onClick={() => c.go({ page: 'billing', id: k })}>{t(l)}</button>)}</div>
-    {cur === 'summary' && <BillingSummary c={c} />}{cur === 'invoices' && <InvoicesList c={c} />}{cur === 'rates' && <RateCard c={c} />}</>);
+    {cur === 'summary' && <BillingSummary c={c} />}{cur === 'invoices' && <InvoicesList c={c} />}{cur === 'rates' && <RateCard c={c} />}{cur === 'subscription' && <TalaanSubscription c={c} />}</>);
 }
 function BillingSummary({ c }: { c: Ctx }) {
   const { t } = c; const clients = visibleClients(c);
@@ -1507,17 +1558,36 @@ function invoicePdf(c: Ctx, inv: Invoice) {
   try { doc.addImage(BRAND_MARK, 'PNG', W - 58, doc.internal.pageSize.getHeight() - 52, 18, 18); doc.text('Talaan', W - 62, doc.internal.pageSize.getHeight() - 40, { align: 'right' }); } catch { /* the mark is optional */ }
   return doc.output('arraybuffer');
 }
-function InvoicesList({ c }: { c: Ctx }) {
-  const { t } = c; const invs = c.s.billing.invoices.filter(i => visibleClients(c).some(x => x.id === i.clientId));
-  const statement = (inv: Invoice) => { const cl = c.s.clients.find(x => x.id === inv.clientId)!; const b = billable(c, cl, inv.month);
-    saveFile(c, `${inv.no}_statement.csv`, '\uFEFF' + [['Date', 'Item'], ...b.items.map(x => [x.date.slice(0, 10), x.item]), [], ['Line', 'Qty', 'Rate', 'Amount'], ...inv.lines.map(l => [l.label, l.qty, l.rate.toFixed(2), l.amount.toFixed(2)]), ['Total', '', '', inv.total.toFixed(2)]].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n')); };
-  const paid = (no: string) => c.setS(s => ({ ...s, billing: { ...s.billing, invoices: s.billing.invoices.map(i => i.no === no ? { ...i, status: 'paid', paidAt: iso(today()) } : i) } }));
+/** A firm invoice as a receivable (customer = the client employer). */
+export const firmDoc = (i: Invoice): ArDoc => ({ no: i.no, customerId: i.clientId, total: i.total, issuedAt: i.issuedAt, dueAt: i.dueAt, payments: i.payments, paidAt: i.status === 'paid' && !i.payments?.length ? i.paidAt : undefined });
+function InvoicesList({ c, clientOnly }: { c: Ctx; clientOnly?: string }) {
+  const { t } = c; const invs = c.s.billing.invoices.filter(i => clientOnly ? i.clientId === clientOnly : visibleClients(c).some(x => x.id === i.clientId));
+  const staff = c.user.role === 'firmOwner' || c.user.role === 'preparer';
+  const detail = (inv: Invoice) => { const cl = c.s.clients.find(x => x.id === inv.clientId)!; const b = billable(c, cl, inv.month);
+    saveFile(c, `${inv.no}_details.csv`, '\uFEFF' + [['Date', 'Item'], ...b.items.map(x => [x.date.slice(0, 10), x.item]), [], ['Line', 'Qty', 'Rate', 'Amount'], ...inv.lines.map(l => [l.label, l.qty, l.rate.toFixed(2), l.amount.toFixed(2)]), ['Total', '', '', inv.total.toFixed(2)]].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n')); };
+  const statement = (clientId: string) => { const cl = c.s.clients.find(x => x.id === clientId)!; saveFile(c, `${clientId}_statement_${iso(today())}.csv`, statementCsv(cl.name, c.s.billing.firmName, c.s.billing.invoices.map(firmDoc), clientId)); };
+  const addPayment = (inv: Invoice, p: Payment) => { const cur = c.s.billing.invoices.find(i => i.no === inv.no); if (!cur || checkPayment(firmDoc(cur), p, iso(today()))) { c.toast(t('payStale')); return; }
+    c.setS(s => ({ ...s, billing: { ...s.billing, invoices: s.billing.invoices.map(i => { if (i.no !== inv.no || checkPayment(firmDoc(i), p, iso(today())) || (i.payments ?? []).some(x => x.id === p.id)) return i; const pays = [...(i.payments ?? []), p]; const paid = balanceOf({ ...firmDoc(i), payments: pays }) <= 0.005;
+    return { ...i, payments: pays, ...(paid ? { status: 'paid' as const, paidAt: p.date } : {}) }; }) } })); c.log('act_payment', { no: inv.no }, inv.clientId);
+    const cl = c.s.clients.find(x => x.id === inv.clientId); if (cl) (cl.contacts ?? []).filter(x => x.billing && x.email).forEach(ct => c.email([ct.email], t('em_receipt_subj', { no: inv.no, firm: c.s.billing.firmName }), t('em_receipt_body', { name: ct.name, amt: peso(p.amount + (p.cwt ?? 0)), no: inv.no, date: p.date, ref: p.reference, firm: c.s.billing.firmName }), 'receipt', cl.id)); };
+  const nameOf = (id: string) => c.s.clients.find(x => x.id === id)?.name ?? id;
   if (!invs.length) return <section className="card"><p className="muted">{t('noInvoices')}</p></section>;
-  return (<section className="card"><p className="warnbox small">{t('soaNote')}</p><div className="scroll"><table className="tbl"><thead><tr><th>{t('invNo')}</th><th>{t('colClient')}</th><th>{t('month')}</th><th>{t('issuedOn')}</th><th>{t('dueOn')}</th><th className="num">{t('totalDue')}</th><th>{t('colStatus')}</th><th></th></tr></thead>
-    <tbody>{invs.map(i => { const overdue = i.status !== 'paid' && i.dueAt < iso(today()); return <tr key={i.no}><td><b>{i.no}</b></td><td>{c.s.clients.find(x => x.id === i.clientId)?.name}</td><td>{c.monthLabel(i.month)}</td><td>{i.issuedAt}</td><td>{i.dueAt}</td><td className="num">{peso(i.total)}</td>
-      <td><Chip u={i.status === 'paid' ? 'ok' : overdue ? 'late' : 'info'}>{i.status === 'paid' ? t('paidChip') : overdue ? t('overdueChip') : t('issuedChip')}</Chip></td>
-      <td className="nowrap"><button className="btn small ghost" onClick={() => saveFile(c, `${i.no}.pdf`, invoicePdf(c, i))}>{t('downloadPdf')}</button> <button className="btn small ghost" onClick={() => statement(i)}>{t('statementCsv')}</button> <button className="btn small ghost" onClick={() => emailInvoice(c, i)}>{t('emailInvoice')}</button>
-        {i.status !== 'paid' && <> <button className="btn small green" onClick={() => paid(i.no)}>{t('markPaid')}</button></>}</td></tr>; })}</tbody></table></div></section>);
+  const now = iso(today());
+  const reviewers = c.s.users.filter(u => (u.role === 'firmOwner' || u.role === 'preparer') && u.active !== false).map(u => u.id);
+  return (<>{staff && <ClaimsQueue c={c} level="firm" docOf={no => { const i = c.s.billing.invoices.find(x => x.no === no); return i && firmDoc(i); }} nameOf={nameOf} onConfirm={(cl, p) => { const i = c.s.billing.invoices.find(x => x.no === cl.docNo); if (i) addPayment(i, p); }} />}
+    {staff ? <AgingCard c={c} docs={invs.map(firmDoc)} nameOf={nameOf} onStatement={statement} /> : <div className="row end"><button className="btn ghost" onClick={() => statement(clientOnly!)}>{t('statementOfAccount')}</button></div>}
+    <section className="card"><p className="warnbox small">{t('soaNote')}</p><div className="scroll"><table className="tbl"><thead><tr><th>{t('invNo')}</th>{!clientOnly && <th>{t('colClient')}</th>}<th>{t('month')}</th><th>{t('issuedOn')}</th><th>{t('dueOn')}</th><th className="num">{t('totalDue')}</th><th className="num">{t('balanceDue')}</th><th>{t('colStatus')}</th><th></th></tr></thead>
+    <tbody>{invs.map(i => { const d = firmDoc(i); const st = arStatus(d, now); return <Fragment key={i.no}><tr><td className="nowrap"><b>{i.no}</b></td>{!clientOnly && <td>{nameOf(i.clientId)}</td>}<td>{c.monthLabel(i.month)}</td><td className="nowrap">{i.issuedAt}</td><td className="nowrap">{i.dueAt}</td><td className="num">{peso(i.total)}</td><td className="num">{peso(balanceOf(d))}</td>
+      <td><Chip u={st === 'paid' ? 'ok' : st === 'overdue' ? 'late' : st === 'partial' ? 'soon' : 'info'}>{t('hs_' + st)}</Chip></td>
+      <td className="nowrap"><button className="btn small ghost" onClick={() => saveFile(c, `${i.no}.pdf`, invoicePdf(c, i))}>{t('downloadPdf')}</button> <button className="btn small ghost" onClick={() => detail(i)}>{t('statementCsv')}</button>{staff && <> <button className="btn small ghost" onClick={() => emailInvoice(c, i)}>{t('emailInvoice')}</button></>}
+        {staff && st !== 'paid' && <> <button className="btn small green" onClick={() => c.modal(<PaymentForm c={c} doc={d} title={nameOf(i.clientId)} onSave={p => addPayment(i, { ...p, source: 'staff' })} />)}>{t('recordPayment')}</button></>}
+        {!staff && st !== 'paid' && <div style={{ marginTop: 6 }}><PayButtons c={c} doc={d} level="firm" payee={c.s.billing.firmName} reviewers={reviewers} onPaid={p => addPayment(i, p)} /></div>}<ClaimStatus c={c} docNo={i.no} /></td></tr>{(d.payments ?? []).length > 0 && <tr className="subrow"><td></td><td colSpan={clientOnly ? 7 : 8}><PaymentsList c={c} doc={d} /></td></tr>}</Fragment>; })}</tbody></table></div>
+    {!staff && <p className="muted small">{t('clientPayHint', { firm: c.s.billing.firmName })}</p>}</section></>);
+}
+/** The client owner's view of what their accounting firm has billed and what is still open. */
+function ClientInvoices({ c }: { c: Ctx }) {
+  const { t } = c; const id = c.user.clientId;
+  return (<><div className="head"><div><h1>{t('myInvoices')}</h1><p className="muted">{t('myInvoicesSub', { firm: c.s.billing.firmName })}</p></div></div>{id ? <InvoicesList c={c} clientOnly={id} /> : null}</>);
 }
 function RateCard({ c }: { c: Ctx }) {
   const { t } = c; const B = c.s.billing; const clients = visibleClients(c);
