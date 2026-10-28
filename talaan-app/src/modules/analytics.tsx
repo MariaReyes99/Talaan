@@ -1,5 +1,7 @@
 /** Talaan Analytics: firm and client dashboards, and downloadable reports. */
 import { useState } from 'react';
+import { ReleaseGate } from './integrations';
+import { fingerprint } from '../integrations';
 import { totals, r2, type Line } from '../engine';
 import { filingsFor, leaveBalance, loanBalance, hasModule, iso, periodInfo, AI_INCLUDED, type Run } from '../model';
 import { Chip, Why, peso, today, saveFile, visibleClients, type Ctx } from '../App';
@@ -91,5 +93,13 @@ function Reports({ c }: { c: Ctx }) {
     ['rp_loans', 'rpd_loans', () => csv([['Client', 'Employee', 'Loan', 'Principal', 'Per cutoff', 'Balance', 'Note'], ...c.s.loans.filter(l => ids.has(c.s.employees.find(e => e.id === l.empId)?.clientId ?? '')).map(l => [cname(c.s.employees.find(e => e.id === l.empId)!.clientId), name(l.empId), l.kind, l.principal, l.perPeriod, loanBalance(c.s, l), l.note ?? ''])])],
   ];
   return (<><Why>{t('reportsIntro')}</Why><div className="grid">{reports.map(([k, d, make]) => <section key={k} className="card"><h2>{t(k)}</h2><p className="muted small">{t(d)}</p>
-    <button className="btn small" onClick={() => saveFile(c, `talaan_${k.slice(3)}_${iso(today())}.csv`, make())}>{t('downloadCsv')}</button></section>)}</div></>);
+    <ReportDownload c={c} k={k} make={make} /></section>)}</div></>);
+}
+
+/** Reports carry pay and tax figures: a second person authorises each download (human in the loop). */
+function ReportDownload({ c, k, make }: { c: Ctx; k: string; make: () => string }) {
+  const { t } = c; const [open, setOpen] = useState(false); const data = open ? make() : '';
+  if (!open) return <button className="btn small" onClick={() => setOpen(true)}>{t('downloadCsv')}</button>;
+  return (<ReleaseGate c={c} system="export" doc={t(k)} subject={`report|${k}`} content={data} summary={t('relSumExport', { what: t(k), scope: t('allClients') })} route={{ page: 'analytics' }}>
+    <button className="btn small" onClick={() => { const f = `talaan_${k.slice(3)}_${iso(today())}.csv`; saveFile(c, f, data); c.ievent({ system: 'export', status: 'prepared', doc: t(k), subject: `report|${k}`, fileName: f, fileHash: fingerprint(data) }); }}>{t('downloadCsv')}</button></ReleaseGate>);
 }

@@ -63,9 +63,10 @@ export function payoutFile(lines: Line[], emps: Employee[], wallet: 'gcash' | 'm
     return [e.mobile!.replace(/\D/g, ''), e.name, l.net.toFixed(2), note]; })]);
 }
 /** Xero manual journal import file: debits positive, credits negative. Imports as a draft in Xero. */
-export function xeroJournalCsv(rows: { narration: string; date: string; lines: [string, number, number][]; codes: (k: string) => string }[], label: (k: string) => string) {
+/** Xero manual journal import. The date must be in the Xero organisation's regional format and the tax rate must be a name that exists in that organisation. */
+export function xeroJournalCsv(rows: { narration: string; date: string; taxRate?: string; lines: [string, number, number][]; codes: (k: string) => string }[], label: (k: string) => string) {
   const out: (string | number)[][] = [['*Narration', '*Date', 'Description', '*AccountCode', '*TaxRate', '*Amount']];
-  for (const j of rows) for (const [k, dr, cr] of j.lines) out.push([j.narration, j.date, label(k), j.codes(k), 'Tax Exempt', r2(dr - cr).toFixed(2)]);
+  for (const j of rows) for (const [k, dr, cr] of j.lines) out.push([j.narration, j.date, label(k), j.codes(k), j.taxRate || 'Tax Exempt', r2(dr - cr).toFixed(2)]);
   return csv(out);
 }
 /** Generic journal file for QuickBooks Online, Juan or other accounting apps (debit and credit columns). */

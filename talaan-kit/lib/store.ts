@@ -7,7 +7,9 @@ import { Redis } from '@upstash/redis';
 import { required, TalaanEnvError } from './env';
 
 const PREFIX = 'talaan:';
-const memory = new Map<string, { v: unknown; exp?: number }>();
+// One map per process (Next dev loads each route separately; sharing it keeps local tests realistic).
+const g = globalThis as unknown as { __talaanMemory?: Map<string, { v: unknown; exp?: number }> };
+const memory = (g.__talaanMemory ??= new Map<string, { v: unknown; exp?: number }>());
 let redis: Redis | null = null;
 
 function useMemory() {
@@ -35,4 +37,9 @@ export async function setJson(key: string, value: unknown, ttlSeconds?: number) 
 export async function setIfNew(key: string, value: unknown, ttlSeconds: number) {
   if (useMemory()) { if (await getJson(key)) return false; await setJson(key, value, ttlSeconds); return true; }
   return (await client().set(k(key), value, { nx: true, ex: ttlSeconds })) === 'OK';
+}
+/** Removes a key (used to release short locks). */
+export async function del(key: string) {
+  if (useMemory()) { memory.delete(k(key)); return; }
+  await client().del(k(key));
 }

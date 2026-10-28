@@ -47,11 +47,23 @@ Do not add it to another product's app.
 | `lib/env.ts` | none | Refuses to run unless `APP_ID=talaan` and `VECTOR_NAMESPACE=talaan-ph-payroll` |
 | `lib/store.ts` | none | Talaan's own Upstash Redis; every key starts with `talaan:` |
 | `lib/crypto.ts` | none | Encrypts Xero tokens with `TALAAN_TOKEN_KEY` (AES-256-GCM) |
-| `lib/xero.ts` | none | Token exchange and refresh, tenant list, and posting payroll as a draft manual journal |
+| `lib/xero.ts` | none | Token exchange and refresh, tenant list, account codes and tax rates, posting payroll as a draft manual journal (codes checked, Department tracking, NoTax) |
+| `app/api/xero/tenants/route.ts` | `GET /api/xero/tenants` | Xero organisations in the firm's connection (to link each client) |
+| `app/api/xero/accounts/route.ts` | `GET /api/xero/accounts?tenantId=` | Active account codes |
+| `app/api/xero/taxrates/route.ts` | `GET /api/xero/taxrates?tenantId=` | Tax rate names for the CSV import |
+| `app/api/xero/journal/route.ts` | `POST /api/xero/journal` | Sends a journal only after a second person authorised that exact journal; logs sent, accepted or failed |
+| `app/api/integrations/events/route.ts` | `POST/GET /api/integrations/events` | Append-only, hash-chained integration log; enforces double approval and second-person rules from the sign-in token |
+| `app/api/integrations/roster/route.ts` | `POST /api/integrations/roster` | Filings, due dates and alert recipients (firm owners only; never grants approval rights) |
+| `app/api/cron/integrations/route.ts` | `GET /api/cron/integrations` (Vercel Cron, `CRON_SECRET`) | Daily: deadline, mismatch, rejection, failure and waiting-for-approval alerts, sent once per stage, escalated after 2 days |
+| `app/api/integrations/hq/route.ts` | `GET /api/integrations/hq` (service token) | Failures by firm for Talaan HQ |
 
 Setup: copy `.env.example` to `.env.local`, fill in Talaan's own values, and add the same values to the
 `talaan` project in Vercel. Xero apps created after 2 March 2026 must use granular scopes, so Talaan asks for
 `accounting.manualjournals` and `accounting.settings.read`, not the retired `accounting.transactions`.
+
+Sign-in tokens carry the person, role, company (`clientId` for client users) and approval duties; the server never
+takes these from a request body. Local route tests: `node routes-test.mjs` with the dev server running
+(`XERO_API_BASE` and `TALAAN_DEV_XERO_TOKEN` point Xero calls at the test's mock server; both are ignored on Vercel).
 
 Before going live: replace `?org=` in the Xero connect route with the signed-in firm from Clerk, and pass
 the same firm ID as `client_reference_id` when creating Stripe Checkout sessions.

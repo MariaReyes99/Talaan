@@ -1,4 +1,5 @@
 /** Talaan Compliance: the deadline calendar across all clients, and "bring your own payroll" import for clients on another payroll system. */
+import { InboundQueue, submitInbound } from './integrations';
 import { useState } from 'react';
 import { contributionsMonthly, withholding, r2, type Employee, type Line } from '../engine';
 import { filingsFor, currentPeriod, periodInfo, iso, hasModule, isRegular, daysBetween, type Client, type FilingKind, type Run } from '../model';
@@ -101,9 +102,9 @@ export function ImportPayroll({ c }: { c: Ctx }) {
       msc: contributionsMonthly(emp!.monthlyRate).msc, sssEE: row.sssEE, sssER: row.sssER, ec: row.ec, phEE: row.phEE, phER: row.phER, piEE: row.piEE, piER: row.piER, taxable: row.taxable, wht: row.wht, taxAdjustment: 0, sssLoan: row.sssLoan, pagibigLoan: row.piLoan, otherDeduction: 0,
       net: row.net || r2(row.gross - row.sssEE - row.phEE - row.piEE - row.wht) }));
     const run: Run = { id: `${cl.id}-${month}-M-imported`, clientId: cl.id, period: `${month}-M`, status: 'approved', kind: 'imported', source: cl.externalSystem || t('otherSystem'), label: t('importedFrom', { system: cl.externalSystem || t('otherSystem') }),
-      hours: {}, reasons: {}, preparedBy: c.user.id, approvedBy: c.user.id, approvedAt: iso(today()), lines };
-    c.setS(s => ({ ...s, runs: [...s.runs.filter(r => r.id !== run.id), run] })); c.log('act_imported', { n: lines.length, month: c.monthLabel(month) }, cl.id);
-    setChecked(null); setText(''); c.toast(t('importSaved', { n: lines.length })); };
+      hours: {}, reasons: {}, preparedBy: c.user.id, lines };
+    // Human in the loop: the register takes effect (and drives the agency filings) only after a second person accepts it.
+    if (submitInbound(c, { kind: 'payroll', clientId: cl.id, content: text, summary: t('inSumPayroll', { n: lines.length, month: c.monthLabel(month), client: cl.name, net: peso(r2(lines.reduce((a, l) => a + l.net, 0))) }), payload: run, control: 'payrun' }, { page: 'files', id: 'import' })) { setChecked(null); setText(''); } };
   const issues = checked?.reduce((a, x) => a + x.issues.length, 0) ?? 0;
   return (<><Why>{t('byoIntro')}</Why><section className="card"><div className="form">
     <label>{t('chooseClient')}<select value={clientId} onChange={e => { setClientId(e.target.value); setChecked(null); }}>{clients.map(x => <option key={x.id} value={x.id}>{x.name}{x.payrollSource === 'external' ? ` (${x.externalSystem || t('otherSystem')})` : ''}</option>)}</select></label>
@@ -123,6 +124,8 @@ export function ImportPayroll({ c }: { c: Ctx }) {
       <p className="muted small">{t('imp_note')}</p>
       <div className="row end"><button className="btn" disabled={!checked.some(x => x.emp)} onClick={save}>{t('imp_save', { n: checked.filter(x => x.emp).length, month: c.monthLabel(month) })}</button></div></>)}
   </section>
+  <InboundQueue c={c} kind="payroll" route={{ page: 'files', id: 'import' }} apply={(s, payload, it, reviewer) => { const run = { ...(payload as Run), approvedBy: reviewer, approvedAt: iso(today()), approvals: it.approvals };
+    return { ...s, runs: [...s.runs.filter(r => r.id !== run.id), run], activity: [{ at: new Date().toISOString(), user: reviewer, clientId: it.clientId, action: 'act_imported', detail: { n: run.lines?.length ?? 0, month: run.period.slice(0, 7) } }, ...s.activity].slice(0, 300) }; }} />
   <ImportedList c={c} cl={cl} /></>);
 }
 function ImportedList({ c, cl }: { c: Ctx; cl: Client }) {
