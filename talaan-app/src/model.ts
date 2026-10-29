@@ -1,9 +1,11 @@
 import { computeLine, runChecks, yearEnd, EMPTY_HOURS, totals, r2, type Employee, type Freq, type Hours, type Line } from './engine';
 import type { Payment, PaymentClaim } from './receivables';
+import type { Approval, ChangeRequest, Duty } from './approvals';
+import { appendEvent, fingerprint, type IntegrationEvent, type NewEvent, type Obligation, type System } from './integrations';
 export { r2 };
 
 export type Role = 'firmOwner' | 'preparer' | 'client' | 'employee' | 'talaanAdmin';
-export interface User { id: string; name: string; role: Role; clientId?: string; empId?: string; email?: string; active?: boolean }
+export interface User { id: string; name: string; role: Role; clientId?: string; empId?: string; email?: string; active?: boolean; /** Approval duties (see approvals.ts); defaults by role when not set. */ duties?: Duty[] }
 export type AccountKey = 'accSalaries' | 'accBonus' | 'accEmployer' | 'accReimb' | 'accSSS' | 'accPH' | 'accPI' | 'accWHT' | 'accOther' | 'accNet';
 export const DEFAULT_CODES: Record<AccountKey, string> = { accSalaries: '6100', accBonus: '6105', accEmployer: '6110', accReimb: '6120', accSSS: '2210', accPH: '2220', accPI: '2230', accWHT: '2240', accOther: '2250', accNet: '2200' };
 
@@ -19,13 +21,23 @@ export interface BankColumn { field: BankField; label: string; width?: number; l
 export interface BankTemplate { name: string; delimiter: ',' | '\t' | '|' | 'fixed'; header: boolean; amount: 'decimal' | 'centavos'; date: 'YYYY-MM-DD' | 'MM/DD/YYYY' | 'MMDDYYYY'; trailer: boolean; columns: BankColumn[]; verified?: string }
 export interface Contact { name: string; email: string; billing?: boolean }
 export interface Rates { perRun: number; perPayslip: number; perFiling: number; perNewHire: number; per2316: number }
-export interface Client { trackDepts?: boolean; modules?: ModuleKey[]; payrollSource?: 'talaan' | 'external'; externalSystem?: string; departments?: string[]; contacts?: Contact[]; notify?: { approved: boolean; remitted: boolean; invoice: boolean }; rates?: Partial<Rates>; region?: string; active?: boolean; ids?: EmployerIds; bankTemplate?: BankTemplate; id: string; name: string; freq: Freq; minWage: number; workdays: 261 | 313; bank: string; xero: boolean; dueDays: { bir: number; sss: number; ph: number; pi: number }; importMap?: Record<string, string>; assignee?: string; codes?: Record<AccountKey, string> }
+export interface Client { trackDepts?: boolean; modules?: ModuleKey[]; payrollSource?: 'talaan' | 'external'; externalSystem?: string; departments?: string[]; contacts?: Contact[]; notify?: { approved: boolean; remitted: boolean; invoice: boolean }; rates?: Partial<Rates>; region?: string; active?: boolean; ids?: EmployerIds; bankTemplate?: BankTemplate; id: string; name: string; freq: Freq; minWage: number; workdays: 261 | 313; bank: string; xero: boolean; dueDays: { bir: number; sss: number; ph: number; pi: number }; importMap?: Record<string, string>; assignee?: string; codes?: Record<AccountKey, string>;
+  /** Xero organisation this client's journals go to (from the firm's Xero connection), the date format of the CSV import, and the tax rate name in that organisation. */
+  xeroTenantId?: string; xeroTenantName?: string; csvDateFormat?: CsvDateFormat; xeroTaxRate?: string }
+export type CsvDateFormat = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
+export function fmtCsvDate(isoDate: string, f: CsvDateFormat = 'DD/MM/YYYY') { const [y, m, d] = isoDate.slice(0, 10).split('-'); return f === 'YYYY-MM-DD' ? `${y}-${m}-${d}` : f === 'MM/DD/YYYY' ? `${m}/${d}/${y}` : `${d}/${m}/${y}`; }
 export interface Activity { at: string; user: string; clientId?: string; action: string; detail?: Record<string, string | number> }
 export interface Note { at: string; user: string; text: string }
 export interface Run {
   id: string; clientId: string; period: string; status: 'draft' | 'approved';
   hours: Record<string, Hours>; reasons: Record<string, string>; preparedBy: string;
   approvedBy?: string; approvedAt?: string; lines?: Line[]; xeroSentAt?: string;
+  /** Bank or e-wallet rejected the payout file (reason), cleared when a corrected file is accepted. */
+  payoutRejected?: { at: string; reason: string; by: string; eventId: string }; payoutAcceptedAt?: string;
+  /** Double approval: payroll review, then finance (approvals.ts). The run is approved when both are given. */
+  approvals?: Approval[];
+  /** Retro adjustment: the earlier cutoff being corrected. */
+  retroFor?: string;
   /** Approval workflow: submitted for approval, or returned to the preparer with a reason. */
   submitted?: { at: string; by: string; to: string[] }; returned?: { at: string; by: string; reason: string };
   /** regular = the normal cutoff; bonus and reimbursement = off-cycle runs; final = final pay for leavers; imported = results from another payroll system. */
@@ -33,7 +45,7 @@ export interface Run {
   /** What was filled in from loans and approved leave when the run was started or refreshed. */
   loanApplied?: Record<string, number>; leaveApplied?: string[]; tplDeduction?: Record<string, number>; source?: string;
 }
-export type RunKind = 'regular' | 'bonus' | 'reimbursement' | 'final' | 'imported';
+export type RunKind = 'regular' | 'bonus' | 'reimbursement' | 'final' | 'imported' | 'adjustment';
 export const runKind = (r: Run): RunKind => r.kind ?? 'regular';
 export const isRegular = (r: Run) => runKind(r) === 'regular';
 
@@ -55,7 +67,11 @@ export interface Release { id: string; version: string; date: string; title: str
 export interface Hq { firms: Firm[]; tickets: Ticket[]; releases: Release[]; nextTicket: number; nextInvoice: number }
 export const APP_VERSION = '0.9.0';
 export type Agency = 'sss' | 'ph' | 'pi' | 'bir';
-export interface Remit { generatedAt?: string; uploadedAt?: string; reference?: string; channel?: string; amountPaid?: number; paidAt?: string; receipt?: { name: string; size: number }; note?: string }
+export interface Remit { generatedAt?: string; uploadedAt?: string; reference?: string; channel?: string; amountPaid?: number; paidAt?: string; receipt?: { name: string; size: number; by?: string; hash?: string }; note?: string;
+  /** Second person checked the receipt against the amount and reference (human in the loop for files received). */
+  receiptCheck?: { by: string; at: string };
+  /** The agency rejected the upload: open until a corrected file is uploaded. Past rejections are kept in the integration log. */
+  rejected?: { at: string; reason: string; by: string; eventId: string } }
 export type CheckKey = 'funds' | 'licence' | 'bcp' | 'export' | 'continuity';
 export type CheckValue = 'yes' | 'no' | 'unknown';
 export interface PartnerCheck { checks: Record<CheckKey, CheckValue>; licence: string; evidence: string; reviewed?: string }
@@ -72,11 +88,19 @@ export interface Invoice { no: string; clientId: string; month: string; lines: I
 export interface Billing { firmName: string; vatRegistered: boolean; termsDays: number; rates: Rates; invoices: Invoice[]; nextNo: number }
 /** A question Ask Tala could not answer from a source, or refused: a person answers it (human in the loop). */
 export interface Handoff { id: string; at: string; user: string; question: string; lang: 'en' | 'tl' | 'zh'; reason: string; status: 'open' | 'answered'; answer?: string; answeredBy?: string; answeredAt?: string; forCorpus?: boolean }
-export interface State { /** Ask Tala questions handed to a person. */ handoffs?: Handoff[]; /** Payments customers say they made outside Talaan, waiting for staff to confirm. */ claims?: PaymentClaim[]; payItems: PayItem[]; loans: Loan[]; leaveTypes: LeaveType[]; leaveRequests: LeaveRequest[]; empHistory: Record<string, EmpChange[]>; hq: Hq; aiUsage: Record<string, number>; seenRelease?: string; notices: Notice[]; outbox: Email[]; billing: Billing; users: User[]; refs: Refs; corpus: CorpusAdmin; watch: { sources: WatchSource[]; queue: ReviewItem[] }; prefs?: { protect?: boolean; help?: boolean }; remits: Record<string, Remit>; partners: Record<string, PartnerCheck>; v: number; clients: Client[]; employees: Employee[]; runs: Run[]; filings: Record<string, { ref: string; date: string }>; askLog: string[]; activity: Activity[]; notes: Record<string, Note[]> }
+/** A received file (payroll register, employee list) waiting for a second person before it changes anything. */
+export interface Inbound { id: string; kind: 'payroll' | 'employees' | 'restore'; clientId: string; fileName?: string; fileHash: string; summary: string; payload: unknown; submittedBy: string; at: string;
+  status: 'pending' | 'accepted' | 'declined'; reviewedBy?: string; reviewedAt?: string; reason?: string; /** Two approvals when the file can change pay or bank details (control), otherwise one. */ control?: 'payrun' | 'bank' | 'restore'; approvals?: Approval[] }
+export interface State { /** Received files waiting for review. */ inbound?: Inbound[];
+  /** Salary, bank, pay-table and role changes waiting for double approval (and their history). */ changes?: ChangeRequest[];
+  /** Strict segregation: nobody who approved a payroll may release its payout file. */ controls?: { strictRelease?: boolean };
+  /** Every exchange with an outside system (append-only, hash-chained; see integrations.ts). */ integrationLog?: IntegrationEvent[]; /** Alert ids already sent, so each alert goes out once per stage. */ alertsSent?: string[];
+  /** Ask Tala questions handed to a person. */ handoffs?: Handoff[]; /** Payments customers say they made outside Talaan, waiting for staff to confirm. */ claims?: PaymentClaim[]; payItems: PayItem[]; loans: Loan[]; leaveTypes: LeaveType[]; leaveRequests: LeaveRequest[]; empHistory: Record<string, EmpChange[]>; hq: Hq; aiUsage: Record<string, number>; seenRelease?: string; notices: Notice[]; outbox: Email[]; billing: Billing; users: User[]; refs: Refs; corpus: CorpusAdmin; watch: { sources: WatchSource[]; queue: ReviewItem[] }; prefs?: { protect?: boolean; help?: boolean }; remits: Record<string, Remit>; partners: Record<string, PartnerCheck>; v: number; clients: Client[]; employees: Employee[]; runs: Run[]; filings: Record<string, { ref: string; date: string }>; askLog: string[]; activity: Activity[]; notes: Record<string, Note[]> }
 
 export const USERS: User[] = [
   { id: 'maricel', name: 'Maricel Santos', role: 'firmOwner' },
   { id: 'jun', name: 'Jun dela Cruz', role: 'preparer' },
+  { id: 'carmela', name: 'Carmela Reyes', role: 'firmOwner' },
   { id: 'teresita', name: 'Teresita Lim', role: 'client', clientId: 'lim' },
   { id: 'rico', name: 'Rico Santos', role: 'employee', clientId: 'lim', empId: 'lim-3' },
   { id: 'lisa', name: 'Lisa (Talaan HQ)', role: 'talaanAdmin' },
@@ -235,6 +259,7 @@ export function sampleState(today = new Date()): State {
   }
   seedPeople(st, today);
   seedFirmInvoices(st, today);
+  seedIntegrations(st, today);
   return st;
 }
 
@@ -403,6 +428,46 @@ export function yearToDate(s: State, empId: string, year: string, excludeRun?: s
 }
 export { yearEnd };
 
+/** Example integration history so the status page shows a pass, a corrected rejection and an open one. */
+function seedIntegrations(st: State, today: Date) {
+  let log: IntegrationEvent[] = []; const at = (daysAgo: number, h = 10) => new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysAgo, h).toISOString();
+  const add = (e: NewEvent) => { log = appendEvent(log, e); return log[log.length - 1]; };
+  const fs = filingsFor(st); const pick = (cl: string, kind: FilingKind) => fs.filter(f => f.clientId === cl && f.kind === kind).sort((a, b) => a.month.localeCompare(b.month))[0];
+  const ok = pick('mabuhay', 'bir');
+  if (ok) { const file = `${ok.clientId}_${ok.month}_BIR_1601C.csv`; const h = fingerprint(file + ok.expected);
+    add({ at: at(9), system: 'bir', status: 'prepared', doc: '1601-C', subject: ok.key, clientId: ok.clientId, period: ok.month, fileName: file, fileHash: h, by: 'jun' });
+    add({ at: at(9, 11), system: 'bir', status: 'uploaded', doc: '1601-C', subject: ok.key, clientId: ok.clientId, period: ok.month, fileName: file, fileHash: h, by: 'jun' });
+    add({ at: at(8), system: 'bir', status: 'accepted', doc: '1601-C', subject: ok.key, clientId: ok.clientId, period: ok.month, ref: 'EFPS-DEMO-001', by: 'jun' });
+    add({ at: at(8, 12), system: 'bir', status: 'paid', doc: '1601-C', subject: ok.key, clientId: ok.clientId, period: ok.month, ref: 'EFPS-DEMO-001', amount: ok.expected, by: 'jun' });
+    add({ at: at(8, 13), system: 'bir', status: 'confirmed', doc: '1601-C', subject: ok.key, clientId: ok.clientId, period: ok.month, ref: 'EFPS-DEMO-001', amount: ok.expected, message: 'Receipt checked: amount and reference match', by: 'maricel' });
+    st.remits = { ...st.remits, [ok.key]: { generatedAt: iso(new Date(at(9))), uploadedAt: iso(new Date(at(9))), reference: 'EFPS-DEMO-001', channel: 'BIR eFPS', amountPaid: ok.expected, paidAt: iso(new Date(at(8))), receipt: { name: 'BIR_1601C_confirmation.pdf', size: 48211, by: 'jun' }, receiptCheck: { by: 'maricel', at: at(8, 13) } } }; }
+  const sss = pick('santos', 'sss');
+  if (sss) { const file = `${sss.clientId}_${sss.month}_SSS_R3.csv`;
+    add({ at: at(6), system: 'sss', status: 'prepared', doc: 'R-3', subject: sss.key, clientId: sss.clientId, period: sss.month, fileName: file, fileHash: fingerprint(file + 'v1'), by: 'jun' });
+    const rj = add({ at: at(5), system: 'sss', status: 'rejected', doc: 'R-3', subject: sss.key, clientId: sss.clientId, period: sss.month, message: 'Invalid SS number on row 4 (example)', by: 'jun' });
+    add({ at: at(5, 14), system: 'sss', status: 'prepared', doc: 'R-3', subject: sss.key, clientId: sss.clientId, period: sss.month, fileName: file, fileHash: fingerprint(file + 'v2'), retryOf: rj.id, by: 'jun' });
+    add({ at: at(4), system: 'sss', status: 'accepted', doc: 'R-3', subject: sss.key, clientId: sss.clientId, period: sss.month, ref: 'PRN-DEMO-2207', by: 'jun' }); }
+  const ph = pick('lim', 'ph');
+  if (ph) { const file = `${ph.clientId}_${ph.month}_PhilHealth_RF1.csv`;
+    add({ at: at(3), system: 'ph', status: 'prepared', doc: 'RF-1', subject: ph.key, clientId: ph.clientId, period: ph.month, fileName: file, fileHash: fingerprint(file), by: 'jun' });
+    const rj = add({ at: at(3, 15), system: 'ph', status: 'rejected', doc: 'RF-1', subject: ph.key, clientId: ph.clientId, period: ph.month, message: 'PIN not found for 1 member (example)', by: 'jun' });
+    st.remits = { ...st.remits, [ph.key]: { generatedAt: iso(new Date(at(3))), rejected: { at: rj.at, reason: rj.message!, by: 'jun', eventId: rj.id } } }; }
+  st.integrationLog = log; st.alertsSent = [];
+  // Example change waiting for double approval: a pay rate increase asked for by the preparer.
+  const e = st.employees.find(x => x.clientId === 'mabuhay' && x.active);
+  if (e) { const to = Math.round(e.monthlyRate * 1.08); st.changes = [{ id: 'chg_demo1', control: 'salary', clientId: 'mabuhay', subject: `emp:${e.id}`, title: `Pay rate change: ${e.name} (Mabuhay Bakery)`,
+    lines: [`Monthly rate: ₱${e.monthlyRate.toLocaleString('en-PH')} → ₱${to.toLocaleString('en-PH')}`], reason: 'Annual review, 8% increase (example)', payload: { empId: e.id, set: { monthlyRate: to }, before: { monthlyRate: e.monthlyRate } },
+    hash: fingerprint(JSON.stringify({ empId: e.id, to })), requestedBy: 'jun', requestedAt: at(1), approvals: [], status: 'pending' }]; }
+}
+
+/** The main return or contribution list for each agency, used as the document name in the integration log. */
+export const DOC_OF: Record<FilingKind, string> = { bir: '1601-C', sss: 'R-3', ph: 'RF-1', pi: 'MCRF' };
+/** What each client must file or pay, with due dates, for the alert rules (integrationAlerts). */
+export function obligationsFor(s: State): Obligation[] {
+  return filingsFor(s).filter(f => s.clients.find(c => c.id === f.clientId)?.active !== false).map(f => ({ key: f.key, clientId: f.clientId, system: f.kind as System, doc: DOC_OF[f.kind],
+    period: f.month, due: iso(f.due), done: !!f.filed, expected: f.expected, paid: f.remit?.amountPaid, mismatchNote: f.remit?.note?.trim() || undefined }));
+}
+
 /** Brings data saved by an earlier version (v8) up to date without losing it. */
 export function migrate(old: State): State {
   const x = seedExtras(new Date());
@@ -420,6 +485,12 @@ export function migrate(old: State): State {
   // A client below its region's lowest new floor moves up to that floor (never down); a higher tier stays the firm's call,
   // so the firm owner gets a review task (see wageReviewClients) instead of an automatic change.
   s.clients = s.clients.map(c => { const r = s.refs?.regions?.find(x => x.id === c.region); return r && c.minWage < r.other ? { ...c, minWage: r.other } : c; });
+  if (!s.integrationLog) { s.integrationLog = []; s.alertsSent = []; }
+  // Receipts recorded before the second-person check existed stay counted as filed (marked so the audit trail shows why).
+  s.remits = Object.fromEntries(Object.entries(s.remits ?? {}).map(([k, r]) => [k, r.receipt && !r.receiptCheck ? { ...r, receiptCheck: { by: 'before-v10', at: new Date().toISOString() } } : r]));
+  // Double approval needs a second approver: the demo firm gets its finance manager (real firms add theirs in Admin → Users).
+  if (s.billing?.firmName === 'Santos Bookkeeping Services' && !s.users.some(u => u.id === 'carmela')) s.users = [...s.users, { id: 'carmela', name: 'Carmela Reyes', role: 'firmOwner', active: true, email: 'carmela@santosbookkeeping.ph' }];
+  if (!s.changes) s.changes = [];
   if (!s.users.some(u => u.role === 'talaanAdmin')) s.users = [...s.users, { id: 'lisa', name: 'Lisa (Talaan HQ)', role: 'talaanAdmin', active: true, email: 'lisa@talaan.example' }];
   return s;
 }
@@ -430,6 +501,10 @@ export function wageReviewClients(s: State) {
 }
 
 /* ---------- Derived data ---------- */
+/** Fingerprint of a pay run's figures. */
+export const linesHash = (s: State, run: Run) => fingerprint(JSON.stringify(linesFor(s, run).map(l => [l.empId, l.gross, l.wht, l.net])));
+/** Approvals that still count: an approval (and every later one) stops counting if the run's figures changed after it was given. */
+export function validApprovals(s: State, run: Run): Approval[] { const h = linesHash(s, run); const out: Approval[] = []; for (const a of run.approvals ?? []) { if (a.hash && a.hash !== h) break; out.push(a); } return out; }
 /** An employee belongs in a cutoff only if hired on or before its last day and not separated before its first day. */
 export function inPeriod(e: Employee, period: string) {
   const { start, end } = periodInfo(period);
@@ -441,7 +516,7 @@ export function linesFor(s: State, run: Run) {
   // An employee with a final pay run in this cutoff is paid there, not in the regular run.
   const leavers = new Set(kind === 'regular' ? s.runs.filter(r => r.clientId === run.clientId && r.period === run.period && runKind(r) === 'final').flatMap(r => r.empIds ?? []) : []);
   const emps = run.empIds ? s.employees.filter(e => run.empIds!.includes(e.id)) : s.employees.filter(e => e.clientId === run.clientId && inPeriod(e, run.period) && !leavers.has(e.id));
-  return emps.map(e => computeLine(e, run.hours[e.id] ?? EMPTY_HOURS, c.freq, c.minWage, { offCycle: kind === 'bonus' || kind === 'reimbursement', ytdBenefits: ytdBenefits(s, e.id, year, run.id) }));
+  return emps.map(e => computeLine(e, run.hours[e.id] ?? EMPTY_HOURS, c.freq, c.minWage, { offCycle: kind === 'bonus' || kind === 'reimbursement' || kind === 'adjustment', ytdBenefits: ytdBenefits(s, e.id, year, run.id) }));
 }
 export { totals as totalsOf };
 export function prevNetFor(s: State, run: Run) {
@@ -486,7 +561,7 @@ export function filingsFor(s: State): Filing[] {
       const sum = (f: (l: Line) => number) => r2(lines.reduce((a, l) => a + f(l), 0));
       const expected = kind === 'sss' ? sum(l => l.sssEE + l.sssER + l.ec + l.sssLoan) : kind === 'ph' ? sum(l => l.phEE + l.phER) : kind === 'pi' ? sum(l => l.piEE + l.piER + l.pagibigLoan) : sum(l => l.wht);
       const remit = s.remits?.[key];
-      const done = remit && remit.amountPaid !== undefined && remit.reference && remit.receipt && Math.abs(remit.amountPaid - expected) < 0.005;
+      const done = remit && remit.amountPaid !== undefined && remit.reference && remit.receipt && remit.receiptCheck && Math.abs(remit.amountPaid - expected) < 0.005;
       out.push({ key, clientId, month, kind, due: new Date(y, m, day), lines, expected, remit, filed: done ? { ref: remit!.reference!, date: remit!.paidAt ?? '' } : undefined });
     }
   }

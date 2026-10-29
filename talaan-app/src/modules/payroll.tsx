@@ -1,5 +1,6 @@
 /** Talaan Payroll: pay items, pay templates, loans, off-cycle runs (13th month, bonuses, reimbursements) and final pay. */
 import { useState } from 'react';
+import { requestChange } from './approvals';
 import { EMPTY_HOURS, computeLine, r2, type Employee, type Hours } from '../engine';
 import { currentPeriod, shiftPeriod, periodInfo, inPeriod, iso, refreshRun, loanBalance, leaveBalance, thirteenthDue, ytdBenefits, yearToDate, yearEnd, runKind, isRegular, hasModule,
   type Client, type Run, type PayItem, type PayItemKind, type Loan, type LoanKind, type State } from '../model';
@@ -55,15 +56,23 @@ function Templates({ c }: { c: Ctx }) {
 function TemplateForm({ c, e }: { c: Ctx; e: Employee }) {
   const { t } = c; const [rows, setRows] = useState(e.template ?? []);
   const items = c.s.payItems.filter(p => p.active !== false);
-  const save = () => { const clean = rows.filter(r => r.amount > 0 && items.some(p => p.id === r.itemId));
-    c.setS(s => ({ ...s, employees: s.employees.map(x => x.id === e.id ? { ...x, template: clean } : x) })); c.log('act_template', { name: e.name }, e.clientId); c.modal(null); c.toast(t('saved')); };
+  // Recurring allowances and deductions change pay every cutoff: double approval like a salary change (approvals.ts).
+  const [why, setWhy] = useState('');
+  const label = (id: string) => c.s.payItems.find(p => p.id === id)?.name ?? id;
+  const save = () => { const clean = rows.filter(r => r.amount > 0 && items.some(p => p.id === r.itemId)); const before = e.template ?? [];
+    if (JSON.stringify(clean) === JSON.stringify(before)) { c.modal(null); return; }
+    const fmt = (xs: typeof clean) => xs.map(x => `${label(x.itemId)} ${peso(x.amount)}`).join(', ') || '—';
+    requestChange(c, { control: 'salary', clientId: e.clientId, subject: `tpl:${e.id}`, title: t('chgTemplateTitle', { name: e.name }), reason: why.trim(),
+      lines: [`${fmt(before)} → ${fmt(clean)}`], payload: { empId: e.id, set: { template: clean }, before: { template: before } } });
+    c.log('act_template', { name: e.name }, e.clientId); c.modal(null); };
   return (<div><h2>{t('templateFor', { name: e.name })}</h2><p className="muted small">{t('templateHelp')}</p>
     <table className="tbl small"><tbody>{rows.map((r, i) => <tr key={i}>
       <td><select aria-label={t('itemName')} value={r.itemId} onChange={x => setRows(rows.map((y, j) => j === i ? { ...y, itemId: x.target.value } : y))}>{items.map(p => <option key={p.id} value={p.id}>{p.name} ({t('pk_' + p.kind)})</option>)}</select></td>
       <td><input aria-label={t('amount')} type="number" min={0} step="0.01" value={r.amount || ''} onChange={x => setRows(rows.map((y, j) => j === i ? { ...y, amount: Math.max(0, r2(Number(x.target.value) || 0)) } : y))} /></td>
       <td><button className="btn small ghost" onClick={() => setRows(rows.filter((_, j) => j !== i))}>{t('remove')}</button></td></tr>)}</tbody></table>
     <button className="btn small ghost" onClick={() => setRows([...rows, { itemId: items[0]?.id ?? '', amount: 0 }])}>+ {t('addLine')}</button>
-    <div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button><button className="btn" onClick={save}>{t('save')}</button></div></div>);
+    <p className="warnbox small">🔐 {t('chgTemplateNote')}</p><div className="form one"><label>{t('changeReason')}<input value={why} placeholder={t('changeReasonPh')} onChange={x => setWhy(x.target.value.slice(0, 200))} /></label></div>
+    <div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button><button className="btn" disabled={why.trim().length < 3} onClick={save}>{t('chgSubmit')}</button></div></div>);
 }
 
 function Loans({ c }: { c: Ctx }) {
@@ -134,7 +143,8 @@ export function RunPrefillNote({ c, run }: { c: Ctx; run: Run }) {
 /* ---------- Off-cycle runs: 13th month, bonuses, reimbursements ---------- */
 export function OffCycleForm({ c, clients }: { c: Ctx; clients: Client[] }) {
   const { t } = c; const [clientId, setClientId] = useState(clients[0]?.id); const cl = c.s.clients.find(x => x.id === clientId)!;
-  const [kind, setKind] = useState<'bonus' | 'reimbursement'>('bonus'); const [label, setLabel] = useState(t('lbl13th'));
+  const [kind, setKind] = useState<'bonus' | 'reimbursement' | 'adjustment'>('bonus'); const [label, setLabel] = useState(t('lbl13th'));
+  const past = [-1, -2, -3, -4, -5, -6].map(n => shiftPeriod(currentPeriod(cl.freq), cl.freq, n)); const [retroFor, setRetroFor] = useState(past[0]);
   const periods = [-1, 0, 1, 2].map(n => shiftPeriod(currentPeriod(cl.freq), cl.freq, n)); const [period, setPeriod] = useState(currentPeriod(cl.freq));
   const emps = c.s.employees.filter(e => e.clientId === clientId && inPeriod(e, period)); const [pick, setPick] = useState<Set<string> | null>(null); const chosen = pick ?? new Set(emps.map(e => e.id));
   const [fill, setFill] = useState<'thirteenth' | 'fixed' | 'blank'>('thirteenth'); const [amt, setAmt] = useState(0);
@@ -142,14 +152,15 @@ export function OffCycleForm({ c, clients }: { c: Ctx; clients: Client[] }) {
   const amountFor = (e: Employee) => kind === 'reimbursement' ? 0 : fill === 'thirteenth' ? thirteenthDue(c.s, e, year).due : fill === 'fixed' ? amt : 0;
   const create = () => {
     const id = `${clientId}-${period}-${kind}-${Date.now().toString(36)}`; const ids = emps.filter(e => chosen.has(e.id)).map(e => e.id);
-    const run: Run = { id, clientId: clientId!, period, status: 'draft', kind, label: label.trim() || t('rk_' + kind), empIds: ids, reasons: {}, preparedBy: c.user.id,
+    const run: Run = { id, clientId: clientId!, period, status: 'draft', kind, label: label.trim() || t('rk_' + kind), empIds: ids, reasons: {}, preparedBy: c.user.id, ...(kind === 'adjustment' ? { retroFor } : {}),
       hours: Object.fromEntries(ids.map(eid => [eid, { ...EMPTY_HOURS, ...(kind === 'bonus' ? { bonus: amountFor(c.s.employees.find(e => e.id === eid)!) } : {}) }])) };
     c.setS(s => ({ ...s, runs: [...s.runs, run] })); c.log('act_offcycle', { label: run.label! }, clientId); c.modal(null); c.go({ page: 'run', id, step: 2 }); };
   return (<div><h2>{t('offCycleNew')}</h2><Why>{t('offCycleIntro')}</Why><div className="form">
     <label>{t('chooseClient')}<select value={clientId} onChange={e => { setClientId(e.target.value); setPick(null); }}>{clients.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
-    <label>{t('runType')}<select value={kind} onChange={e => { const k = e.target.value as 'bonus' | 'reimbursement'; setKind(k); setLabel(k === 'bonus' ? t('lbl13th') : t('lblReimb')); }}><option value="bonus">{t('rk_bonus')}</option><option value="reimbursement">{t('rk_reimbursement')}</option></select></label>
+    <label>{t('runType')}<select value={kind} onChange={e => { const k = e.target.value as 'bonus' | 'reimbursement' | 'adjustment'; setKind(k); setLabel(k === 'bonus' ? t('lbl13th') : k === 'adjustment' ? t('lblRetro', { period: c.periodLabel(retroFor) }) : t('lblReimb')); }}><option value="bonus">{t('rk_bonus')}</option><option value="reimbursement">{t('rk_reimbursement')}</option><option value="adjustment">{t('rk_adjustment')}</option></select></label>
     <label>{t('runLabel')}<input list="oc-labels" value={label} onChange={e => setLabel(e.target.value.slice(0, 60))} /><datalist id="oc-labels">{[t('lbl13th'), t('lbl14th'), t('lblMidYear'), t('lblReimb')].map(x => <option key={x} value={x} />)}</datalist></label>
     <label>{t('payInCutoff')}<select value={period} onChange={e => setPeriod(e.target.value)}>{periods.map(p => <option key={p} value={p}>{c.periodLabel(p)}</option>)}</select><small>{t('payDate', { date: c.fmt(periodInfo(period).payDate) })}</small></label>
+    {kind === 'adjustment' && <label>{t('retroForLbl')}<select value={retroFor} onChange={e => { setRetroFor(e.target.value); setLabel(t('lblRetro', { period: c.periodLabel(e.target.value) })); }}>{past.map(p => <option key={p} value={p}>{c.periodLabel(p)}</option>)}</select><small>{t('retroHelp')}</small></label>}
     {kind === 'bonus' && <label>{t('fillWith')}<select value={fill} onChange={e => setFill(e.target.value as typeof fill)}><option value="thirteenth">{t('fill13th')}</option><option value="fixed">{t('fillFixed')}</option><option value="blank">{t('fillBlank')}</option></select></label>}
     {kind === 'bonus' && fill === 'fixed' && <label>{t('amount')}<input type="number" min={0} value={amt || ''} onChange={e => setAmt(Math.max(0, r2(Number(e.target.value) || 0)))} /></label>}</div>
     <h3>{t('employees')} ({chosen.size}/{emps.length})</h3>

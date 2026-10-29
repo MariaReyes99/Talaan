@@ -16,6 +16,7 @@ Live demo: https://talaan-ivory.vercel.app
 | `talaan-kit/` | Guided tour and server routes (Next.js): Ask Tala API, online payments (PayMongo), Stripe, Xero, email, source watch |
 | `talaan-ai/` | Ask Tala quality and safety: synthetic test data, metric targets and history, RAGAS, NeMo Guardrails, PyRIT red team |
 | `docs/ARCHITECTURE.md` | How Talaan scales to millions of employees: speed, security, cost |
+| `docs/CONTROLS.md` | Double approval for the 10 high-risk actions, files in and out, the integration log, alerts and Xero |
 | `brand/` | Talaan 3D logos (with and without slogan), the app icon, and `brand/modules/` lockups for each module (Payroll, Compliance, Books, HR, AI, Analytics, HQ) |
 
 ## Run locally
@@ -24,7 +25,7 @@ Live demo: https://talaan-ivory.vercel.app
 cd talaan-app
 npm install
 npm start        # http://localhost:3000
-npm test         # payroll engine, model, billing, entitlements, encryption, voice, Ask Tala and 3,000 synthetic employees
+npm test         # payroll engine, model, billing, entitlements, integrations, double approval, encryption, voice, Ask Tala and 3,000 synthetic employees
 npm run check:ui # every screen's text exists in English, Tagalog and Chinese
 npm run check:corpus   # Ask Tala corpus: translations, sources, retrieval
 npm run build:tour     # the published guided tour as one HTML file
@@ -45,6 +46,11 @@ npm run dev      # http://localhost:3000/en/tour
 
 This is a prototype with demo data. Nothing is sent to Xero, banks or government
 agencies. Contribution and tax rates must be checked by a CPA before live use.
+
+Controls (see `docs/CONTROLS.md`): two approvals for pay runs, payroll release, salary and bank changes, filings,
+bonus, retro and final pay; maker plus approver for pay tables and roles; a second person for every file in or out;
+a tamper-evident integration log with failure alerts and escalation. Demo users: Jun prepares, Maricel and Carmela
+(firm owners) review and approve, Teresita approves for Lim Trading.
 
 ## Secrets
 

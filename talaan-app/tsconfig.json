@@ -26,6 +26,8 @@
   "src/tour/voice.test.ts",
   "src/model.test.ts",
   "src/billing.test.ts",
+  "src/integrations.test.ts",
+  "src/approvals.test.ts",
   "src/rag/rag.test.ts"
  ]
 }

@@ -11,6 +11,9 @@ const head = f => `// GENERATED from talaan-app/${f} by scripts/sync-rag.mjs. Ed
 for (const f of ['text.ts', 'retriever.ts', 'guard.ts', 'pipeline.ts']) writeFileSync(new URL(f, out), head(`src/rag/${f}`) + readFileSync(new URL(`src/rag/${f}`, app), 'utf8'));
 // entitlements.ts imports a type from model.ts; the kit only needs the module keys.
 writeFileSync(new URL('entitlements.ts', out), head('src/entitlements.ts') + readFileSync(new URL('src/entitlements.ts', app), 'utf8').replace("import type { ModuleKey } from './model';", "export type ModuleKey = 'payroll' | 'compliance' | 'books' | 'hr' | 'ai' | 'analytics';"));
+// Integration log, release authorisation and alert rules: the same code decides in the browser and on the server.
+writeFileSync(new URL('../approvals-core.ts', out), head('src/approvals.ts') + readFileSync(new URL('src/approvals.ts', app), 'utf8'));
+writeFileSync(new URL('../integrations-core.ts', out), head('src/integrations.ts') + readFileSync(new URL('src/integrations.ts', app), 'utf8'));
 const corpus = JSON.parse(readFileSync(new URL('corpus/corpus.json', app), 'utf8')).filter(e => e.product === 'talaan' && e.namespace === 'talaan-ph-payroll');
 writeFileSync(new URL('corpus.json', out), JSON.stringify(corpus));
 console.log(`Synced Ask Tala code and ${corpus.length} corpus entries into lib/rag.`);

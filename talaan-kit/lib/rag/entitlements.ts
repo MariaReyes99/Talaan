@@ -26,7 +26,7 @@ export const MODULE_MANIFEST: Record<ModuleKey, ModuleSpec> = {
   payroll: { pages: ['payruns', 'run', 'payroll', 'payslips'], features: ['payRuns', 'payItems', 'payTemplates', 'loans', 'bonusAnd13thMonth', 'reimbursements', 'finalPay', 'payslips', 'bankAndEwalletFiles', 'certificateOfEmployment'] },
   compliance: { pages: ['files'], features: ['sssR3', 'sssMl2', 'sssR1a', 'philhealthRf1', 'philhealthEr2', 'pagibigMcrf', 'pagibigStlrf', 'bir1601c', 'bir1604c', 'birAlphalist', 'bir2316', 'remittanceTracking', 'deadlineCalendar', 'importPayroll'] },
   hr: { pages: ['hr', 'myleave'], features: ['employeeRecords', 'leaveRequests', 'leaveBalances', 'changeHistory', 'statutoryLeaveTypes'] },
-  books: { pages: ['books'], features: ['accountMapping', 'journalPreview', 'xeroJournal', 'genericJournalCsv', 'departmentSplit'], needsAnyOf: ['payroll', 'compliance'] },
+  books: { pages: ['books'], features: ['accountMapping', 'journalPreview', 'xeroJournal', 'genericJournalCsv', 'departmentSplit'], needsAnyOf: ['payroll', 'compliance'], api: ['/api/xero/journal', '/api/xero/accounts', '/api/xero/taxrates', '/api/xero/tenants'] },
   ai: { pages: ['ask'], features: ['askTala', 'citedAnswers', 'guardrails'], api: ['/api/ask'] },
   analytics: { pages: ['analytics'], features: ['dashboard', 'reports'], needsAnyOf: ['payroll', 'compliance'] },
 };

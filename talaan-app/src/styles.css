@@ -260,3 +260,14 @@ label.block{display:flex;flex-direction:column;gap:6px;margin:10px 0;font-weight
 .paychoices{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .card.attention{border-left:4px solid var(--amber);background:var(--amber-bg)}
 .tbl tr.subrow td{padding-top:0;border-top:0}.tbl tr.subrow ul.activity{margin:0}
+ul.plain { list-style: none; padding: 0; margin: 0; }
+ul.plain li { padding: 8px 0; border-bottom: 1px solid var(--line); }
+ul.plain li:last-child { border-bottom: 0; }
+.gate { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; margin: 8px 0; display: grid; gap: 6px; }
+.gate.ok { border-style: solid; }
+.gate .row { flex-wrap: wrap; }
+pre.preview { max-height: 220px; overflow: auto; font-size: 11px; background: var(--bg2, rgba(127,127,127,.08)); padding: 8px; border-radius: 8px; white-space: pre; }
+ol.apsteps { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 2px 0; }
+ol.apsteps li { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+ol.apsteps li.done { border-color: var(--green, #2e7d32); }
+ol.apsteps li.cur { border-color: var(--gold, #c9a227); font-weight: 600; }

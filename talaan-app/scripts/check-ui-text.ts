@@ -7,14 +7,20 @@ const used = new Set([...src.matchAll(/\bt\(\s*'([A-Za-z0-9_]+)'\s*[,)]/g)].map(
 // keys passed through arrays such as [['runs', 'tabPayRuns'], ...] or t(k)
 for (const m of src.matchAll(/'((?:tab|nav|hq|rp_|rpd_|cs_|h_|act_|n_|why2_|role|mod_|modd_|rk_|pk_|pkh_|lk_|sr_|src_|ls_|show_|tk_|tc_|ts_|hs_|hh_|cs2_|view_|fld_|acch_|acc(?=[A-Z]))[A-Za-z0-9_]*)'/g)) used.add(m[1]);
 const dyn: Record<string, string[]> = {
-  mod_: ['payroll', 'compliance', 'books', 'hr', 'ai', 'analytics'], modd_: ['payroll', 'compliance', 'books', 'hr', 'ai', 'analytics'], rk_: ['regular', 'bonus', 'reimbursement', 'final', 'imported'],
+  mod_: ['payroll', 'compliance', 'books', 'hr', 'ai', 'analytics'], modd_: ['payroll', 'compliance', 'books', 'hr', 'ai', 'analytics'], rk_: ['regular', 'bonus', 'reimbursement', 'final', 'imported', 'adjustment'],
   pk_: ['allowance', 'deMinimis', 'deduction', 'reimbursement'], pkh_: ['allowance', 'deMinimis', 'deduction', 'reimbursement'], lk_: ['sss', 'pagibig', 'company', 'cashAdvance'],
   sr_: ['resigned', 'endContract', 'retired', 'terminated', 'redundancy'], src_: ['talaan', 'external'], ls_: ['pending', 'approved', 'rejected'], show_: ['pending', 'all'], tk_: ['open', 'all'],
   tc_: ['problem', 'question', 'request'], ts_: ['open', 'waiting', 'solved'], hs_: ['draft', 'sent', 'partial', 'paid', 'overdue'], pm_: ['bank', 'gcash', 'maya', 'check', 'card', 'cash', 'other'], ag_: ['current', 'd1_30', 'd31_60', 'd61_90', 'd90p'], ck_: ['all', 'firm', 'employer'], ps_: ['online', 'staff', 'proof'], hr_: ['evasion', 'nosource'], pc_: ['card', 'bank'], hh_: ['ok', 'soon', 'late'], cs2_: ['done', 'late', 'soon', 'planned'], view_: ['month', 'list'],
-  fld_: ['name', 'position', 'monthlyRate', 'department', 'bankAccount', 'payout', 'tin', 'sss', 'philhealth', 'pagibig', 'hireDate', 'separationDate'], why2_: ['bonus', 'reimbursement', 'final'],
+  fld_: ['name', 'position', 'monthlyRate', 'department', 'bankAccount', 'payout', 'tin', 'sss', 'philhealth', 'pagibig', 'hireDate', 'separationDate'], why2_: ['bonus', 'reimbursement', 'final', 'adjustment'],
+  duty_: ['review', 'finance', 'signatory', 'config', 'security'], dutyh_: ['review', 'finance', 'signatory', 'config', 'security'], fp_: ['review', 'finance'],
+  ctl_: ['payrun', 'release', 'salary', 'bank', 'filing', 'rates', 'roles'], chg_: ['pending', 'approved', 'returned', 'withdrawn', 'stale'],
+  mx_: ['payrun', 'release', 'salary', 'retro', 'finalpay', 'bonus', 'filing', 'bank', 'rates', 'roles'], mxm_: ['payrun', 'release', 'salary', 'retro', 'finalpay', 'bonus', 'filing', 'bank', 'rates', 'roles'], mxw_: ['payrun', 'release', 'salary', 'retro', 'finalpay', 'bonus', 'filing', 'bank', 'rates', 'roles'],
+  ist_: ['requested', 'authorised', 'declined', 'received', 'prepared', 'uploaded', 'sent', 'accepted', 'paid', 'confirmed', 'rejected', 'failed', 'resolved'], alk_: ['due3', 'due', 'overdue', 'mismatch', 'rejected', 'failed', 'awaiting'],
+  al_: ['due3', 'due', 'overdue', 'overdue_esc', 'mismatch', 'rejected', 'rejected_esc', 'failed', 'failed_esc', 'awaiting', 'awaiting_esc'],
   acch_: ['accSalaries', 'accBonus', 'accEmployer', 'accReimb', 'accSSS', 'accPH', 'accPI', 'accWHT', 'accOther', 'accNet'],
 };
 for (const [p, xs] of Object.entries(dyn)) for (const x of xs) used.add(p + x);
+for (const k of ['em_alert_subj', 'em_alert_body', 'st_receiptCheck', 'st_rejected', 'apStrictOn', 'apStrictOff', 'relGate2', 'why_twice', 'chgSalaryTitle', 'chgBankTitle']) used.add(k); // used in src/alerts.ts
 for (const p of ['payroll', 'hr', 'books', 'analytics', 'hq', 'myleave']) { used.add(`h_${p}_lead`); used.add(`h_${p}_steps`); }
 const prefixesOnly = new Set([...Object.keys(dyn), 'tab', 'nav', 'hq', 'act_', 'n_', 'h_', 'cs_', 'rp_', 'rpd_', 'role', 'acc']);
 const keys = [...used].filter(k => !prefixesOnly.has(k) && !k.endsWith('_')).sort();

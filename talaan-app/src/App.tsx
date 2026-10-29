@@ -1,9 +1,9 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef as useRefHook, useState, type ReactNode } from 'react';
+import { Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef as useRefHook, useState, type ReactNode } from 'react';
 import { jsPDF } from 'jspdf';
 import TourHost from './tour/TourHost';
 import { makeT, LANG_NAMES, INTL_LOCALE, DICTS, type Lang } from './i18n';
 import { EMPTY_HOURS, idRules, journal, totals, r2, type Employee, type Hours, type Check, type Line } from './engine';
-import { USERS as SEED_USERS, SEED_REFS, inPeriod, sampleState, migrate, refreshRun, runKind, isRegular, hasModule, modulesOf, MODULES, MODULE_PRICE, AI_INCLUDED, APP_VERSION, type ModuleKey, periodInfo, currentPeriod, shiftPeriod, linesFor, checksFor, filingsFor, tasksFor, agencyDueDays, wageReviewClients, daysBetween, iso, PORTAL,
+import { USERS as SEED_USERS, SEED_REFS, inPeriod, sampleState, migrate, refreshRun, runKind, isRegular, hasModule, modulesOf, MODULES, MODULE_PRICE, AI_INCLUDED, APP_VERSION, type ModuleKey, periodInfo, currentPeriod, shiftPeriod, linesFor, checksFor, filingsFor, DOC_OF, fmtCsvDate, linesHash, validApprovals, tasksFor, agencyDueDays, wageReviewClients, daysBetween, iso, PORTAL,
   DEFAULT_CODES, type Handoff, type Notice, type Email, type Invoice, type InvoiceLine, type Rates, type Contact, type Region, type Holiday, type WatchSource, type ReviewItem, type Role, type AccountKey, type BankTemplate, type BankColumn, type EmployerIds, type Remit, type CheckKey, type CheckValue, type PartnerCheck, type Activity, type State, type Run, type Client, type Task, type Filing, type FilingKind, type User } from './model';
 import { ask, askFull, KB, CATEGORIES, liveCorpus, checkCorpus, type Entry, type AskResult } from './kb';
 import { REFUSAL } from './rag/pipeline';
@@ -12,6 +12,12 @@ import { arStatus, balanceOf, statementCsv, checkPayment, type ArDoc, type Payme
 import { PaymentForm, PaymentsList, AgingCard } from './modules/receivables';
 import { ClaimsQueue, ClaimStatus, PayButtons } from './modules/payments';
 import { canOpen, type Persona } from './entitlements';
+import { appendEvent, fingerprint, releaseState, xeroJournalContent, type NewEvent } from './integrations';
+import { POLICY, addApproval, canApprove, dutiesOf, eligible, nextDuty, strands, unstaffed } from './approvals';
+import { alertsDue, applyAlerts } from './alerts';
+import { IntegrationStatus, ReleaseGate, InboundQueue, submitInbound } from './modules/integrations';
+import { ChangeInbox, ApprovalsAdmin, DutyPicker, requestChange } from './modules/approvals';
+import { refsHash, restoreState } from './changes';
 import { LAYOUTS, compareWithSample, sssR3, sssMl2, sssR1a, phRf1, phEr2, piMcrf, piStlrf, piNewMembers, birAlphalist, bir1604cSummary, type LayoutInfo } from './layouts';
 import { BANK_PRESETS, buildPayoutFile } from './bank';
 import { form2316Pdf } from './pdf2316';
@@ -22,7 +28,7 @@ import MARK from '../assets/talaan-mark-96.png';
 import { PayrollSetup, OffCycleForm, FinalPayForm, RunKindChip, RunTools, RunPrefillNote } from './modules/payroll';
 import { HR, MyLeave, EmployeeHistory, logEmployeeChanges } from './modules/hr';
 import { ComplianceCalendar, ImportPayroll } from './modules/compliance';
-import { Books } from './modules/books';
+import { Books, journalRows } from './modules/books';
 import { Analytics } from './modules/analytics';
 import { Hq, SupportForm, WhatsNew, TalaanSubscription } from './modules/hq';
 import { GlobalSearch, ModulesCard, ClientSetup, MoreMenu, ModuleBadge, BRAND_MARK } from './modules/shell';
@@ -73,7 +79,11 @@ export default function App() {
   const email = (to: string[], subject: string, body: string, kind: string, clientId?: string) => { const list = [...new Set(to.filter(Boolean))]; if (!list.length) return false;
     setS(p => ({ ...p, outbox: [{ id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, at: new Date().toISOString(), to: list, subject, body, kind, clientId, status: 'queued', by: userId } as Email, ...p.outbox].slice(0, 400) }));
     log('act_email', { subject }, clientId); return true; };
-  const ctx: Ctx = { s, setS, t, lang, user, go: setRoute, fmt, monthLabel, periodLabel, modal: setModal, toast: setToast, openTour: () => setTourOpen(true), log, notify, email };
+  // Integration log: append-only and hash-chained; the newest 5,000 entries stay in the browser (the server keeps all).
+  const ievent = (e: Omit<NewEvent, 'by'> & { by?: string }) => setS(p => ({ ...p, integrationLog: appendEvent(p.integrationLog ?? [], { ...e, by: e.by ?? userId }).slice(-5000) }));
+  const ctx: Ctx = { s, setS, t, lang, user, go: setRoute, fmt, monthLabel, periodLabel, modal: setModal, toast: setToast, openTour: () => setTourOpen(true), log, notify, email, ievent };
+  // Failure and deadline alerts: checked whenever filings, payments or the integration log change; each goes out once per stage.
+  useEffect(() => { const due = alertsDue(s, iso(today())); if (due.length) setS(p => applyAlerts(p, due, t, monthLabel)); }, [s.integrationLog, s.remits, s.runs, s.clients]);
 
   const mods = new Set<ModuleKey>(visibleClients(ctx).flatMap(x => modulesOf(x).filter(m => hasModule(x, m))));
   const navMods: [Route['page'], string, ModuleKey][] = [['payruns', 'navPayroll', 'payroll'], ['hr', 'navHR', 'hr'], ['files', 'navCompliance', 'compliance'], ['books', 'navBooks', 'books'], ['analytics', 'navAnalytics', 'analytics'], ['ask', 'ask', 'ai']];
@@ -131,7 +141,7 @@ export default function App() {
         {route.page === 'client' && <ClientPage c={ctx} id={route.id!} />}
         {route.page === 'payruns' && <PayRuns key={userId} c={ctx} />}
         {route.page === 'run' && <RunPage c={ctx} id={route.id!} startStep={route.step} />}
-        {route.page === 'files' && <Files c={ctx} />}
+        {route.page === 'files' && <Files c={ctx} key={route.id ?? ''} initial={route.id} />}
         {route.page === 'payslips' && <Payslips c={ctx} />}
         {route.page === 'ask' && <Ask key={userId} c={ctx} />}
         {route.page === 'faqs' && <Faqs c={ctx} />}
@@ -154,7 +164,7 @@ export default function App() {
         <span className="muted small">Talaan {APP_VERSION} · {t('tagline')}</span>
         <button className="link" onClick={() => { const fresh = sampleState(); setS(fresh); setToast(t('resetDemo')); setRoute({ page: homeOf(user.role) }); }}>{t('resetDemo')}</button>
       </footer>
-      {modal && <div className="scrim" onClick={() => setModal(null)}><div className="modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>{modal}</div></div>}
+      {modal && <div className="scrim" onClick={() => setModal(null)}><div className="modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>{isValidElement<{ c?: Ctx }>(modal) && modal.props.c ? cloneElement(modal, { c: ctx }) : modal}</div></div>}
       {toast && <div className="toast" role="status">{toast}</div>}
       <TourHost open={tourOpen} lang={lang} onLang={changeLang} onClose={closeTour} />
     </div>
@@ -163,7 +173,8 @@ export default function App() {
 
 export interface Ctx { s: State; setS: (f: State | ((p: State) => State)) => void; t: T; lang: Lang; user: User; go: (r: Route) => void; fmt: (d: Date) => string;
   monthLabel: (m: string) => string; periodLabel: (p: string) => string; modal: (n: ReactNode) => void; toast: (s: string) => void; openTour: () => void; log: (action: string, detail?: Activity['detail'], clientId?: string) => void;
-  notify: (to: string[], key: string, vars: Notice['vars'], route: Route) => void; email: (to: string[], subject: string, body: string, kind: string, clientId?: string) => boolean }
+  notify: (to: string[], key: string, vars: Notice['vars'], route: Route) => void; email: (to: string[], subject: string, body: string, kind: string, clientId?: string) => boolean;
+  /** Records one exchange with an outside system in the integration log. */ ievent: (e: Omit<NewEvent, 'by'> & { by?: string }) => void }
 export const roleKey = (u: User) => ({ firmOwner: 'roleFirmOwner', preparer: 'rolePreparer', client: 'roleClient', employee: 'roleEmployee', talaanAdmin: 'roleTalaan' } as const)[u.role];
 export const usersNow = () => USERS;
 export const visibleClients = (c: Ctx) => c.s.clients.filter(x => x.active !== false && ((c.user.role !== 'client' && c.user.role !== 'employee') || x.id === c.user.clientId));
@@ -208,7 +219,7 @@ function Home({ c }: { c: Ctx }) {
     {(c.user.role === 'firmOwner' || c.user.role === 'preparer') && <GettingStarted c={c} />}
     {c.user.role === 'firmOwner' && (() => { const w = wageReviewClients(c.s); return w.length ? <div className="card duebar"><Chip u="soon">{t('wageReviewChip')}</Chip><span className="grow">{t('wageReview', { n: w.length, list: w.map(x => `${x.c.name} (₱${x.c.minWage} → ${x.r!.wageOrder} ₱${x.r!.other}–₱${x.r!.nonAgri})`).join('; ') })}</span><button className="btn small" onClick={() => c.go({ page: 'client', id: w[0].c.id })}>{t('open')}</button></div> : null; })()}
     {c.user.role === 'firmOwner' && (() => { const due = corpusDue(c); return due ? <div className="card duebar"><Chip u="soon">{t('reviewDueChip')}</Chip><span className="grow">{t('corpusDueTask', { n: due })}</span><button className="btn small" onClick={() => c.go({ page: 'admin', id: 'corpus' })}>{t('open')}</button></div> : null; })()}
-    <ApprovalsWaiting c={c} />
+    <ApprovalsWaiting c={c} /><ChangeInbox c={c} />
     <section className="card"><h2>{t('needsYou')}</h2>
       {urgent.length === 0 ? <p className="muted">{t('allClear')}</p> : <ul className="tasks">{urgent.map((k, i) => (
         <li key={i}><Chip u={k.urgency}>{dueText(c, k.due)}</Chip><span className="grow"><b>{c.s.clients.find(x => x.id === k.clientId)!.name}</b><br />{taskText(c, k)}</span>
@@ -296,7 +307,19 @@ export function EmployeeForm({ c, clientId, emp }: { c: Ctx; clientId: string; e
   const set = (k: keyof Employee, v: string | number) => setE({ ...e, [k]: v });
   const [why, setWhy] = useState('');
   const sensitive = !!emp && (emp.monthlyRate !== e.monthlyRate || emp.position !== e.position || (emp.bankAccount ?? '') !== (e.bankAccount ?? ''));
-  const save = () => { if (!ok || (sensitive && why.trim().length < 3)) return; c.setS(s => ({ ...logEmployeeChanges(s, emp, e, c.user.id, why.trim()), employees: emp ? s.employees.map(x => x.id === e.id ? e : x) : [...s.employees, e] })); c.log('act_emp', { name: e.name }, clientId); c.modal(null); c.toast(t('saved')); };
+  // Double approval: a pay rate or payroll bank/e-wallet change on an existing employee waits for review + finance (approvals.ts).
+  // Everything else saves now. New employees (onboarding) save now; their first pay run still needs two approvals.
+  const payKeys = ['monthlyRate', 'bankAccount', 'payout', 'mobile'] as const;
+  const held = emp ? payKeys.filter(k => String(emp[k] ?? (k === 'payout' ? 'bank' : '')) !== String(e[k] ?? (k === 'payout' ? 'bank' : ''))) : [];
+  const needWhy = sensitive || held.length > 0;
+  const save = () => { if (!ok || (needWhy && why.trim().length < 3)) return;
+    const now: Employee = emp && held.length ? { ...e, ...Object.fromEntries(held.map(k => [k, emp[k]])) } : e;
+    c.setS(s => ({ ...logEmployeeChanges(s, emp, now, c.user.id, why.trim()), employees: emp ? s.employees.map(x => x.id === e.id ? now : x) : [...s.employees, e] })); c.log('act_emp', { name: e.name }, clientId);
+    if (emp && held.length) { const bank = held.some(k => k !== 'monthlyRate'); const show = (k: string, v: unknown) => k === 'bankAccount' ? `•••${String(v ?? '').replace(/\D/g, '').slice(-4)}` : k === 'monthlyRate' ? peso(Number(v)) : String(v ?? '');
+      requestChange(c, { control: bank ? 'bank' : 'salary', clientId, subject: `emp:${e.id}`, title: t(bank ? 'chgBankTitle' : 'chgSalaryTitle', { name: e.name, client: cl.name }), reason: why.trim(),
+        lines: held.map(k => `${t(k)}: ${show(k, emp[k])} → ${show(k, e[k])}`), payload: { empId: e.id, set: Object.fromEntries(held.map(k => [k, e[k]])), before: Object.fromEntries(held.map(k => [k, emp[k]])) } }); }
+    else c.toast(t('saved'));
+    c.modal(null); };
   return (<div><h2>{emp ? t('editEmployee') : t('addEmployee')}</h2>
     <div className="form">
       <label>{t('name')}<input value={e.name} onChange={x => set('name', x.target.value)} />{e.name.trim().length < 2 && <small className="bad">{t('requiredField')}</small>}</label>
@@ -310,9 +333,10 @@ export function EmployeeForm({ c, clientId, emp }: { c: Ctx; clientId: string; e
         <label key={k} className={good ? 'good' : 'badfield'}>{t(k)}<input inputMode="numeric" value={v} onChange={x => set(k, x.target.value.replace(/[^\d-]/g, ''))} />
           <small className={good ? 'ok' : 'bad'}>{good ? '✓ ' + t('looksRight') : help}</small></label>); })}
     </div>
-    {sensitive && <div className="warnbox small"><b>{t('changeReasonTitle')}</b><label>{t('changeReason')}<input value={why} placeholder={t('changeReasonPh')} onChange={x => setWhy(x.target.value.slice(0, 200))} /></label></div>}
+    {held.length > 0 && <p className="warnbox small">🔐 {t('chgNeedsTwo')}</p>}
+    {needWhy && <div className="warnbox small"><b>{t('changeReasonTitle')}</b><label>{t('changeReason')}<input value={why} placeholder={t('changeReasonPh')} onChange={x => setWhy(x.target.value.slice(0, 200))} /></label></div>}
     {!ok && <p className="bad small">{t('fixIdsFirst')}</p>}
-    <div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button><button className="btn" disabled={!ok || (sensitive && why.trim().length < 3)} onClick={save}>{t('save')}</button></div></div>);
+    <div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button><button className="btn" disabled={!ok || (needWhy && why.trim().length < 3)} onClick={save}>{t('save')}</button></div></div>);
 }
 
 /* ---------------- Pay runs ---------------- */
@@ -324,7 +348,7 @@ function runEligibility(c: Ctx, r?: Run): string | null {
   if (ch.filter(k => k.level === 'amber').some(k => (r.reasons[checkKey(k)] ?? '').trim().length < 3)) return 'why_reason';
   if (!r.submitted) return 'why_notSubmitted';
   if (c.user.id === r.preparedBy) return 'why_own';
-  if (!(c.user.role === 'firmOwner' || (c.user.role === 'client' && c.user.clientId === r.clientId))) return 'why_role';
+  if (!canApprove(c.user, 'payrun', runCtx(c.s, r))) return validApprovals(c.s, r).some(a => a.by === c.user.id) ? 'why_twice' : 'why_role';
   return null;
 }
 function payRows(c: Ctx, clients: Client[]): PayRow[] {
@@ -408,9 +432,8 @@ function BatchApprove({ c, rows, onDone }: { c: Ctx; rows: PayRow[]; onDone: () 
   const judged = rows.map(r => ({ r, why: runEligibility(c, r.run) }));
   const ok = judged.filter(x => !x.why), skip = judged.filter(x => x.why);
   const total = r2(ok.reduce((a, x) => a + x.r.net, 0));
-  const go = () => { const stamp = iso(today());
-    c.setS(s => ({ ...s, runs: s.runs.map(run => { const hit = ok.find(x => x.r.run!.id === run.id); return hit ? { ...run, status: 'approved', approvedBy: c.user.id, approvedAt: stamp, lines: linesFor(s, run) } : run; }) }));
-    ok.forEach(x => { c.log('act_approved', { period: x.r.period }, x.r.clientId); afterApproval(c, x.r.run!, linesFor(c.s, x.r.run!)); }); c.modal(null); onDone(); c.toast(t('approvedN', { n: ok.length, m: skip.length })); };
+  // Each run gets this person's approval step; a run is approved only when its second (finance) approval is given.
+  const go = () => { ok.forEach(x => approveRunStep(c, x.r.run!, linesFor(c.s, x.r.run!))); c.modal(null); onDone(); c.toast(t('approvedN', { n: ok.length, m: skip.length })); };
   return (<div><h2>{t('approveTitle')}</h2>
     {ok.length > 0 && <><h3>{t('eligible')} ({ok.length})</h3><table className="tbl small"><tbody>{ok.map(({ r }) => <tr key={r.key}><td>{c.s.clients.find(x => x.id === r.clientId)!.name}</td><td>{c.periodLabel(r.period)}</td><td className="num">{peso(r.net)}</td></tr>)}
       <tr className="totalrow"><td colSpan={2}>{t('grandTotal')}</td><td className="num">{peso(total)}</td></tr></tbody></table></>}
@@ -451,7 +474,7 @@ function Stepper({ c, step }: { c: Ctx; step: number }) {
 
 const HOUR_FIELDS: (keyof Hours)[] = ['absentDays', 'otHours', 'otRestHours', 'otHolidayHours', 'ndHours', 'regHolidayDays', 'specialDays', 'restDays', 'taxableAllowance', 'deMinimis', 'reimbursement', 'sssLoan', 'pagibigLoan', 'otherDeduction'];
 const GUIDED_FIELDS: (keyof Hours)[] = ['absentDays', 'otHours', 'ndHours', 'regHolidayDays'];
-const KIND_FIELDS: Record<string, (keyof Hours)[]> = { bonus: ['bonus', 'taxableAllowance'], reimbursement: ['reimbursement'], final: ['absentDays', 'otHours', 'bonus', 'leaveDays', 'leaveConversion', 'taxAdjustment', 'otherDeduction'] };
+const KIND_FIELDS: Record<string, (keyof Hours)[]> = { adjustment: ['otHours', 'otRestHours', 'otHolidayHours', 'ndHours', 'regHolidayDays', 'specialDays', 'restDays', 'taxableAllowance'], bonus: ['bonus', 'taxableAllowance'], reimbursement: ['reimbursement'], final: ['absentDays', 'otHours', 'bonus', 'leaveDays', 'leaveConversion', 'taxAdjustment', 'otherDeduction'] };
 const checkKey = (k: Check) => `${k.code}|${k.empId ?? ''}`;
 
 function RunPage({ c, id, startStep }: { c: Ctx; id: string; startStep?: number }) {
@@ -471,14 +494,15 @@ function RunPage({ c, id, startStep }: { c: Ctx; id: string; startStep?: number 
   const setHour = (empId: string, k: keyof Hours, v: string) => { const n = Math.max(k === 'taxAdjustment' ? -999999 : 0, Math.min(k.endsWith('Days') ? 31 : 999999, r2(Number(v) || 0)));
     updRun({ hours: { ...run.hours, [empId]: { ...(run.hours[empId] ?? EMPTY_HOURS), [k]: n } } }); };
   const preparer = USERS.find(u => u.id === run.preparedBy)!;
-  const canApproveRole = c.user.role === 'firmOwner' || (c.user.role === 'client' && c.user.clientId === run.clientId);
+  const valid = validApprovals(c.s, run); const canApproveRole = canApprove(c.user, 'payrun', runCtx(c.s, run)); const apNext = nextDuty('payrun', valid);
+  const stranding = canApproveRole && strands(USERS, 'payrun', runCtx(c.s, run), c.user.id);
   const isPreparer = c.user.id === run.preparedBy;
   const govt = r2(tot.sssEE + tot.sssER + tot.ec + tot.phEE + tot.phER + tot.piEE + tot.piER);
   const empName = (eid: string) => emps.find(e => e.id === eid)?.name ?? eid;
 
-  const approve = () => c.modal(<div><h2>{t('step4')}</h2><p>{t('confirmApprove')}</p><div className="row end">
+  const approve = () => c.modal(<div><h2>{t('step4')}</h2><p>{t('confirmApprove')}</p><p className="small">{t('apStepOf', { n: valid.length + 1, of: POLICY.payrun.length, duty: stepLabel(c, run, apNext) })}</p>{stranding && <p className="warnbox small">{t('apStrand')}</p>}<div className="row end">
     <button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button>
-    <button className="btn green" onClick={() => { updRun({ status: 'approved', approvedBy: c.user.id, approvedAt: iso(today()), lines }); c.log('act_approved', { period: run.period }, run.clientId); afterApproval(c, run, lines); c.modal(null); c.toast(t('approvedBy', { name: c.user.name, date: c.fmt(today()) })); setStep(5); }}>{t('approveAs', { name: c.user.name })}</button></div></div>);
+    <button className="btn green" onClick={() => { const done = approveRunStep(c, run, lines); c.modal(null); c.toast(done ? t('approvedBy', { name: c.user.name, date: c.fmt(today()) }) : t('apStepDone')); if (done) setStep(5); }}>{t('approveAs', { name: c.user.name })}</button></div></div>);
 
   return (<>
     <div className="head"><div><h1>{cl.name} {!isRegular(run) && <RunKindChip c={c} run={run} />}</h1><p className="muted">{run.label ? `${run.label} · ` : ''}{c.periodLabel(run.period)}, {t('payDate', { date: c.fmt(periodInfo(run.period).payDate) })}</p></div>
@@ -531,10 +555,10 @@ function RunPage({ c, id, startStep }: { c: Ctx; id: string; startStep?: number 
         : red.length > 0 || !amberDone ? <p className="bad">{t('notReady')}</p>
         : !run.submitted ? <p className="muted">{t('notSubmittedYet')}</p>
         : isPreparer ? <p className="warn">{t('cantApproveOwn')}</p>
-        : !canApproveRole ? <p className="warn">{t('cantApproveRole')}</p> : null}
+        : !canApproveRole ? <p className="warn">{valid.some(a => a.by === c.user.id) ? t('apAlreadyYou') : t('apNeedDuty', { duty: stepLabel(c, run, apNext) })}</p> : null}
       <div className="row end"><button className="btn ghost" onClick={() => setStep(3)}>{t('back')}</button>
         {!locked && run.submitted && canApproveRole && !isPreparer && <button className="btn ghost" onClick={() => c.modal(<ReturnForm c={c} run={run} />)}>{t('returnRun')}</button>}
-        {!locked && <button className="btn green" disabled={!run.submitted || isPreparer || !canApproveRole || red.length > 0 || !amberDone} onClick={approve}>{t('approveAs', { name: c.user.name })}</button>}
+        {!locked && <button className="btn green" disabled={!run.submitted || isPreparer || !canApproveRole || red.length > 0 || !amberDone} onClick={approve}>{apNext ? t('apApproveAs', { duty: stepLabel(c, run, apNext) }) : t('approveAs', { name: c.user.name })}</button>}
         {locked && <button className="btn" onClick={() => setStep(5)}>{t('next')}</button>}</div>
     </>)}
 
@@ -624,19 +648,41 @@ function payslipHtml(c: Ctx, run: Run, cl: Client) {
 
 function RunFiles({ c, run, cl }: { c: Ctx; run: Run; cl: Client }) {
   const { t } = c; const lines = run.lines ?? []; const j = journal(lines); const emps = c.s.employees;
-  const slug = `${cl.id}_${run.period}`;
-  const send = () => { if (!cl.xero) return c.toast(t('xeroNeedsConnect')); c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === run.id ? { ...r, xeroSentAt: iso(today()) } : r) })); c.log('act_xero', {}, run.clientId); c.toast(t('sentXero')); };
+  const slug = `${cl.id}_${run.period}`; const [bankReject, setBankReject] = useState<string | null>(null); const isStaff = c.user.role === 'firmOwner' || c.user.role === 'preparer';
+  const send = () => { if (!cl.xero) return c.toast(t('xeroNeedsConnect')); c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === run.id ? { ...r, xeroSentAt: iso(today()) } : r) })); c.log('act_xero', {}, run.clientId);
+    c.ievent({ system: 'xero', status: 'sent', doc: 'Manual journal', subject: run.id, clientId: run.clientId, period: run.period.slice(0, 7), message: t('xeroProtoNote') }); c.toast(t('sentXero')); };
+  // Segregation of duties: preparer, final approver and releaser are three different people (strict: no run approver releases).
+  const sod = c.s.controls?.strictRelease ? (run.approvals ?? []).map(a => a.by).concat(run.approvedBy ?? []) : [run.approvedBy ?? ''];
+  const tpl = cl.bankTemplate ?? BANK_PRESETS['Generic CSV']; const payDate = iso(periodInfo(run.period).payDate); const route: Route = { page: 'run', id: run.id, step: 5 };
+  const bankFile = useMemo(() => ({ file: `${slug}_bank_${cl.bank}.${tpl.delimiter === 'fixed' ? 'txt' : 'csv'}`, text: buildPayoutFile(tpl, lines, emps, { payDate, reference: `PAYROLL ${run.period}`, method: 'bank' }).text }), [run.id, lines, tpl, emps]);
+  const bankLines = lines.filter(l => (emps.find(e => e.id === l.empId)?.payout ?? 'bank') === 'bank'); const sumNet = (ls: Line[]) => peso(r2(ls.reduce((a, l) => a + l.net, 0)));
+  // Same content as the Books screen, so one authorisation covers the journal wherever it is sent from.
+  const slipsHtml = useMemo(() => payslipHtml(c, run, cl), [run.id, lines, c.lang]);
+  const xcodes = { ...DEFAULT_CODES, ...(cl.codes ?? {}) }; const xeroContent = xeroJournalContent(cl.xeroTenantId ?? '', payDate, journalRows(lines, id => emps.find(e => e.id === id)?.department, !!cl.trackDepts).map(r => ({ accountCode: xcodes[r.key], description: r.key, amount: r2(r.dr - r.cr), department: r.dept })));
+  const payout = (system: 'bank' | 'ewallet', file: string, text: string) => { saveFile(c, file, text); c.ievent({ system, status: 'prepared', doc: 'Payout file', subject: run.id, clientId: run.clientId, period: run.period.slice(0, 7), fileName: file, fileHash: fingerprint(text), retryOf: run.payoutRejected?.eventId }); };
+  const bankResult = (ok: boolean, reason = '') => c.setS(s => { const log = appendEvent(s.integrationLog ?? [], { system: 'bank', status: ok ? 'accepted' : 'rejected', doc: 'Payout file', subject: run.id, clientId: run.clientId, period: run.period.slice(0, 7), message: ok ? cl.bank : reason, retryOf: ok ? run.payoutRejected?.eventId : undefined, by: c.user.id }); const e = log[log.length - 1];
+    return { ...s, integrationLog: log, runs: s.runs.map(r => r.id !== run.id ? r : ok ? { ...r, payoutAcceptedAt: e.at, payoutRejected: undefined } : { ...r, payoutAcceptedAt: undefined, payoutRejected: { at: e.at, reason, by: c.user.id, eventId: e.id } }) }; });
   return (<>
     <h2>{t('step5')}</h2><Why>{t('why5')}</Why>
     <div className="filegrid">
-      <div className="file"><b>{t('bankFile', { bank: cl.bank })}</b><span className="muted small">{cl.bank} online banking</span><button className="btn small" onClick={() => { const tpl = cl.bankTemplate ?? BANK_PRESETS['Generic CSV']; const f = buildPayoutFile(tpl, lines, emps, { payDate: iso(periodInfo(run.period).payDate), reference: `PAYROLL ${run.period}`, method: 'bank' }); saveFile(c, `${slug}_bank_${cl.bank}.${tpl.delimiter === 'fixed' ? 'txt' : 'csv'}`, f.text); }}>{t('download')}</button>
+      <div className="file"><b>{t('bankFile', { bank: cl.bank })}</b><span className="muted small">{cl.bank} online banking</span>
+        <ReleaseGate c={c} system="bank" doc="Payout file" subject={run.id} control="release" exclude={[run.preparedBy]} excludeFinal={sod} clientId={run.clientId} period={run.period.slice(0, 7)} content={bankFile.text} summary={t('relSumPayout', { where: cl.bank, n: bankLines.length, amt: sumNet(bankLines), date: c.fmt(periodInfo(run.period).payDate) })} route={route}>
+          <button className="btn small" onClick={() => payout('bank', bankFile.file, bankFile.text)}>{t('download')}</button>
+        {run.payoutRejected ? <span className="bad small">{t('bankRejectedOpen', { date: c.fmt(new Date(run.payoutRejected.at)), reason: run.payoutRejected.reason })}</span> : run.payoutAcceptedAt ? <span className="ok small">✓ {t('bankAcceptedOn', { date: c.fmt(new Date(run.payoutAcceptedAt)) })}</span> : null}
+        {isStaff && !run.payoutAcceptedAt && (bankReject === null ? <span className="row"><button className="link small" onClick={() => bankResult(true)}>{t('bankAccepted')}</button><button className="link small" onClick={() => setBankReject('')}>{t('bankRejected')}</button></span>
+          : <span className="row"><input aria-label={t('rejectReasonLabel')} placeholder={t('rejectReasonLabel')} value={bankReject} onChange={e => setBankReject(e.target.value.slice(0, 300))} /><button className="btn small" disabled={bankReject.trim().length < 5} onClick={() => { bankResult(false, bankReject.trim()); setBankReject(null); }}>{t('rejectedSave')}</button></span>)}</ReleaseGate>
         <span className="muted small">{cl.bankTemplate?.verified ? `${t('testedWithBank')} ${cl.bankTemplate.verified}` : t('untested')}</span></div>
-      {(['gcash', 'maya'] as const).filter(w => lines.some(l => emps.find(e => e.id === l.empId)?.payout === w)).map(w => (
-        <div key={w} className="file"><b>{w === 'gcash' ? 'GCash' : 'Maya'}</b><span className="muted small">{t('d_wallet')}</span><button className="btn small" onClick={() => saveFile(c, `${slug}_${w}_payouts.csv`, buildPayoutFile(BANK_PRESETS[w === 'gcash' ? 'GCash bulk payout' : 'Maya bulk payout'], lines, emps, { payDate: iso(periodInfo(run.period).payDate), reference: `${cl.name} ${run.period}`, method: w }).text)}>{t('download')}</button></div>))}
-      <div className="file"><b>{t('payslipsFile')}</b><span className="muted small">{t('employees')}: {lines.length}</span><button className="btn small" onClick={() => saveFile(c, `${slug}_payslips.html`, payslipHtml(c, run, cl))}>{t('download')}</button></div>
+      {(['gcash', 'maya'] as const).filter(w => lines.some(l => emps.find(e => e.id === l.empId)?.payout === w)).map(w => { const nm = w === 'gcash' ? 'GCash' : 'Maya'; const ls = lines.filter(l => emps.find(e => e.id === l.empId)?.payout === w);
+        const text = buildPayoutFile(BANK_PRESETS[w === 'gcash' ? 'GCash bulk payout' : 'Maya bulk payout'], lines, emps, { payDate, reference: `${cl.name} ${run.period}`, method: w }).text; return (
+        <div key={w} className="file"><b>{nm}</b><span className="muted small">{t('d_wallet')}</span>
+          <ReleaseGate c={c} system="ewallet" doc={`${nm} payouts`} subject={run.id} control="release" exclude={[run.preparedBy]} excludeFinal={sod} clientId={run.clientId} period={run.period.slice(0, 7)} content={text} summary={t('relSumPayout', { where: nm, n: ls.length, amt: sumNet(ls), date: c.fmt(periodInfo(run.period).payDate) })} route={route}>
+            <button className="btn small" onClick={() => payout('ewallet', `${slug}_${w}_payouts.csv`, text)}>{t('download')}</button></ReleaseGate></div>); })}
+      <div className="file"><b>{t('payslipsFile')}</b><span className="muted small">{t('employees')}: {lines.length}</span>
+        <ReleaseGate c={c} system="export" doc="Payslips" subject={run.id} clientId={run.clientId} period={run.period.slice(0, 7)} content={slipsHtml} summary={t('relSumExport', { what: t('payslipsFile'), scope: `${cl.name} · ${c.periodLabel(run.period)}` })} route={route}>
+          <button className="btn small" onClick={() => { saveFile(c, `${slug}_payslips.html`, slipsHtml); c.ievent({ system: 'export', status: 'prepared', doc: 'Payslips', subject: run.id, clientId: run.clientId, fileName: `${slug}_payslips.html`, fileHash: fingerprint(slipsHtml) }); }}>{t('download')}</button></ReleaseGate></div>
       <div className="file"><b>{t('files')}</b><span className="muted small">SSS, PhilHealth, Pag-IBIG, BIR</span><button className="btn small ghost" onClick={() => c.go({ page: 'files' })}>{t('open')}</button></div>
     </div>
-    <div className="row between"><h3>{t('journalTitle')}</h3>{run.xeroSentAt ? <Chip u="ok">✓ {t('sentXero')}</Chip> : <button className="btn small xero" onClick={send}>{t('sendXero')}</button>}</div>
+    <div className="row between"><h3>{t('journalTitle')}</h3>{run.xeroSentAt ? <Chip u="ok">✓ {t('sentXero')}</Chip> : <ReleaseGate c={c} system="xero" doc="Manual journal" subject={run.id} clientId={run.clientId} period={run.period.slice(0, 7)} content={xeroContent} summary={t('relSumXero', { client: cl.name, period: c.periodLabel(run.period), org: cl.xeroTenantName ?? '—' })} route={route}><button className="btn small xero" onClick={send}>{t('sendXero')}</button></ReleaseGate>}</div>
     <table className="tbl"><thead><tr><th>{t('colAccount')}</th><th className="num">{t('debit')}</th><th className="num">{t('credit')}</th></tr></thead>
       <tbody>{j.map(([k, dr, cr]) => <tr key={k}><td>{t(k)}</td><td className="num">{dr ? peso(dr) : ''}</td><td className="num">{cr ? peso(cr) : ''}</td></tr>)}
         <tr className="totalrow"><td>{t('total')}</td><td className="num">{peso(r2(j.reduce((a, r) => a + r[1], 0)))}</td><td className="num">{peso(r2(j.reduce((a, r) => a + r[2], 0)))}</td></tr></tbody></table>
@@ -647,13 +693,14 @@ function RunFiles({ c, run, cl }: { c: Ctx; run: Run; cl: Client }) {
 export const AGENCY_FORMS: Record<FilingKind, string> = { sss: 'SSS: R-3 + ML-2', ph: 'PhilHealth: RF-1', pi: 'Pag-IBIG: MCRF + STLRF', bir: 'BIR: 1601-C' };
 const blankIds: EmployerIds = { sss: '', philhealth: '', pagibig: '', tin: '', rdo: '', address: '' };
 function remitStatus(f: Filing): { u: 'ok' | 'soon' | 'late' | 'info'; key: string; amt?: number } {
-  const r = f.remit;
+  const r = f.remit; if (r?.rejected) return { u: 'late', key: 'st_rejected' };
   if (!r || (!r.uploadedAt && r.amountPaid === undefined)) return { u: 'info', key: 'st_notStarted' };
   if (r.amountPaid === undefined) return { u: 'soon', key: 'st_uploaded' };
   const diff = r2(r.amountPaid - f.expected);
   if (diff < -0.004) return { u: 'late', key: 'st_short', amt: -diff };
   if (diff > 0.004) return { u: 'soon', key: 'st_over', amt: diff };
   if (!r.receipt) return { u: 'soon', key: 'st_noReceipt' };
+  if (!r.receiptCheck) return { u: 'soon', key: 'st_receiptCheck' };
   return { u: 'ok', key: 'st_matched' };
 }
 function agencyFiles(c: Ctx, f: Filing): { label: string; file: string; make: () => string }[] {
@@ -664,12 +711,13 @@ function agencyFiles(c: Ctx, f: Filing): { label: string; file: string; make: ()
   if (f.kind === 'pi') return [{ label: 'MCRF', file: `${tag}_PagIBIG_MCRF.csv`, make: () => piMcrf(f.lines, emps, f.month, ids, cl.name) }, { label: 'STLRF', file: `${tag}_PagIBIG_STLRF.csv`, make: () => piStlrf(f.lines, emps, f.month, ids) }];
   return [{ label: '1601-C', file: `${tag}_BIR_1601C.csv`, make: () => birFile(f.lines, f.month, cl.name) }];
 }
-function Files({ c }: { c: Ctx }) {
-  const { t } = c; const [tab, setTab] = useState('remit');
-  const tabs: [string, string][] = [['remit', 'tabRemit'], ['calendar', 'tabCalendar'], ['import', 'tabImportPayroll'], ['newhires', 'tabNewHires'], ['yearend', 'tabYearEnd'], ['layouts', 'tabLayouts']];
+function Files({ c, initial }: { c: Ctx; initial?: string }) {
+  const { t } = c;
+  const tabs: [string, string][] = [['remit', 'tabRemit'], ['integrations', 'tabIntegrations'], ['calendar', 'tabCalendar'], ['import', 'tabImportPayroll'], ['newhires', 'tabNewHires'], ['yearend', 'tabYearEnd'], ['layouts', 'tabLayouts']];
+  const [tab, setTab] = useState(tabs.some(([k]) => k === initial) ? initial! : 'remit');
   return (<><ModuleBadge c={c} m="compliance" /><div className="head"><div><h1>{t('navCompliance')}</h1><p className="muted">{t('complianceSub')}</p></div></div>
     <div className="pills tabs" role="tablist">{tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} aria-pressed={tab === k} onClick={() => setTab(k)}>{t(l)}</button>)}</div>
-    {tab === 'remit' && <RemitTable c={c} />}{tab === 'calendar' && <ComplianceCalendar c={c} />}{tab === 'import' && <ImportPayroll c={c} />}{tab === 'newhires' && <NewHires c={c} />}{tab === 'yearend' && <YearEndView c={c} />}{tab === 'layouts' && <LayoutsView c={c} />}</>);
+    {tab === 'remit' && <RemitTable c={c} />}{tab === 'integrations' && <IntegrationStatus c={c} />}{tab === 'calendar' && <ComplianceCalendar c={c} />}{tab === 'import' && <ImportPayroll c={c} />}{tab === 'newhires' && <NewHires c={c} />}{tab === 'yearend' && <YearEndView c={c} />}{tab === 'layouts' && <LayoutsView c={c} />}</>);
 }
 function RemitTable({ c }: { c: Ctx }) {
   const { t } = c; const clients = visibleClients(c);
@@ -688,32 +736,61 @@ function RemitTable({ c }: { c: Ctx }) {
 }
 function RemitForm({ c, f }: { c: Ctx; f: Filing }) {
   const { t } = c; const cl = c.s.clients.find(x => x.id === f.clientId)!;
-  const [r, setR] = useState<Remit>({ ...(f.remit ?? {}) });
+  const [r, setR] = useState<Remit>({ ...(f.remit ?? {}) }); const [rejecting, setRejecting] = useState<string | null>(null);
   const set = (p: Partial<Remit>) => setR(x => ({ ...x, ...p }));
   const diff = r.amountPaid !== undefined ? r2(r.amountPaid - f.expected) : 0;
   const errors = [!(r.reference ?? '').trim() || (r.reference ?? '').trim().length < 4 ? t('needRef') : '', r.amountPaid === undefined || !(r.amountPaid > 0) ? t('needAmount') : '', !r.receipt ? t('needReceipt') : '',
     Math.abs(diff) > 0.004 && !(r.note ?? '').trim() ? t('noteLabel') : ''].filter(Boolean);
-  const save = () => { c.setS(s => ({ ...s, remits: { ...s.remits, [f.key]: r } }));
+  const ev = { system: f.kind, doc: DOC_OF[f.kind], subject: f.key, clientId: f.clientId, period: f.month } as const;
+  const files = useMemo(() => agencyFiles(c, f).map(x => ({ ...x, data: x.make() })), [f.key, f.expected]); const filesText = files.map(x => x.data).join('\n');
+  // Submission (upload to the portal) only after the reviewer and the authorised signatory approved this exact file.
+  const filingOk = releaseState(c.s.integrationLog ?? [], f.kind, DOC_OF[f.kind], f.key, fingerprint(filesText), POLICY.filing.length).state === 'authorised';
+  const canCheck = !!r.receipt && !r.receiptCheck && !!f.remit?.receipt && (r.receipt.by ?? '') !== c.user.id && (c.user.role === 'firmOwner' || c.user.role === 'preparer' || (c.user.role === 'client' && c.user.clientId === f.clientId));
+  const checkReceipt = () => { const chk = { by: c.user.id, at: new Date().toISOString() }; c.setS(s => ({ ...s, remits: { ...s.remits, [f.key]: { ...(s.remits[f.key] ?? r), receiptCheck: chk } } })); set({ receiptCheck: chk });
+    c.ievent({ ...ev, status: 'confirmed', ref: r.reference, amount: r.amountPaid, message: `${t('rcChecked')} ${r.receipt?.name ?? ''}` }); c.toast(t('rcDone')); };
+  const save = () => { const old = f.remit ?? {}; const fix = r.rejected && r.uploadedAt && r.uploadedAt !== old.uploadedAt ? r.rejected.eventId : undefined;
+    // A changed amount, reference or receipt needs a fresh second check.
+    const changed = r.amountPaid !== old.amountPaid || r.reference !== old.reference || r.receipt?.name !== old.receipt?.name || r.receipt?.hash !== old.receipt?.hash;
+    const next: Remit = { ...(fix ? { ...r, rejected: undefined } : r), ...(changed ? { receiptCheck: undefined } : {}) };
+    c.setS(s => ({ ...s, remits: { ...s.remits, [f.key]: next } }));
+    // Integration log: what changed in this save (upload, payment, confirmation).
+    if (r.uploadedAt && r.uploadedAt !== old.uploadedAt) c.ievent({ ...ev, status: 'uploaded', fileHash: fingerprint(filesText), message: PORTAL[f.kind], retryOf: fix });
+    if (r.amountPaid !== undefined && (r.amountPaid !== old.amountPaid || r.reference !== old.reference)) c.ievent({ ...ev, status: 'paid', ref: r.reference, amount: r.amountPaid, message: Math.abs(diff) > 0.004 ? `${t('remitWarn')} ${peso(diff)}${r.note ? ': ' + r.note : ''}` : r.channel });
     if (!errors.length) { c.log('act_filed', { kind: f.kind, month: f.month }, f.clientId);
       if (Math.abs(diff) < 0.005 && cl.notify?.remitted !== false && !f.remit?.paidAt) (cl.contacts ?? []).forEach(ct => c.email([ct.email], t('em_remit_subj', { client: cl.name, agency: AGENCY_FORMS[f.kind].split(':')[0], month: c.monthLabel(f.month) }),
         t('em_remit_body', { name: ct.name, agency: AGENCY_FORMS[f.kind].split(':')[0], month: c.monthLabel(f.month), amt: peso(r.amountPaid ?? 0), ref: r.reference ?? '', date: r.paidAt ?? iso(today()), firm: c.s.billing.firmName }), 'remitted', cl.id)); }
     c.modal(null); c.toast(Math.abs(diff) > 0.004 ? t('remitWarn') : t('saved')); };
+  // The portal rejected the upload: record why, go back to step 1, and alert the preparer and firm owner (alerts.ts).
+  const reject = (reason: string) => { c.setS(s => { const log = appendEvent(s.integrationLog ?? [], { ...ev, status: 'rejected', message: reason, by: c.user.id }); const e = log[log.length - 1];
+      return { ...s, integrationLog: log, remits: { ...s.remits, [f.key]: { ...r, uploadedAt: undefined, rejected: { at: e.at, reason, by: c.user.id, eventId: e.id } } } }; });
+    c.log('act_rejected', { kind: f.kind, month: f.month }, f.clientId); c.modal(null); c.toast(t('rejectedSaved')); };
   return (<div><h2>{AGENCY_FORMS[f.kind]}</h2><p className="muted">{cl.name}, {c.monthLabel(f.month)}. {t('colExpected')}: <b>{peso(f.expected)}</b></p>
+    {r.rejected && <div className="warnbox"><b>{t('st_rejected')}</b> {t('rejectedOpen', { date: c.fmt(new Date(r.rejected.at)), reason: r.rejected.reason })}</div>}
     <ol className="remitsteps">
-      <li><b>{t('stepGenerate')}</b><div className="row">{agencyFiles(c, f).map(x => <button key={x.label} className="btn small ghost" onClick={() => { saveFile(c, x.file, x.make()); set({ generatedAt: r.generatedAt ?? iso(today()) }); }}>{t('download')} {x.label}</button>)}</div></li>
-      <li><label className="check"><input type="checkbox" checked={!!r.uploadedAt} onChange={e => set({ uploadedAt: e.target.checked ? iso(today()) : undefined })} /> {t('uploadedQ', { portal: PORTAL[f.kind] })}</label></li>
+      <li><b>{t('stepGenerate')}</b>
+        <ReleaseGate c={c} {...ev} control="filing" content={filesText} summary={t('relSumAgency', { doc: AGENCY_FORMS[f.kind], client: cl.name, month: c.monthLabel(f.month), amt: peso(f.expected), n: new Set(f.lines.map(l => l.empId)).size })} route={{ page: 'files' }}>
+          <div className="row">{files.map(x => <button key={x.label} className="btn small ghost" onClick={() => { saveFile(c, x.file, x.data); set({ generatedAt: r.generatedAt ?? iso(today()) });
+            c.ievent({ ...ev, status: 'prepared', fileName: x.file, fileHash: fingerprint(x.data), retryOf: r.rejected?.eventId }); }}>{t('download')} {x.label}</button>)}</div></ReleaseGate></li>
+      <li><label className="check"><input type="checkbox" disabled={!filingOk && !r.uploadedAt} checked={!!r.uploadedAt} onChange={e => set({ uploadedAt: e.target.checked ? iso(today()) : undefined })} /> {t('uploadedQ', { portal: PORTAL[f.kind] })}</label>
+        {!filingOk && !r.uploadedAt && <small className="muted">{t('apUploadAfter')}</small>}
+        {rejecting === null ? <button className="link small" onClick={() => setRejecting('')}>{t('rejectedBtn')}</button>
+          : <div className="form"><label>{t('rejectReasonLabel')}<input autoFocus value={rejecting} onChange={e => setRejecting(e.target.value.slice(0, 300))} /></label>
+            <div className="row"><button className="btn small ghost" onClick={() => setRejecting(null)}>{t('cancel')}</button><button className="btn small" disabled={rejecting.trim().length < 5} onClick={() => reject(rejecting.trim())}>{t('rejectedSave')}</button></div></div>}</li>
       <li><div className="form">
         <label><span>{t('stepRef')} <Tip text={t('tip_reference')} /></span><input value={r.reference ?? ''} onChange={e => set({ reference: e.target.value.replace(/[^\w\- ]/g, '').slice(0, 40) })} /></label>
         <label>{t('stepChannel')}<select value={r.channel ?? ''} onChange={e => set({ channel: e.target.value })}><option value="">—</option>{['ch_bank', 'ch_branch', 'ch_ewallet', 'ch_portal', ...(f.kind === 'bir' ? ['ch_efps'] : [])].map(k => <option key={k} value={t(k)}>{t(k)}</option>)}</select></label>
         <label>{t('stepAmount')}<input type="number" min={0} step="0.01" value={r.amountPaid ?? ''} onChange={e => set({ amountPaid: e.target.value === '' ? undefined : Math.max(0, r2(Number(e.target.value))) })} /></label>
         <label>{t('stepDate')}<input type="date" value={r.paidAt ?? ''} onChange={e => set({ paidAt: e.target.value })} /></label>
         <label>{t('stepReceipt')}<input type="file" accept=".pdf,image/*" onChange={e => { const x = e.target.files?.[0]; if (!x) return; if (x.size > MAX_DOC_BYTES) return c.toast(t('tooBig'));
-          addDoc({ owner: `remit:${f.key}`, kind: 'Agency receipt', name: x.name, size: x.size, type: x.type, addedBy: c.user.id }, x).then(() => set({ receipt: { name: x.name, size: x.size } })); }} />{r.receipt && <small className="ok">✓ {r.receipt.name}</small>}</label>
+          addDoc({ owner: `remit:${f.key}`, kind: 'Agency receipt', name: x.name, size: x.size, type: x.type, addedBy: c.user.id }, x).then(() => x.arrayBuffer()).then(b => { const hash = fingerprint(b); set({ receipt: { name: x.name, size: x.size, by: c.user.id, hash } });
+            c.ievent({ ...ev, status: 'received', fileName: x.name, fileHash: hash, message: 'Agency receipt' }); }); }} />{r.receipt && <small className="ok">✓ {r.receipt.name}</small>}</label>
       </div></li>
     </ol>
+    {r.receipt && <div className={r.receiptCheck ? 'okbox small' : 'warnbox small'}>🔐 {r.receiptCheck ? t('rcCheckedBy', { name: USERS.find(u => u.id === r.receiptCheck!.by)?.name ?? r.receiptCheck.by }) : <>{t('rcNeeded', { name: USERS.find(u => u.id === r.receipt!.by)?.name ?? t('someone') })} {canCheck ? <button className="btn small green" onClick={checkReceipt}>{t('rcConfirm')}</button> : <span className="muted">{f.remit?.receipt ? t('rcOther') : t('rcSaveFirst')}</span>}</>}</div>}
     <DocsPanel c={c} owner={`remit:${f.key}`} title={t('docsTitle')} compact />
     {r.amountPaid !== undefined && Math.abs(diff) > 0.004 && <div className="warnbox"><b>{t('remitWarn')}</b> {t('diffNote', { amt: peso(diff) })}<label>{t('noteLabel')}<input value={r.note ?? ''} onChange={e => set({ note: e.target.value.slice(0, 300) })} /></label></div>}
     {errors.length > 0 && <ul className="bad small">{errors.map(x => <li key={x}>{x}</li>)}</ul>}
+    <p className="muted small">{t('intLogged')}</p>
     <div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button><button className="btn" onClick={save}>{t('saveRemit')}</button></div></div>);
 }
 function NewHires({ c }: { c: Ctx }) {
@@ -722,15 +799,17 @@ function NewHires({ c }: { c: Ctx }) {
   const cl = c.s.clients.find(x => x.id === clientId)!; const ids = cl.ids ?? blankIds;
   const hires = c.s.employees.filter(e => e.clientId === clientId && (e.hireDate ?? '').slice(0, 7) === month);
   const tag = `${clientId}_${month}`;
+  const nh = useMemo(() => !hires.length ? [] : [{ label: 'nhSss', where: 'My.SSS', system: 'sss' as const, file: `${tag}_SSS_R1A.csv`, data: sssR1a(hires, ids, cl.name) },
+    { label: 'nhPh', where: 'PhilHealth EPRS', system: 'ph' as const, file: `${tag}_PhilHealth_ER2.csv`, data: phEr2(hires, ids, cl.name) },
+    { label: 'nhPi', where: t('nhPiNote'), system: 'pi' as const, file: `${tag}_PagIBIG_new_members.csv`, data: piNewMembers(hires, ids) }], [tag, hires.length, c.s.employees]);
   return (<><Why>{t('nhIntro')}</Why><section className="card"><div className="form">
       <label>{t('chooseClient')}<select value={clientId} onChange={e => setClientId(e.target.value)}>{clients.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
       <label>{t('month')}<input type="month" value={month} onChange={e => setMonth(e.target.value)} /></label></div>
     {!hires.length ? <p className="muted">{t('noNewHires')}</p> : <><table className="tbl"><tbody>{hires.map(e => <tr key={e.id}><td><b>{e.name}</b><div className="muted small">{e.position}</div></td><td>{t('hired', { date: e.hireDate ?? '' })}</td><td>SSS {e.sss}</td><td>PhilHealth {e.philhealth}</td></tr>)}</tbody></table>
-      <div className="filegrid" style={{ marginTop: 12 }}>
-        <div className="file"><b>{t('nhSss')}</b><span className="muted small">My.SSS</span><button className="btn small" onClick={() => saveFile(c, `${tag}_SSS_R1A.csv`, sssR1a(hires, ids, cl.name))}>{t('download')}</button></div>
-        <div className="file"><b>{t('nhPh')}</b><span className="muted small">PhilHealth EPRS</span><button className="btn small" onClick={() => saveFile(c, `${tag}_PhilHealth_ER2.csv`, phEr2(hires, ids, cl.name))}>{t('download')}</button></div>
-        <div className="file"><b>{t('nhPi')}</b><span className="muted small">{t('nhPiNote')}</span><button className="btn small" onClick={() => saveFile(c, `${tag}_PagIBIG_new_members.csv`, piNewMembers(hires, ids))}>{t('download')}</button></div>
-      </div></>}</section></>);
+      <ReleaseGate c={c} system="sss" doc="New-hire reports" subject={`nh|${tag}`} clientId={clientId} period={month} control="filing" content={nh.map(x => x.data).join('\n')} summary={t('relSumExport', { what: t('tabNewHires'), scope: `${cl.name} · ${c.monthLabel(month)} · ${hires.length}` })} route={{ page: 'files', id: 'newhires' }}>
+      <div className="filegrid" style={{ marginTop: 12 }}>{nh.map(x => <div key={x.file} className="file"><b>{t(x.label)}</b><span className="muted small">{x.where}</span>
+        <button className="btn small" onClick={() => { saveFile(c, x.file, x.data); c.ievent({ system: x.system, status: 'prepared', doc: 'New-hire report', subject: `nh|${tag}`, clientId, period: month, fileName: x.file, fileHash: fingerprint(x.data) }); }}>{t('download')}</button></div>)}
+      </div></ReleaseGate></>}</section></>);
 }
 function YearEndView({ c }: { c: Ctx }) {
   const { t } = c; const clients = visibleClients(c);
@@ -741,6 +820,12 @@ function YearEndView({ c }: { c: Ctx }) {
   const rows = emps.map(e => { const ls = runs.flatMap(r => (r.lines ?? []).filter(l => l.empId === e.id)); const op = e.opening?.year === year ? e.opening : undefined;
     return { e, ls, op, y: yearEnd(e.id, ls, 0, op?.taxable ?? 0, op?.withheld ?? 0, op?.gross ?? 0) }; }).filter(r => r.ls.length || r.op);
   const canEdit = c.user.role === 'firmOwner' || c.user.role === 'preparer';
+  // Year-end forms go to BIR and employees: the review and the authorised signatory approve these exact figures first.
+  const alpha = birAlphalist(rows.map(r => ({ e: r.e, y: r.y })), year, cl.ids ?? blankIds, cl.name);
+  const summary1604 = bir1604cSummary(rows.map(r => ({ e: r.e, y: r.y })), filingsFor(c.s).filter(f => f.clientId === clientId && f.kind === 'bir' && f.month.startsWith(String(year))).map(f => ({ month: f.month, withheld: f.expected, remitted: f.remit?.amountPaid, ref: f.remit?.reference, date: f.remit?.paidAt })), year, cl.ids ?? blankIds, cl.name);
+  const yeContent = JSON.stringify(rows.map(r => [r.e.id, r.y])) + alpha + summary1604; const yeKey = `ye|${clientId}|${year}`;
+  const yeOk = releaseState(c.s.integrationLog ?? [], 'bir', 'Year-end 2316 and alphalist', yeKey, fingerprint(yeContent), POLICY.filing.length).state === 'authorised';
+  const yeLog = (file: string, data: string | ArrayBuffer | Uint8Array) => c.ievent({ system: 'bir', status: 'prepared', doc: 'Year-end 2316 and alphalist', subject: yeKey, clientId, period: String(year), fileName: file, fileHash: fingerprint(data) });
   const dec = c.s.runs.find(r => r.clientId === clientId && r.status === 'draft' && r.period === `${year}-12-${cl.freq === 'monthly' ? 'M' : 'B'}`);
   const apply = () => { if (!dec) return c.toast(t('noDecRun'));
     c.setS(s => ({ ...s, runs: s.runs.map(r => r.id !== dec.id ? r : { ...r, hours: Object.fromEntries(Object.entries(r.hours).map(([id, h]) => [id, { ...h, taxAdjustment: rows.find(x => x.e.id === id)?.y.difference ?? 0 }])) }) }));
@@ -751,9 +836,11 @@ function YearEndView({ c }: { c: Ctx }) {
     <div className="scroll"><table className="tbl"><thead><tr><th>{t('colEmployee')}</th><th className="num">{t('gross')}</th><th className="num">{t('colTaxable')}</th><th className="num">{t('colTaxDue')}</th><th className="num">{t('colWithheld')}</th><th className="num">{t('colDiff')}</th><th></th></tr></thead>
       <tbody>{rows.map(({ e, ls, y, op }) => <tr key={e.id}><td><b>{e.name}</b>{y.mwe && <> <Chip u="info">{t('mweShort')}</Chip></>}<div className="small">{op ? <span className="muted">{t('openingIncluded', { amt: peso(op.gross) })}</span> : <span className="warn">{t('noOpening')}</span>}{canEdit && <> <button className="link" onClick={() => c.modal(<OpeningForm c={c} e={e} year={year} />)}>{t('setOpening')}</button></>}</div></td><td className="num">{peso(y.gross)}</td><td className="num">{peso(y.taxable)}</td><td className="num">{peso(y.taxDue)}</td><td className="num">{peso(y.withheld)}</td>
         <td className="num"><b className={y.difference < 0 ? 'okmsg' : ''}>{y.difference < 0 ? `(${peso(-y.difference)})` : peso(y.difference)}</b></td>
-        <td><button className="btn small ghost" onClick={() => saveFile(c, `${clientId}_${year}_2316_${e.name.replace(/\W+/g, '_')}.pdf`, form2316Pdf({ e, y, lines: ls, year, employer: { name: cl.name, ids: cl.ids ?? blankIds } }))}>{t('pdf2316')}</button></td></tr>)}</tbody></table></div>
-    <div className="row end"><button className="btn ghost" onClick={() => saveFile(c, `${clientId}_${year}_alphalist_1604C.csv`, birAlphalist(rows.map(r => ({ e: r.e, y: r.y })), year, cl.ids ?? blankIds, cl.name))}>{t('alphalist')}</button>
-      <button className="btn ghost" onClick={() => saveFile(c, `${clientId}_${year}_1604C_summary.csv`, bir1604cSummary(rows.map(r => ({ e: r.e, y: r.y })), filingsFor(c.s).filter(f => f.clientId === clientId && f.kind === 'bir' && f.month.startsWith(String(year))).map(f => ({ month: f.month, withheld: f.expected, remitted: f.remit?.amountPaid, ref: f.remit?.reference, date: f.remit?.paidAt })), year, cl.ids ?? blankIds, cl.name))}>{t('bir1604c')}</button>
+        <td><button className="btn small ghost" disabled={!yeOk} title={yeOk ? '' : t('relGate2')} onClick={() => { const f = `${clientId}_${year}_2316_${e.name.replace(/\W+/g, '_')}.pdf`; const d = form2316Pdf({ e, y, lines: ls, year, employer: { name: cl.name, ids: cl.ids ?? blankIds } }); saveFile(c, f, d); yeLog(f, d); }}>{t('pdf2316')}</button></td></tr>)}</tbody></table></div>
+    {rows.length > 0 && <ReleaseGate c={c} system="bir" doc="Year-end 2316 and alphalist" subject={yeKey} clientId={clientId} period={String(year)} control="filing" content={yeContent} summary={t('relSumExport', { what: `${t('alphalist')}, ${t('bir1604c')}, 2316`, scope: `${cl.name} · ${year} · ${rows.length}` })} route={{ page: 'files', id: 'yearend' }}>
+      <div className="row"><button className="btn ghost" onClick={() => { const f = `${clientId}_${year}_alphalist_1604C.csv`; saveFile(c, f, alpha); yeLog(f, alpha); }}>{t('alphalist')}</button>
+      <button className="btn ghost" onClick={() => { const f = `${clientId}_${year}_1604C_summary.csv`; saveFile(c, f, summary1604); yeLog(f, summary1604); }}>{t('bir1604c')}</button></div></ReleaseGate>}
+    <div className="row end">
       {(c.user.role === 'firmOwner' || c.user.role === 'preparer') && <button className="btn" onClick={apply}>{t('applyAdj')}</button>}</div></section></>);
 }
 function OpeningForm({ c, e, year }: { c: Ctx; e: Employee; year: number }) {
@@ -993,7 +1080,7 @@ function DataHub({ c }: { c: Ctx }) {
   const exports: { key: string; file: string; make: () => string | null }[] = [
     { key: 'exp_employees', file: `talaan_employees_${tag}_${stamp}.csv`, make: () => employeesCsv(c.s.employees.filter(e => sel.some(x => x.id === e.clientId)), name) },
     { key: 'exp_register', file: `talaan_register_${tag}_${stamp}.csv`, make: () => registerCsv(approved.map(r => ({ client: name(r.clientId), period: r.period, lines: r.lines ?? [] })), c.s.employees) },
-    { key: 'exp_xero', file: `talaan_xero_journals_${tag}_${stamp}.csv`, make: () => { const js = journals(); return js.length ? xeroJournalCsv(js.map(j => ({ narration: j.narration, date: j.date, lines: j.lines, codes: codesFor(j.r.clientId) })), k => DICTS.en[k] ?? k) : null; } },
+    { key: 'exp_xero', file: `talaan_xero_journals_${tag}_${stamp}.csv`, make: () => { const js = journals(); return js.length ? xeroJournalCsv(js.map(j => { const jc = c.s.clients.find(x => x.id === j.r.clientId); return { narration: j.narration, date: fmtCsvDate(j.date, jc?.csvDateFormat), taxRate: jc?.xeroTaxRate, lines: j.lines, codes: codesFor(j.r.clientId) }; }), k => DICTS.en[k] ?? k) : null; } },
     { key: 'exp_generic', file: `talaan_journals_${tag}_${stamp}.csv`, make: () => { const js = journals(); return js.length ? genericJournalCsv(js.map((j, i) => ({ no: `TAL-${String(i + 1).padStart(4, '0')}`, narration: j.narration, date: j.date, lines: j.lines, codes: codesFor(j.r.clientId) })), k => DICTS.en[k] ?? k) : null; } },
     { key: 'exp_calendar', file: `talaan_deadlines_${tag}_${stamp}.csv`, make: () => calendarCsv(tasksFor(c.s, today()).filter(k => sel.some(x => x.id === k.clientId)).map(k => ({ subject: `${name(k.clientId)}: ${taskText(c, k)}`, date: k.due, description: k.kind === 'file' ? `Upload at ${PORTAL[k.filing!.kind]}` : 'Talaan pay run' }))) },
     { key: 'exp_gcash', file: `talaan_gcash_payouts_${tag}_${stamp}.csv`, make: () => { const r = latest('gcash'); return r ? payoutFile(r.lines ?? [], c.s.employees, 'gcash', `${name(r.clientId)} ${r.period}`) : null; } },
@@ -1003,12 +1090,38 @@ function DataHub({ c }: { c: Ctx }) {
   return (<div className="split2">
     <section className="card"><h2>{t('exportTitle')}</h2>
       <div className="form"><label>{t('forClient')}<select value={clientId} onChange={e => setClientId(e.target.value)}><option value="all">{t('allClients')}</option>{clients.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label></div>
-      <ul className="exports">{exports.filter(x => x.key !== 'exp_backup' || c.user.role === 'firmOwner' || c.user.role === 'preparer').map(x => <li key={x.key}><span className="grow"><b>{t(x.key)}</b><br /><span className="muted small">{x.file}</span></span>
-        <button className="btn small" onClick={() => { const data = x.make(); if (!data) return c.toast(t('nothingToExport')); saveFile(c, x.file, data); }}>{t('download')}</button></li>)}</ul>
+      <ul className="exports">{exports.filter(x => x.key !== 'exp_backup' || c.user.role === 'firmOwner' || c.user.role === 'preparer').map(x => x.key === 'exp_calendar'
+        ? <li key={x.key}><span className="grow"><b>{t(x.key)}</b><br /><span className="muted small">{x.file}</span></span><button className="btn small" onClick={() => { const data = x.make(); if (!data) return c.toast(t('nothingToExport')); saveFile(c, x.file, data); }}>{t('download')}</button></li>
+        : <GatedExport key={x.key + tag} c={c} x={x} tag={tag} clientId={clientId === 'all' ? undefined : clientId} />)}</ul>
       <p className="muted small">{t('exp_note')}</p></section>
     <div>{(c.user.role === 'firmOwner' || c.user.role === 'preparer') && <section className="card"><h2>{t('importTitle')}</h2><EmployeeImport c={c} /><hr /><Restore c={c} /></section>}
       <ProtectCard c={c} /></div>
+    <div style={{ gridColumn: '1 / -1' }}><InboundQueue c={c} kind="employees" route={{ page: 'connections', id: 'data' }} apply={(s, payload, it) => {
+      // Only the imported columns change, and only if the employee was not changed after the upload (otherwise that row is skipped).
+      const rows = payload as { e: Employee; before: Partial<Employee> | null }[]; let skipped = 0; let employees = s.employees;
+      for (const r of rows) { const cur = employees.find(x => x.id === r.e.id);
+        if (!r.before) { if (!cur) employees = [...employees, r.e]; continue; }
+        if (!cur || JSON.stringify(pickImport(cur)) !== JSON.stringify(r.before)) { skipped++; continue; }
+        employees = employees.map(x => x.id === cur.id ? { ...cur, ...pickImport(r.e) } : x); }
+      return { ...s, employees, activity: [{ at: new Date().toISOString(), user: c.user.id, clientId: it.clientId, action: 'act_import', detail: { n: rows.length - skipped, skipped } }, ...s.activity].slice(0, 300) }; }} /></div>
   </div>);
+}
+/** The columns an employee list import may change; everything else on the record is kept. */
+const IMPORT_FIELDS = ['name', 'position', 'monthlyRate', 'tin', 'sss', 'philhealth', 'pagibig', 'bankAccount', 'payout', 'mobile'] as const;
+const pickImport = (e: Employee): Partial<Employee> => Object.fromEntries(IMPORT_FIELDS.map(k => [k, e[k] ?? (k === 'payout' ? 'bank' : '')])) as Partial<Employee>;
+/** Exports that carry pay, bank or ID data, or go to another system, need a second person's authorisation (human in the loop). */
+const VOLATILE: (keyof State)[] = ['integrationLog', 'notices', 'outbox', 'alertsSent', 'activity', 'inbound', 'askLog', 'changes'];
+function GatedExport({ c, x, tag, clientId }: { c: Ctx; x: { key: string; file: string; make: () => string | null }; tag: string; clientId?: string }) {
+  const { t } = c; const [open, setOpen] = useState(false);
+  const system = x.key === 'exp_xero' || x.key === 'exp_generic' ? 'xero' : x.key === 'exp_gcash' || x.key === 'exp_maya' ? 'ewallet' : 'export';
+  // The backup's fingerprint covers the business data, not the log and notices that change while it is being authorised.
+  // What is authorised is exactly what is downloaded. The backup leaves out the audit log and notices (they change while it is being authorised, and restores never take them from a file).
+  const content = useMemo(() => !open ? '' : x.key === 'exp_backup' ? JSON.stringify(Object.fromEntries(Object.entries(c.s).filter(([k]) => !VOLATILE.includes(k as keyof State)))) : (x.make() ?? ''), [open, x.key, c.s]);
+  return (<li style={{ display: 'block' }}><div className="row"><span className="grow"><b>{t(x.key)}</b><br /><span className="muted small">{x.file}</span></span>
+    <button className="btn small" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? t('close') : t('download')}</button></div>
+    {open && (!content ? <p className="muted small">{t('nothingToExport')}</p> :
+      <ReleaseGate c={c} system={system} doc={t(x.key)} subject={`export|${x.key}|${tag}`} clientId={clientId} content={content} summary={t('relSumExport', { what: t(x.key), scope: clientId ? (c.s.clients.find(k => k.id === clientId)?.name ?? '') : t('allClients') })} route={{ page: 'connections', id: 'data' }}>
+        <button className="btn small" onClick={() => { const data = content; if (!data) return; saveFile(c, x.file, data); c.ievent({ system, status: 'prepared', doc: t(x.key), subject: `export|${x.key}|${tag}`, clientId, fileName: x.file, fileHash: fingerprint(data) }); }}>{t('download')}</button></ReleaseGate>)}</li>);
 }
 function EmployeeImport({ c }: { c: Ctx }) {
   const { t } = c; const clients = visibleClients(c);
@@ -1035,8 +1148,12 @@ function EmployeeImport({ c }: { c: Ctx }) {
     }));
   };
   const good = rows?.filter(r => !r.problems.length) ?? [];
-  const apply = () => { c.setS(s => { const ids = new Set(good.map(r => r.e.id)); return { ...s, employees: [...s.employees.filter(e => !ids.has(e.id)), ...good.map(r => r.e)] }; });
-    c.log('act_import', { n: good.length }, clientId); c.toast(t('importedN', { n: good.length })); setRows(null); setText(''); };
+  // Human in the loop: the list waits for a second person (it can change pay rates and bank accounts).
+  const apply = () => { const cl = c.s.clients.find(x => x.id === clientId); const changed = good.filter(r => r.existing).length;
+    if (submitInbound(c, { kind: 'employees', clientId: clientId!, content: text, summary: t('inSumEmployees', { n: good.length, changed, client: cl?.name ?? '' }),
+      payload: good.map(r => { const old = c.s.employees.find(e => e.id === r.e.id); return { e: r.e, before: old ? pickImport(old) : null }; }),
+      // Changes to existing employees can alter pay rates or bank accounts: two approvals. A list of new hires only (onboarding): one.
+      control: good.some(r => { const old = c.s.employees.find(e => e.id === r.e.id); return !!old && (old.monthlyRate !== r.e.monthlyRate || (old.bankAccount ?? '') !== (r.e.bankAccount ?? '') || (old.payout ?? 'bank') !== (r.e.payout ?? 'bank') || (old.mobile ?? '') !== (r.e.mobile ?? '')); }) ? 'bank' : undefined }, { page: 'connections', id: 'data' })) { setRows(null); setText(''); } };
   const onFile = (f?: File) => { if (!f) return; f.text().then(x => { setText(x); setRows(null); }).catch(() => c.toast(t('badFile'))); };
   const sample = 'Name\tPosition\tMonthly rate\tTIN\tSSS\tPhilHealth\tPag-IBIG\tBank account\tPay by\tMobile\nMaria Reyes\tCashier\t21000\t123-456-789\t34-1234567-8\t12-345678901-2\t1234-5678-9012\t001234567890\tBank\t';
   return (<div><h3>{t('imp_employees')}</h3><p className="small muted">{t('impHelp')}</p>
@@ -1054,10 +1171,12 @@ function Restore({ c }: { c: Ctx }) {
   const { t } = c;
   const onFile = (f?: File) => { if (!f) return; f.text().then(x => { const d = JSON.parse(x) as State;
     if (!d || !Array.isArray(d.clients) || !Array.isArray(d.employees) || !Array.isArray(d.runs)) throw new Error('bad');
-    c.modal(<div><h2>{t('impRestore')}</h2><p>{t('restoreWarn')}</p><div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button>
-      <button className="btn" onClick={() => { const base = sampleState(); c.setS({ ...base, ...d, v: 7, activity: d.activity ?? [], notes: d.notes ?? {}, filings: d.filings ?? {}, askLog: d.askLog ?? [], remits: d.remits ?? {}, partners: d.partners ?? {}, users: d.users ?? base.users, refs: d.refs ?? base.refs, corpus: d.corpus ?? base.corpus, watch: d.watch ?? base.watch }); c.log('act_restore'); c.modal(null); c.toast(t('restored')); }}>{t('confirm')}</button></div></div>);
+    c.modal(<div><h2>{t('impRestore')}</h2><p>{t('restoreWarn')}</p><p className="warnbox small">🔐 {t('restoreTwo')}</p><div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button>
+      <button className="btn" onClick={() => { submitInbound(c, { kind: 'restore', clientId: '', fileName: f.name, content: x, control: 'restore', payload: d,
+        summary: t('inSumRestore', { clients: d.clients.length, employees: d.employees.length, runs: d.runs.length }) }, { page: 'connections', id: 'data' }); c.modal(null); }}>{t('chgSubmit')}</button></div></div>);
   }).catch(() => c.toast(t('badFile'))); };
-  return <div><h3>{t('impRestore')}</h3><div className="form"><label>{t('chooseBackup')}<input type="file" accept=".json,application/json" onChange={e => onFile(e.target.files?.[0])} /></label></div></div>;
+  return <div><h3>{t('impRestore')}</h3><div className="form"><label>{t('chooseBackup')}<input type="file" accept=".json,application/json" onChange={e => onFile(e.target.files?.[0])} /></label></div>
+    <InboundQueue c={c} kind="restore" route={{ page: 'connections', id: 'data' }} apply={(s, payload) => ({ ...restoreState(s, payload as State), activity: [{ at: new Date().toISOString(), user: c.user.id, action: 'act_restore', detail: {} }, ...s.activity].slice(0, 300) })} /></div>;
 }
 
 /* ---------------- Partner checks and continuity ---------------- */
@@ -1090,12 +1209,16 @@ function PartnerChecks({ c }: { c: Ctx }) {
 }
 function Continuity({ c }: { c: Ctx }) {
   const { t } = c; const last = c.s.activity.find(a => a.action === 'act_exported' && String(a.detail?.file ?? '').startsWith('talaan_continuity_'));
-  const download = () => { const name = (id: string) => c.s.clients.find(x => x.id === id)?.name ?? id;
-    const deadlines = tasksFor(c.s, today()).map(k => ({ subject: `${name(k.clientId)}: ${taskText(c, k)}`, date: k.due, description: k.kind === 'file' ? `Upload at ${PORTAL[k.filing!.kind]}` : 'Pay run' }));
-    saveFile(c, `talaan_continuity_${iso(today())}.zip`, continuityPack(c.s, { today: today(), deadlines, clientName: name })); };
+  // The pack holds every employee's pay, IDs and bank details: a second person authorises it (its fingerprint covers the data, not the log).
+  const [open, setOpen] = useState(false); const name = (id: string) => c.s.clients.find(x => x.id === id)?.name ?? id;
+  const dataKey = JSON.stringify([c.s.clients, c.s.employees, c.s.runs.map(r => [r.id, r.status, r.lines]), c.s.remits, c.s.refs]);
+  const download = () => { const deadlines = tasksFor(c.s, today()).map(k => ({ subject: `${name(k.clientId)}: ${taskText(c, k)}`, date: k.due, description: k.kind === 'file' ? `Upload at ${PORTAL[k.filing!.kind]}` : 'Pay run' }));
+    const f = `talaan_continuity_${iso(today())}.zip`; const data = continuityPack(c.s, { today: today(), deadlines, clientName: name }); saveFile(c, f, data);
+    c.ievent({ system: 'export', status: 'prepared', doc: 'Continuity pack', subject: 'continuity', fileName: f, fileHash: fingerprint(dataKey) }); };
   return (<><Why>{t('ctIntro')}</Why>
     <section className="card"><h2>{t('ctPack')}</h2><p>{t('ctPackDesc')}</p><p className="muted small">{last ? t('ctLast', { date: new Date(last.at).toLocaleDateString(INTL_LOCALE[c.lang]) }) : t('ctNever')} {t('ctDue')}</p>
-      {(c.user.role === 'firmOwner' || c.user.role === 'preparer') && <button className="btn" onClick={download}>{t('ctPack')}</button>}</section>
+      {(c.user.role === 'firmOwner' || c.user.role === 'preparer') && (!open ? <button className="btn" onClick={() => setOpen(true)}>{t('ctPack')}</button>
+        : <ReleaseGate c={c} system="export" doc="Continuity pack" subject="continuity" content={dataKey} summary={t('relSumExport', { what: t('ctPack'), scope: t('allClients') })} route={{ page: 'connections', id: 'continuity' }}><button className="btn" onClick={download}>{t('download')}</button></ReleaseGate>)}</section>
     <section className="card"><h2>{t('ctPlan')}</h2><ol className="plan">{['ct1', 'ct2', 'ct3', 'ct4'].map(k => <li key={k}>{t(k)}</li>)}</ol><p className="muted small">{t('ctDrill')}</p></section></>);
 }
 
@@ -1196,34 +1319,49 @@ function ClientForm({ c }: { c: Ctx }) {
 /* ---------------- Admin ---------------- */
 function Admin({ c, tab }: { c: Ctx; tab?: string }) {
   const { t } = c; const cur = tab ?? 'users';
-  const tabs: [string, string][] = [['users', 'tabUsers'], ['clients', 'tabClients'], ['refs', 'tabRefs'], ['corpus', 'tabCorpus'], ['watch', 'tabWatch']];
+  const tabs: [string, string][] = [['users', 'tabUsers'], ['approvals', 'tabApprovals'], ['clients', 'tabClients'], ['refs', 'tabRefs'], ['corpus', 'tabCorpus'], ['watch', 'tabWatch']];
   return (<><div className="head"><h1>{t('admin')}</h1></div>
     <div className="pills tabs" role="tablist">{tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={cur === k} aria-pressed={cur === k} onClick={() => c.go({ page: 'admin', id: k })}>{t(l)}</button>)}</div>
-    {cur === 'users' && <UsersAdmin c={c} />}{cur === 'clients' && <ClientsAdmin c={c} />}{cur === 'refs' && <RefsAdmin c={c} />}{cur === 'corpus' && <CorpusAdmin c={c} />}{cur === 'watch' && <WatchAdmin c={c} />}</>);
+    {cur === 'users' && <UsersAdmin c={c} />}{cur === 'approvals' && <ApprovalsAdmin c={c} />}{cur === 'clients' && <ClientsAdmin c={c} />}{cur === 'refs' && <RefsAdmin c={c} />}{cur === 'corpus' && <CorpusAdmin c={c} />}{cur === 'watch' && <WatchAdmin c={c} />}</>);
 }
 function UsersAdmin({ c }: { c: Ctx }) {
   const { t } = c;
   return (<><p className="muted small">{t('prodAuth')}</p><section className="card"><div className="row between"><p style={{ margin: 0 }}>{t('usersIntro')}</p><button className="btn" onClick={() => c.modal(<UserForm c={c} />)}>+ {t('addUser')}</button></div>
     <table className="tbl"><thead><tr><th>{t('name')}</th><th>{t('role')}</th><th>{t('clientFor')}</th><th>{t('email')}</th><th>{t('colStatus')}</th><th></th></tr></thead>
-      <tbody>{c.s.users.map(u => <tr key={u.id}><td><span className="avatar">{initials(u.id)}</span> <b>{u.name}</b></td><td>{t(roleKey(u))}<div className="muted small">{t('roleDesc_' + u.role)}</div></td>
+      <tbody>{c.s.users.map(u => <tr key={u.id}><td><span className="avatar">{initials(u.id)}</span> <b>{u.name}</b></td><td>{t(roleKey(u))}<div className="muted small">{t('roleDesc_' + u.role)}</div>{dutiesOf(u, u.clientId).length > 0 && <div className="small">🔐 {dutiesOf(u, u.clientId).map(d => t('duty_' + d)).join(', ')}</div>}</td>
         <td>{c.s.clients.find(x => x.id === u.clientId)?.name ?? '—'}</td><td className="small">{u.email ?? '—'}</td><td><Chip u={u.active === false ? 'info' : 'ok'}>{u.active === false ? t('inactive') : t('active')}</Chip></td>
         <td><button className="btn small ghost" onClick={() => c.modal(<UserForm c={c} u={u} />)}>{t('editUser')}</button></td></tr>)}</tbody></table></section></>);
 }
 function UserForm({ c, u }: { c: Ctx; u?: User }) {
   const { t } = c; const [f, setF] = useState<User>(u ?? { id: `u_${Date.now().toString(36)}`, name: '', role: 'preparer', email: '', active: true });
   const set = (p: Partial<User>) => setF(x => ({ ...x, ...p }));
+  const dutiesOfDefault = (x: User) => dutiesOf({ ...x, duties: undefined }, x.clientId);
   const owners = c.s.users.filter(x => x.role === 'firmOwner' && x.active !== false && x.id !== f.id).length;
   const problems = [f.name.trim().length < 2 ? t('nameNeeded').replace(/company/i, '') : '', f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email) ? t('emailBad') : '',
     (f.role === 'client' || f.role === 'employee') && !f.clientId ? t('needClient') : '', f.role === 'employee' && !f.empId ? t('needEmployee') : '',
     u && u.id === c.user.id && f.active === false ? t('cantSelf') : '', (f.role !== 'firmOwner' || f.active === false) && owners === 0 && u?.role === 'firmOwner' ? t('needOwner') : ''].filter(Boolean);
-  const save = () => { if (problems.length) return; c.setS(s => ({ ...s, users: u ? s.users.map(x => x.id === f.id ? f : x) : [...s.users, f] })); c.log('act_user', { name: f.name }); c.modal(null); c.toast(t('saved')); };
+  // Double approval for access: a new staff or client login, a role or company change, new approval duties, or reactivation
+  // waits for a second person with the security duty. Removing access (deactivating) is immediate, as it should be.
+  const sameDuties = (a?: string[], b?: string[]) => JSON.stringify([...(a ?? ['default'])].sort()) === JSON.stringify([...(b ?? ['default'])].sort());
+  // An email change for anyone who approves or prepares would redirect their sign-in and approval emails, so it is approved too.
+  const grants = !u ? f.role !== 'employee' : (u.role !== f.role || u.clientId !== f.clientId || !sameDuties(u.duties, f.duties) || (u.active === false && f.active !== false) || (f.role !== 'employee' && (u.email ?? '') !== (f.email ?? '')));
+  const save = () => { if (problems.length) return;
+    if (grants) { const now = u ? { ...u, name: f.name, ...(f.active === false ? { active: false } : {}) } : null;
+      if (now) c.setS(s => ({ ...s, users: s.users.map(x => x.id === f.id ? now : x) }));
+      const lines = [u ? `${t('role')}: ${t(roleKey(u))} → ${t(roleKey(f))}` : `${t('addUser')}: ${f.name} (${t(roleKey(f))})`, ...(f.clientId ? [`${t('clientFor')}: ${c.s.clients.find(x => x.id === f.clientId)?.name ?? ''}`] : []),
+        `${t('apDuties')}: ${(f.duties ?? dutiesOfDefault(f)).map(d => t('duty_' + d)).join(', ') || '—'}`, ...(u && (u.email ?? '') !== (f.email ?? '') ? [`${t('email')}: ${u.email || '—'} → ${f.email || '—'}`] : [])];
+      requestChange(c, { control: 'roles', subject: `user:${f.id}`, title: t('chgRoleTitle', { name: f.name }), lines, payload: { user: f, before: now ?? null } });
+      c.log('act_user', { name: f.name }); c.modal(null); return; }
+    c.setS(s => ({ ...s, users: u ? s.users.map(x => x.id === f.id ? f : x) : [...s.users, f] })); c.log('act_user', { name: f.name }); c.modal(null); c.toast(t('saved')); };
   return (<div><h2>{u ? t('editUser') : t('addUser')}</h2><div className="form">
     <label>{t('name')}<input value={f.name} onChange={e => set({ name: e.target.value.slice(0, 80) })} /></label>
     <label>{t('email')}<input type="email" value={f.email ?? ''} onChange={e => set({ email: e.target.value.trim().slice(0, 120) })} /></label>
-    <label>{t('role')}<select value={f.role} onChange={e => set({ role: e.target.value as Role, clientId: undefined, empId: undefined })}>{(['firmOwner', 'preparer', 'client', 'employee'] as Role[]).map(r => <option key={r} value={r}>{t(roleKey({ ...f, role: r }))}</option>)}</select><small>{t('roleDesc_' + f.role)}</small></label>
+    <label>{t('role')}<select value={f.role} onChange={e => set({ role: e.target.value as Role, clientId: undefined, empId: undefined, duties: undefined })}>{(['firmOwner', 'preparer', 'client', 'employee'] as Role[]).map(r => <option key={r} value={r}>{t(roleKey({ ...f, role: r }))}</option>)}</select><small>{t('roleDesc_' + f.role)}</small></label>
     {(f.role === 'client' || f.role === 'employee') && <label>{t('clientFor')}<select value={f.clientId ?? ''} onChange={e => set({ clientId: e.target.value || undefined, empId: undefined })}><option value="">—</option>{c.s.clients.filter(x => x.active !== false).map(x => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>}
     {f.role === 'employee' && f.clientId && <label>{t('employeeFor')}<select value={f.empId ?? ''} onChange={e => set({ empId: e.target.value || undefined })}><option value="">—</option>{c.s.employees.filter(e => e.clientId === f.clientId).map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>}
     <label className="check"><input type="checkbox" checked={f.active !== false} onChange={e => set({ active: e.target.checked })} /> {t('active')}</label></div>
+    <DutyPicker c={c} role={f.role} value={f.duties} onChange={d => set({ duties: d as User['duties'] })} />
+    {grants && <p className="warnbox small">🔐 {t('chgRoleNote')}</p>}
     {problems.length > 0 && <ul className="bad small">{problems.map(p => <li key={p}>{p}</li>)}</ul>}
     <div className="row end"><button className="btn ghost" onClick={() => c.modal(null)}>{t('cancel')}</button><button className="btn" disabled={problems.length > 0} onClick={save}>{t('save')}</button></div></div>);
 }
@@ -1240,22 +1378,39 @@ function RefsAdmin({ c }: { c: Ctx }) {
   const { t } = c; const r = c.s.refs;
   const upd = (p: Partial<typeof r>) => c.setS(s => ({ ...s, refs: { ...s.refs, ...p } }));
   const [bank, setBank] = useState(''); const [doc, setDoc] = useState(''); const [hol, setHol] = useState<Holiday>({ date: '', name: '', type: 'regular' });
-  const setRegion = (i: number, p: Partial<Region>) => upd({ regions: r.regions.map((x, j) => j === i ? { ...x, ...p } : x) });
-  const apply = (reg: Region) => { const n = c.s.clients.filter(x => x.region === reg.id).length; c.setS(s => ({ ...s, clients: s.clients.map(x => x.region === reg.id ? { ...x, minWage: reg.nonAgri } : x) })); c.toast(t('regionApplied', { n })); };
+  // Double approval (rates and tables): edits are a draft until submitted; a second person with the rates duty approves them.
+  const [draft, setDraft] = useState<{ regions: Region[]; holidays: Holiday[] } | null>(null); const [why, setWhy] = useState('');
+  const cur = draft ?? { regions: r.regions, holidays: r.holidays };
+  const setRegion = (i: number, p: Partial<Region>) => setDraft({ ...cur, regions: cur.regions.map((x, j) => j === i ? { ...x, ...p } : x) });
+  const diff = () => { const out: string[] = []; const before = new Map(r.regions.map(x => [x.id, x]));
+    for (const x of cur.regions) { const b = before.get(x.id); if (!b) { out.push(`+ ${x.name || x.id}: ₱${x.nonAgri} / ₱${x.other} (${x.wageOrder})`); continue; }
+      for (const k of ['name', 'nonAgri', 'other', 'wageOrder', 'effective', 'checked'] as const) if (String(b[k] ?? '') !== String(x[k] ?? '')) out.push(`${x.name}: ${t(k === 'nonAgri' ? 'nonAgri' : k === 'other' ? 'otherRate' : k === 'wageOrder' ? 'wageOrder' : k === 'effective' ? 'effective' : k === 'checked' ? 'checkedCol' : 'region')} ${b[k] ?? '—'} → ${x[k] ?? '—'}`); }
+    const key = (h: Holiday) => `${h.date}|${h.name}|${h.type}`; const hb = new Set(r.holidays.map(key)), ha = new Set(cur.holidays.map(key));
+    cur.holidays.filter(h => !hb.has(key(h))).forEach(h => out.push(`+ ${h.date} ${h.name} (${t(h.type === 'regular' ? 'regularH' : 'specialH')})`));
+    r.holidays.filter(h => !ha.has(key(h))).forEach(h => out.push(`− ${h.date} ${h.name}`)); return out; };
+  const changes = draft ? diff() : []; const pending = (c.s.changes ?? []).filter(x => x.control === 'rates' && x.status === 'pending');
+  const submit = () => { requestChange(c, { control: 'rates', subject: 'refs', title: t('chgRatesTitle'), lines: changes, reason: why.trim(), payload: { regions: cur.regions, holidays: cur.holidays, beforeHash: refsHash(c.s) } }); setDraft(null); setWhy(''); };
+  const apply = (reg: Region) => { const hit = c.s.clients.filter(x => x.region === reg.id && x.minWage !== reg.nonAgri); if (!hit.length) return c.toast(t('regionApplied', { n: 0 }));
+    requestChange(c, { control: 'rates', subject: `wage:${reg.id}`, title: t('chgWageTitle', { region: reg.name }), reason: reg.wageOrder, lines: hit.map(x => `${x.name}: ₱${x.minWage} → ₱${reg.nonAgri}`),
+      payload: { clientWages: Object.fromEntries(hit.map(x => [x.id, reg.nonAgri])), beforeHash: refsHash(c.s) } }); };
   return (<>
+    {pending.length > 0 && <p className="warnbox small">🔐 {t('chgRatesPending', { n: pending.length })} <button className="link" onClick={() => c.go({ page: 'admin', id: 'approvals' })}>{t('open')}</button></p>}
+    {draft && <section className="card sticky-note"><b>🔐 {t('chgDraft', { n: changes.length })}</b><ul className="small">{changes.slice(0, 12).map((l, i) => <li key={i}>{l}</li>)}</ul>
+      <div className="row"><input className="grow" aria-label={t('changeReason')} placeholder={t('chgWhyPh')} value={why} onChange={e => setWhy(e.target.value.slice(0, 200))} />
+        <button className="btn ghost small" onClick={() => setDraft(null)}>{t('discard')}</button><button className="btn small" disabled={!changes.length || why.trim().length < 3} onClick={submit}>{t('chgSubmit')}</button></div></section>}
     <section className="card"><h2>{t('regionsTitle')} <Tip text={t('tip_minWage')} /></h2><div className="scroll"><table className="tbl small"><thead><tr><th>{t('region')}</th><th>{t('nonAgri')}</th><th>{t('otherRate')}</th><th>{t('wageOrder')}</th><th>{t('effective')}</th><th>{t('checkedCol')}</th><th></th></tr></thead>
-      <tbody>{r.regions.map((x, i) => <tr key={x.id}><td><input value={x.name} onChange={e => setRegion(i, { name: e.target.value })} /></td>
+      <tbody>{cur.regions.map((x, i) => <tr key={x.id}><td><input value={x.name} onChange={e => setRegion(i, { name: e.target.value })} /></td>
         <td><input type="number" min={0} value={x.nonAgri} onChange={e => setRegion(i, { nonAgri: Math.max(0, Number(e.target.value) || 0) })} /></td>
         <td><input type="number" min={0} value={x.other} onChange={e => setRegion(i, { other: Math.max(0, Number(e.target.value) || 0) })} /></td>
         <td><input value={x.wageOrder} onChange={e => setRegion(i, { wageOrder: e.target.value })} /></td><td><input type="date" value={x.effective} onChange={e => setRegion(i, { effective: e.target.value })} /></td>
         <td><input type="date" value={x.checked ?? ''} onChange={e => setRegion(i, { checked: e.target.value })} /></td><td><button className="btn small ghost" onClick={() => apply(x)}>{t('applyRegion')}</button></td></tr>)}</tbody></table></div>
-      <button className="btn small ghost" onClick={() => upd({ regions: [...r.regions, { id: `r_${Date.now().toString(36)}`, name: '', nonAgri: 0, other: 0, wageOrder: '', effective: '' }] })}>+ {t('addRegion')}</button></section>
+      <button className="btn small ghost" onClick={() => setDraft({ ...cur, regions: [...cur.regions, { id: `r_${Date.now().toString(36)}`, name: '', nonAgri: 0, other: 0, wageOrder: '', effective: '' }] })}>+ {t('addRegion')}</button></section>
     <section className="card"><h2>{t('holidaysTitle')}</h2><p className="muted small">{t('holidaysNote')}</p>
-      <table className="tbl small"><tbody>{[...r.holidays].sort((a, b) => a.date.localeCompare(b.date)).map(h => <tr key={h.date + h.name}><td>{h.date}</td><td>{h.name}</td><td><Chip u={h.type === 'regular' ? 'info' : 'soon'}>{t(h.type === 'regular' ? 'regularH' : 'specialH')}</Chip></td>
-        <td><button className="btn small ghost" onClick={() => upd({ holidays: r.holidays.filter(x => x !== h) })}>{t('removeItem')}</button></td></tr>)}</tbody></table>
+      <table className="tbl small"><tbody>{[...cur.holidays].sort((a, b) => a.date.localeCompare(b.date)).map(h => <tr key={h.date + h.name}><td>{h.date}</td><td>{h.name}</td><td><Chip u={h.type === 'regular' ? 'info' : 'soon'}>{t(h.type === 'regular' ? 'regularH' : 'specialH')}</Chip></td>
+        <td><button className="btn small ghost" onClick={() => setDraft({ ...cur, holidays: cur.holidays.filter(x => x !== h) })}>{t('removeItem')}</button></td></tr>)}</tbody></table>
       <div className="row"><input type="date" aria-label={t('dateLbl')} value={hol.date} onChange={e => setHol({ ...hol, date: e.target.value })} /><input placeholder={t('nameLbl')} value={hol.name} onChange={e => setHol({ ...hol, name: e.target.value })} />
         <select aria-label={t('typeLbl')} value={hol.type} onChange={e => setHol({ ...hol, type: e.target.value as Holiday['type'] })}><option value="regular">{t('regularH')}</option><option value="special">{t('specialH')}</option></select>
-        <button className="btn small" disabled={!hol.date || !hol.name.trim()} onClick={() => { upd({ holidays: [...r.holidays, { ...hol, name: hol.name.trim() }] }); setHol({ date: '', name: '', type: 'regular' }); }}>+ {t('addHoliday')}</button></div></section>
+        <button className="btn small" disabled={!hol.date || !hol.name.trim()} onClick={() => { setDraft({ ...cur, holidays: [...cur.holidays, { ...hol, name: hol.name.trim() }] }); setHol({ date: '', name: '', type: 'regular' }); }}>+ {t('addHoliday')}</button></div></section>
     <div className="split2">
       <section className="card"><h2>{t('banksTitle')}</h2><ul className="chips">{r.banks.map(b => <li key={b}>{b} <button className="link" aria-label={`${t('removeItem')} ${b}`} onClick={() => upd({ banks: r.banks.filter(x => x !== b) })}>✕</button></li>)}</ul>
         <div className="row"><input value={bank} placeholder={t('nameLbl')} onChange={e => setBank(e.target.value.slice(0, 40))} /><button className="btn small" disabled={!bank.trim() || r.banks.includes(bank.trim())} onClick={() => { upd({ banks: [...r.banks, bank.trim()] }); setBank(''); }}>+ {t('addBank')}</button></div></section>
@@ -1375,8 +1530,22 @@ function Bell({ c }: { c: Ctx }) {
 }
 
 /* ---------------- Approval workflow ---------------- */
-function approversFor(c: Ctx, run: Run) {
-  return USERS.filter(u => u.active !== false && u.id !== run.preparedBy && (u.role === 'firmOwner' || (u.role === 'client' && u.clientId === run.clientId)));
+/** Double approval of pay runs (approvals.ts): payroll review, then finance; never the preparer or the person who submitted it. */
+const runCtx = (s: State, run: Run) => ({ requesters: [run.preparedBy, run.submitted?.by ?? run.preparedBy], approvals: validApprovals(s, run), clientId: run.clientId });
+function approversFor(c: Ctx, run: Run) { return eligible(USERS, 'payrun', runCtx(c.s, run)); }
+/** Step names: final pay is "HR verifies clearance" then "Finance approves"; other runs "Payroll review" then "Finance approval". */
+export const stepLabel = (c: Ctx, run: Run, duty: string | null) => !duty ? '' : c.t(runKind(run) === 'final' ? 'fp_' + duty : 'duty_' + duty);
+/** Gives this person's approval step. Returns true when the run is now fully approved. */
+export function approveRunStep(c: Ctx, run: Run, lines: Line[]): boolean {
+  const cur = c.s.runs.find(r => r.id === run.id) ?? run; if (!canApprove(c.user, 'payrun', runCtx(c.s, cur))) return false;
+  const h = linesHash(c.s, cur); const step = addApproval({ ...cur, approvals: validApprovals(c.s, cur) }, 'payrun', c.user.id);
+  const item = { ...step.item, approvals: step.item.approvals!.map((a, i, all) => i === all.length - 1 ? { ...a, hash: h } : a) }; const done = step.done; const cl = c.s.clients.find(x => x.id === run.clientId)!;
+  if (done) { c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === run.id ? { ...r, approvals: item.approvals, status: 'approved', approvedBy: c.user.id, approvedAt: iso(today()), lines } : r) }));
+    c.log('act_approved', { period: run.period }, run.clientId); afterApproval(c, { ...run, approvals: item.approvals }, lines); return true; }
+  c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === run.id ? { ...r, approvals: item.approvals } : r) })); c.log('act_approvedStep', { period: run.period }, run.clientId);
+  const next = eligible(USERS, 'payrun', runCtx(c.s, item)); c.notify(next.map(u => u.id), 'n_apNext', { name: c.user.name, client: cl.name, period: run.period }, { page: 'run', id: run.id, step: 4 });
+  next.forEach(u => u.email && c.email([u.email], c.t('em_approval_subj', { client: cl.name, period: c.periodLabel(run.period) }), c.t('em_apNext_body', { name: u.name, first: c.user.name, client: cl.name, period: c.periodLabel(run.period), net: peso(totals(lines).net) }), 'approval', cl.id));
+  c.notify([run.preparedBy], 'n_apStepGiven', { name: c.user.name, client: cl.name, period: run.period }, { page: 'run', id: run.id, step: 4 }); return false;
 }
 function submitRun(c: Ctx, run: Run) {
   const cl = c.s.clients.find(x => x.id === run.clientId)!; const to = approversFor(c, run); const lines = linesFor(c.s, run); const tot = totals(lines);
@@ -1397,11 +1566,14 @@ function Workflow({ c, run, ready, lines }: { c: Ctx; run: Run; ready: boolean; 
   const { t } = c; if (run.status === 'approved') return null;
   const approvers = approversFor(c, run); const names = (ids: string[]) => ids.map(id => USERS.find(u => u.id === id)?.name ?? id).join(', ');
   const isStaff = c.user.role === 'firmOwner' || c.user.role === 'preparer';
-  const withdraw = () => { c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === run.id ? { ...r, submitted: undefined } : r) }));
+  const withdraw = () => { c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === run.id ? { ...r, submitted: undefined, approvals: [] } : r) }));
     const cl = c.s.clients.find(x => x.id === run.clientId)!; c.notify(run.submitted?.to ?? [], 'n_withdrawn', { name: c.user.name, client: cl.name, period: run.period }, { page: 'run', id: run.id }); };
-  void lines;
+  void lines; const valid = validApprovals(c.s, run);
   return (<div className="workflow">
-    <ol className="wf"><li className="done">{t('step3')}</li><li className={run.submitted ? 'done' : 'cur'}>{t('submitForApproval')}</li><li className={run.submitted ? 'cur' : ''}>{t('step4')}</li></ol>
+    <ol className="wf"><li className="done">{t('step3')}</li><li className={run.submitted ? 'done' : 'cur'}>{t('submitForApproval')}</li>
+      {POLICY.payrun.map((d, i) => { const a = valid[i]; return <li key={d} className={a ? 'done' : run.submitted && i === valid.length ? 'cur' : ''}>{stepLabel(c, run, d)}{a && <small> · ✓ {USERS.find(u => u.id === a.by)?.name}</small>}</li>; })}</ol>
+    {(run.approvals?.length ?? 0) > valid.length && <p className="warnbox small">{t('apReset')}</p>}
+    {run.submitted && unstaffed(USERS, 'payrun', runCtx(c.s, run)).length > 0 && <p className="warn small">{t('apNobody')}</p>}
     {run.returned && !run.submitted && <div className="warnbox small">↩ {t('returnedMsg', { name: USERS.find(u => u.id === run.returned!.by)?.name ?? '', reason: run.returned.reason })}</div>}
     {run.submitted ? <p className="small">⏳ {t('submittedTo', { date: new Date(run.submitted.at).toLocaleString(INTL_LOCALE[c.lang], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }), names: names(run.submitted.to) })}
         {isStaff && c.user.id === run.submitted.by && <> <button className="link" onClick={withdraw}>{t('withdraw')}</button></>}</p>
@@ -1412,7 +1584,7 @@ function Workflow({ c, run, ready, lines }: { c: Ctx; run: Run; ready: boolean; 
 function ReturnForm({ c, run }: { c: Ctx; run: Run }) {
   const { t } = c; const [reason, setReason] = useState(''); const cl = c.s.clients.find(x => x.id === run.clientId)!;
   const go = () => { const prep = USERS.find(u => u.id === run.preparedBy);
-    c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === run.id ? { ...r, submitted: undefined, returned: { at: new Date().toISOString(), by: c.user.id, reason: reason.trim() } } : r) }));
+    c.setS(s => ({ ...s, runs: s.runs.map(r => r.id === run.id ? { ...r, submitted: undefined, approvals: [], returned: { at: new Date().toISOString(), by: c.user.id, reason: reason.trim() } } : r) }));
     c.notify([run.preparedBy], 'n_returned', { name: c.user.name, client: cl.name, period: run.period, reason: reason.trim() }, { page: 'run', id: run.id, step: 3 });
     if (prep?.email) c.email([prep.email], t('em_returned_subj', { client: cl.name, period: c.periodLabel(run.period) }), t('em_returned_body', { name: prep.name, approver: c.user.name, client: cl.name, period: c.periodLabel(run.period), reason: reason.trim() }), 'returned', cl.id);
     c.log('act_returned', { period: run.period }, run.clientId); c.modal(null); c.toast(t('saved')); };
@@ -1421,7 +1593,7 @@ function ReturnForm({ c, run }: { c: Ctx; run: Run }) {
 }
 function ApprovalsWaiting({ c }: { c: Ctx }) {
   const { t } = c;
-  const mine = c.s.runs.filter(r => r.status === 'draft' && r.submitted && (r.submitted.to.includes(c.user.id) || c.user.role === 'firmOwner'));
+  const mine = c.s.runs.filter(r => r.status === 'draft' && r.submitted && canApprove(c.user, 'payrun', runCtx(c.s, r)));
   if (!mine.length) return null;
   return (<section className="card approvals"><h2>⏳ {t('ps_waiting')} ({mine.length})</h2><ul className="tasks">{mine.map(r => { const cl = c.s.clients.find(x => x.id === r.clientId)!; const pay = periodInfo(r.period).payDate;
     const hours = Math.round((Date.now() - new Date(r.submitted!.at).getTime()) / 3600e3); const urgent = daysBetween(today(), pay) <= 1 || hours >= 24;

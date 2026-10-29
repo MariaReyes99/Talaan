@@ -5,6 +5,7 @@
  * In the live product this is a separate, staff-only area on the same deployment, reading across all firms.
  */
 import { Fragment, useState } from 'react';
+import { HqIntegrations } from './integrations';
 import { MODULES, MODULE_PRICE, AI_INCLUDED, APP_VERSION, filingsFor, iso, daysBetween, type Firm, type HqInvoice, type Ticket, type Release, type State } from '../model';
 import { Chip, Why, peso, today, roleKey, saveFile, type Ctx } from '../App';
 import { arStatus, balanceOf, statementCsv, daysBetweenIso, checkPayment, type ArDoc, type Payment } from '../receivables';
@@ -33,10 +34,10 @@ export function health(f: Firm): { u: 'ok' | 'soon' | 'late'; why: string[] } {
 
 export function Hq({ c, tab }: { c: Ctx; tab?: string }) {
   const { t } = c; const cur = tab ?? 'overview'; const open = c.s.hq.tickets.filter(x => x.status !== 'solved').length;
-  const tabs: [string, string][] = [['overview', 'hqOverview'], ['billing', 'hqBilling'], ['support', 'hqSupport'], ['releases', 'hqReleases']];
+  const tabs: [string, string][] = [['overview', 'hqOverview'], ['billing', 'hqBilling'], ['support', 'hqSupport'], ['integrations', 'hqIntegrations'], ['releases', 'hqReleases']];
   return (<><ModuleBadge c={c} m="hq" /><div className="head"><div><h1>Talaan HQ</h1><p className="muted">{t('hqSub')}</p></div><Chip u="info">v{APP_VERSION}</Chip></div>
     <div className="pills tabs" role="tablist">{tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={cur === k} aria-pressed={cur === k} onClick={() => c.go({ page: 'hq', id: k })}>{t(l)}{k === 'support' && open > 0 && <span>{open}</span>}</button>)}</div>
-    {cur === 'overview' && <Overview c={c} />}{cur === 'billing' && <Billing c={c} />}{cur === 'support' && <Support c={c} />}{cur === 'releases' && <Releases c={c} />}</>);
+    {cur === 'overview' && <Overview c={c} />}{cur === 'billing' && <Billing c={c} />}{cur === 'support' && <Support c={c} />}{cur === 'integrations' && <HqIntegrations c={c} firms={firmsNow(c.s)} />}{cur === 'releases' && <Releases c={c} />}</>);
 }
 
 function Overview({ c }: { c: Ctx }) {

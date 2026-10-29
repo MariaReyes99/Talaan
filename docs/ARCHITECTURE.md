@@ -69,6 +69,9 @@ answers are phrased by a language model.
 | Approvals | Step-up passkey prompt when approving a pay run, confirming a payment or changing bank details | One extra tap at the moments that move money |
 | Who can see what | Persona and module checks on every screen and API (`entitlements.ts`), record checks per client, row-level security in the database | Nothing: menus simply show what they can use |
 | Personal data | TIN, SSS, PhilHealth, Pag-IBIG and bank numbers encrypted per field (AES-256-GCM); masked in history; removed from Ask Tala questions before search or logging | Nothing |
+| Double approval | Pay runs, payroll release, salary and bank changes, filings, bonus, retro and final pay need two approvers by duty; pay tables and roles need a second person; preparer, final approver and releaser are always different people (docs/CONTROLS.md) | One tap each, only on high-risk actions |
+| Files in and out | Every outgoing file is authorised by a second person for its exact content (SHA-256); received files take effect only after review by someone else | A preview and one tap |
+| Integration log | Every exchange with BIR, SSS, PhilHealth, Pag-IBIG, banks, e-wallets and Xero is logged, hash-chained, with failure alerts and escalation | Nothing; alerts come to them |
 | Two-person rule | The preparer cannot approve; the person who sends a payment proof cannot confirm it; HQ confirms firms' proofs | Nothing extra |
 | Payments | PayMongo hosted checkout (GCash, Maya, cards, QR Ph): Talaan never sees card numbers. Webhooks signature-checked, idempotent | Pays on a familiar page |
 | AI safety | Guardrails (injection, data requests, tax evasion, other products), grounded answers with citations, human handoff; red-teamed with PyRIT on every release | Gets an answer or a person |

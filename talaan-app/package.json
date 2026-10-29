@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node build.mjs",
     "start": "node build.mjs && npx --yes serve dist -l 3000",
-    "test": "tsx src/engine.test.ts && tsx src/model.test.ts && tsx src/billing.test.ts && tsx src/secure.test.ts && tsx src/tour/voice.test.ts && tsx src/rag/rag.test.ts && tsx scripts/synth-payroll.ts",
+    "test": "tsx src/engine.test.ts && tsx src/model.test.ts && tsx src/billing.test.ts && tsx src/integrations.test.ts && tsx src/approvals.test.ts && tsx src/secure.test.ts && tsx src/tour/voice.test.ts && tsx src/rag/rag.test.ts && tsx scripts/synth-payroll.ts",
     "typecheck": "tsc -p .",
     "check:corpus": "tsx scripts/check-corpus.ts",
     "test:synthetic": "tsx scripts/synth-payroll.ts",

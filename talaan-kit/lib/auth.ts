@@ -15,7 +15,8 @@ export function serviceOk(req: Request) {
   return !!token && token.length >= 16 && eq(got, token);
 }
 
-export interface OrgClaims { org: string; sub: string; role: string; exp: number }
+/** Token claims from Talaan sign-in. clientId: the company of a client user. duties: approval duties approved in Talaan (approvals.ts). */
+export interface OrgClaims { org: string; sub: string; role: string; exp: number; clientId?: string; duties?: ('review' | 'finance' | 'signatory' | 'config' | 'security')[] }
 export function issueOrgToken(c: Omit<OrgClaims, 'exp'>, ttlSeconds = 3600) {
   const payload = Buffer.from(JSON.stringify({ ...c, exp: Math.floor(Date.now() / 1000) + ttlSeconds })).toString('base64url');
   return `${payload}.${createHmac('sha256', required('ORG_TOKEN_SECRET')).update(payload).digest('base64url')}`;
